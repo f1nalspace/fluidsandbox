@@ -17,7 +17,7 @@
 Dependencies:
 
 	- Visual Studio 2019
-	-	PhysX SDK 3.4.2 (Multithreaded DLL, x64/win32)
+	- PhysX SDK 3.4.2 (Multithreaded DLL, x64/win32)
 	- FreeGlut (Multithreaded DLL, x64/win32)
 	- FreeImage (Multithreaded DLL, x64/win32)
 	- Glew (Multithreaded DLL, x64/win32)
@@ -2536,15 +2536,22 @@ void main(int argc, char **argv) {
 	// Required extensions check
 	printf("  Checking opengl requirements...");
 
-	if(!GLEW_VERSION_2_0 || !glewIsSupported("GL_ARB_texture_float GL_ARB_point_sprite GL_ARB_framebuffer_object")) {
+	int maxColorAttachments = 0;
+	glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, &maxColorAttachments);
+
+	if((!GLEW_VERSION_2_0) || 
+		(!glewIsSupported("GL_ARB_texture_float GL_ARB_point_sprite GL_ARB_framebuffer_object")) ||
+		(maxColorAttachments < 4)) {
 		printf("failed\n");
-		cerr << endl << "Your graphics adapter is not supported, press enter to exit!" << endl;
+		cerr << endl << "Your graphics adapter is not supported, press any key to exit!" << endl;
 		cerr << "Required opengl version:" << endl;
 		cerr << "  OpenGL version 2.0 or higher" << endl;
 		cerr << "Required opengl extensions:" << endl;
 		cerr << "  GL_ARB_texture_float" << endl;
 		cerr << "  GL_ARB_point_sprite" << endl;
 		cerr << "  GL_ARB_framebuffer_object" << endl;
+		cerr << "Required constants:" << endl;
+		cerr << "  GL_MAX_COLOR_ATTACHMENTS >= 4" << endl;
 		getchar();
 		exit(1);
 	} else
