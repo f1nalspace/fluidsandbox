@@ -1,0 +1,28 @@
+uniform sampler2D normalTex;
+uniform sampler2D positionTex;
+uniform vec4 lightColor;
+uniform float shininess;
+uniform vec3 lightPos;
+
+void main (void)
+{
+	vec2 texcoord = gl_TexCoord[0].xy;
+	vec4 pos = texture2D(positionTex, texcoord);
+	float materialValue = pos.w;
+	vec3 vertex = pos.xyz;
+	if (vertex.x < -9999.0 || materialValue > 0.9) {
+		discard;
+	}
+
+	vec3 lightDir = normalize(lightPos - vertex);
+	vec3 normal = texture2D(normalTex, texcoord).xyz;
+	float diffuse = dot(normal, lightDir);
+	float specular = 0.0;
+	if (diffuse > 0.0 && shininess > 0.0) {
+		vec3 posEye = -vertex;
+		vec3 viewEye = normalize(-posEye);
+		vec3 halfVec = normalize(lightDir + viewEye);
+		specular = pow(max(0.0, dot(normal, halfVec)), shininess);
+	}
+	gl_FragColor = (vec4(lightColor.xyz, 1.0) * diffuse + specular) * lightColor.w;
+}

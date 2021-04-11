@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Scene xmlns:fs="http://www.finalspace.org/FluidSimulation/Scene" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.finalspace.org/FluidSimulation FluidSchema.xsd">
+	<System>
+		<CPUThreads>8</CPUThreads>
+	</System>
+	<FluidColors>
+		<FluidColor clear="true" name="Clear" falloff="2.0, 1.0, 0.5, 1.0" default="true" />
+		<FluidColor base="0.25, 0.25, 1.0, 1.0" falloff="2.0, 1.0, 0.5, 1.0" name="Blue" />
+		<FluidColor base="0.5, 1.0, 0.5, 1.0" falloff="0.5, 0.25, 1.0, 1.0" name="Green" />
+		<FluidColor base="1.0, 0.0, 0.5, 0.89" falloff="0.5, 2.0, 2.0, 1.0" name="Red" />
+		<FluidColor base="1.0, 1.0, 0.5, 1.0" falloff="0.25, 0.25, 1.0, 1.0" name="Yellow" />
+		<FluidColor base="0.0, 0.0, 0.0, 1.0" falloff="1.0, 1.0, 1.0, 1.0" falloffScale="1.0" name="Black" />
+		<FluidColor base="1.0, 1.0, 1.0, 1.0" falloff="0.0, 0.0, 0.0, 1.0" falloffScale="0.1" name="White" />
+	</FluidColors>
+	<FluidSystem>
+		<!-- Particle radius (Default: 0.06) -->
+		<ParticleRadius>0.06</ParticleRadius>
+		<!-- Particle distance = Particle radius * Particle Distance Factor (Default: 2.0) -->
+		<ParticleDistanceFactor>2.0</ParticleDistanceFactor>
+		<!-- Max distance the particles will move (Default: 0.3) -->
+		<MaxMotionDistance>0.24</MaxMotionDistance>
+		<!-- RestOffset(Default: 0.12) -->
+		<RestOffset>0.12</RestOffset>
+		<!-- ContactOffset (Default: 0.036) -->
+		<ContactOffset>0.12</ContactOffset>
+
+		<Viscosity>100.0</Viscosity>
+		<Stiffness>100.0</Stiffness>
+
+		<Restitution>0.2</Restitution>
+		<Damping>0.001</Damping>
+		<DynamicFriction>0.001</DynamicFriction>
+		<ParticleMass>0.0001</ParticleMass>
+		
+		<ParticleRenderFactor>1.5</ParticleRenderFactor>
+		<ParticleMinDensity>0.01</ParticleMinDensity>
+	</FluidSystem>
+	<Properties>
+		<BackgroundColor>0.0, 0.0, 0.0</BackgroundColor>
+	</Properties>
+</Scene>

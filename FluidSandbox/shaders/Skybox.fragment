@@ -1,0 +1,5 @@
+uniform samplerCube cubemap;
+varying vec3 texCoord;
+void main() {
+	gl_FragData[0] = textureCube(cubemap, vec3(-texCoord.x, -texCoord.y, texCoord.z));
+}

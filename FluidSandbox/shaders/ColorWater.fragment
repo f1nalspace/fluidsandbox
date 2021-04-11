@@ -1,0 +1,97 @@
+uniform sampler2D depthTex;
+uniform sampler2D thicknessTex;
+uniform sampler2D sceneTex;
+uniform samplerCube skyboxCubemap;
+uniform float xFactor;
+uniform float yFactor;
+uniform float zFar;
+uniform float zNear;
+uniform float minDepth;
+uniform vec4 colorFalloff;
+uniform vec4 fluidColor;
+uniform float falloffScale;
+
+const vec3 lightDir = vec3(0.577, 0.577, 0.577);
+const float shininess = 40.0;
+const vec4 specularColor = vec4(1.0, 1.0, 1.0, 1.0);
+const float fresPower = 2.0;
+const float fresScale = 0.4;
+const float fresBias = 0.1;
+const vec3 thicknessRefraction = vec3(0.02, 0.03, 0.06);
+
+vec3 uvToEye(vec2 texCoord,float z)
+{
+	// Convert texture coordinate to homogeneous space
+	vec2 xyPos = (texCoord * 2.0 - 1.0);
+	float a = zFar/(zFar-zNear);
+	float b = zFar*zNear/(zNear-zFar);
+	float rd=b/(z-a);
+	return vec3(xyPos.x,xyPos.y,-1.0)*rd; 
+}
+
+void main()
+{
+	float depth = texture2D(depthTex,gl_TexCoord[0].xy).x;
+	if(depth<minDepth) {
+		discard;
+		return;
+	}
+	
+	// Calculate normal
+	vec3 eyePos = uvToEye(gl_TexCoord[0].xy,depth);
+	
+	vec2 texCoord1 = vec2(gl_TexCoord[0].x+xFactor,gl_TexCoord[0].y);
+	vec2 texCoord2 = vec2(gl_TexCoord[0].x-xFactor,gl_TexCoord[0].y);
+	
+	vec3 ddx = uvToEye(texCoord1, texture2D(depthTex,texCoord1.xy).x)-eyePos;
+	vec3 ddx2 = eyePos-uvToEye(texCoord2, texture2D(depthTex,texCoord2.xy).x);
+	if(abs(ddx.z)>abs(ddx2.z))
+	{
+		ddx = ddx2;
+	}
+
+	texCoord1 = vec2(gl_TexCoord[0].x,gl_TexCoord[0].y+yFactor);
+	texCoord2 = vec2(gl_TexCoord[0].x,gl_TexCoord[0].y-yFactor);
+
+	vec3 ddy = uvToEye(texCoord1, texture2D(depthTex,texCoord1.xy).x)-eyePos;
+	vec3 ddy2 = eyePos-uvToEye(texCoord2, texture2D(depthTex,texCoord2.xy).x);
+	if(abs(ddy.z)>abs(ddy2.z))
+	{
+		ddy = ddy2;
+	}
+
+	vec3 n = cross(ddx, ddy);
+	n = normalize(n);
+	
+	//vec3 n = normalize(cross(dFdx(eyePos.xyz), dFdy(eyePos.xyz)));
+
+	// Diffuse light
+	float diffuse = dot(n, lightDir)*0.5+0.5;
+	 
+	// Phong specular
+	vec3 v = normalize(-eyePos);
+	vec3 h = normalize(lightDir + v);
+	float specular = pow(max(0.0, dot(n, h)), shininess);
+	 
+	// Fresnel reflection
+	float fresnel = fresBias + fresScale*pow(1.0 - max(0.0, dot(n, v)), fresPower);
+	vec3 r = reflect(-v, n);
+	r = r * gl_NormalMatrix;
+
+	// Get reflection color from skybox
+  	vec4 reflectColor = textureCube(skyboxCubemap, r);
+	 
+	// Color due to Absorption
+	float thickness = texture2D(thicknessTex, gl_TexCoord[0].xy).x;
+	vec4 absorbColor = fluidColor * exp(-thickness*(falloffScale*colorFalloff));
+
+	// Scene reflection based on thickness
+	float refraction = thickness*thicknessRefraction.x;
+	vec4 sceneCol = texture2D(sceneTex, gl_TexCoord[0].xy + (n.xy * refraction));
+	
+	// Mix everything together
+	vec4 finalCol = vec4(absorbColor.xyz + reflectColor.xyz*fresnel + diffuse*specularColor.xyz*specular, 1.0);
+	float alpha = clamp(absorbColor.w, 0.0, 1.0);
+	gl_FragColor = mix(finalCol, sceneCol, alpha);
+	gl_FragDepth = texture2D(depthTex, gl_TexCoord[0].xy).x;
+}

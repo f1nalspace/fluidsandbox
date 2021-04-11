@@ -1,0 +1,298 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{8EE0D0E5-0F7A-44A0-8B6E-EDCDB9F90A22}</ProjectGuid>
+    <RootNamespace>FluidSandbox</RootNamespace>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectName>FluidSandbox</ProjectName>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>Unicode</CharacterSet>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>Unicode</CharacterSet>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)Build\FluidSandbox-$(Configuration)-$(Platform)\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)Build\FluidSandbox-$(Configuration)-$(Platform)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)Immediates\FluidSandbox-$(Configuration)-$(Platform)\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)Immediates\FluidSandbox-$(Configuration)-$(Platform)\</IntDir>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</LinkIncremental>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</LinkIncremental>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)Build\FluidSandbox-$(Configuration)-$(Platform)\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)Build\FluidSandbox-$(Configuration)-$(Platform)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)Immediates\FluidSandbox-$(Configuration)-$(Platform)\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)Immediates\FluidSandbox-$(Configuration)-$(Platform)\</IntDir>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkIncremental>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_SCL_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <AdditionalIncludeDirectories>$(SolutionDir)Libraries\PhysX\physx\include\;$(SolutionDir)Libraries\PhysX\pxshared\include\;$(SolutionDir)Libraries\glew\include\;$(SolutionDir)Libraries\glm\include\;$(SolutionDir)Libraries\freeglut\include\;$(SolutionDir)Libraries\rapidxml\include\;$(SolutionDir)Libraries\freeimage\include\</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
+      <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
+      <IgnoreSpecificDefaultLibraries>mcvcrtd.lib;libcmt.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <AdditionalLibraryDirectories>$(SolutionDir)Libraries\PhysX\physx\lib\$(Platform)\;$(SolutionDir)Libraries\PhysX\pxshared\lib\$(Platform)\;$(SolutionDir)Libraries\glew\lib\$(Platform)\;$(SolutionDir)Libraries\freeglut\lib\$(Platform)\;$(SolutionDir)Libraries\freeimage\lib\$(Platform)\</AdditionalLibraryDirectories>
+    </Link>
+    <PostBuildEvent>
+      <Command>REM Copy shader files
+Mkdir "$(OutDir)shaders"
+Mkdir "$(OutDir)scenarios"
+Mkdir "$(OutDir)textures"
+Copy "$(ProjectDir)shaders\*.vertex" "$(OutDir)shaders"
+Copy "$(ProjectDir)shaders\*.fragment" "$(OutDir)shaders"
+Copy "$(ProjectDir)scenarios\*.xml" "$(OutDir)scenarios"
+Copy "$(ProjectDir)scene.xml" "$(OutDir)"
+Copy "$(ProjectDir)textures\*.*" "$(OutDir)textures"
+Copy "$(SolutionDir)Libraries\PhysX\physx\bin\$(Platform)\*.dll" "$(OutDir)"
+Copy "$(SolutionDir)Libraries\PhysX\pxshared\bin\$(Platform)\*.dll" "$(OutDir)"
+Copy "$(SolutionDir)Libraries\freeglut\bin\$(Platform)\freeglut.dll" "$(OutDir)"
+Copy "$(SolutionDir)Libraries\freeimage\bin\$(Platform)\freeimage.dll" "$(OutDir)"
+Copy "$(SolutionDir)Libraries\glew\bin\$(Platform)\glew32.dll" "$(OutDir)"</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_SCL_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <AdditionalIncludeDirectories>$(SolutionDir)Libraries\PhysX\physx\include\;$(SolutionDir)Libraries\PhysX\pxshared\include\;$(SolutionDir)Libraries\glew\include\;$(SolutionDir)Libraries\glm\include\;$(SolutionDir)Libraries\freeglut\include\;$(SolutionDir)Libraries\rapidxml\include\;$(SolutionDir)Libraries\freeimage\include\</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
+      <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
+      <IgnoreSpecificDefaultLibraries>mcvcrtd.lib;libcmt.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <AdditionalLibraryDirectories>$(SolutionDir)Libraries\PhysX\physx\lib\$(Platform)\;$(SolutionDir)Libraries\PhysX\pxshared\lib\$(Platform)\;$(SolutionDir)Libraries\glew\lib\$(Platform)\;$(SolutionDir)Libraries\freeglut\lib\$(Platform)\;$(SolutionDir)Libraries\freeimage\lib\$(Platform)\</AdditionalLibraryDirectories>
+    </Link>
+    <PostBuildEvent>
+      <Command>REM Copy shader files
+Mkdir "$(OutDir)shaders"
+Mkdir "$(OutDir)scenarios"
+Mkdir "$(OutDir)textures"
+Copy "$(ProjectDir)shaders\*.vertex" "$(OutDir)shaders"
+Copy "$(ProjectDir)shaders\*.fragment" "$(OutDir)shaders"
+Copy "$(ProjectDir)scenarios\*.xml" "$(OutDir)scenarios"
+Copy "$(ProjectDir)scene.xml" "$(OutDir)"
+Copy "$(ProjectDir)textures\*.*" "$(OutDir)textures"
+Copy "$(SolutionDir)Libraries\PhysX\physx\bin\$(Platform)\*.dll" "$(OutDir)"
+Copy "$(SolutionDir)Libraries\PhysX\pxshared\bin\$(Platform)\*.dll" "$(OutDir)"
+Copy "$(SolutionDir)Libraries\freeglut\bin\$(Platform)\freeglut.dll" "$(OutDir)"
+Copy "$(SolutionDir)Libraries\freeimage\bin\$(Platform)\freeimage.dll" "$(OutDir)"
+Copy "$(SolutionDir)Libraries\glew\bin\$(Platform)\glew32.dll" "$(OutDir)"</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <AdditionalIncludeDirectories>$(SolutionDir)Libraries\PhysX\physx\include\;$(SolutionDir)Libraries\PhysX\pxshared\include\;$(SolutionDir)Libraries\glew\include\;$(SolutionDir)Libraries\glm\include\;$(SolutionDir)Libraries\freeglut\include\;$(SolutionDir)Libraries\rapidxml\include\;$(SolutionDir)Libraries\freeimage\include\</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
+      <IgnoreSpecificDefaultLibraries>mcvcrtd.lib;libcmt.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <AdditionalLibraryDirectories>$(SolutionDir)Libraries\PhysX\physx\lib\$(Platform)\;$(SolutionDir)Libraries\PhysX\pxshared\lib\$(Platform)\;$(SolutionDir)Libraries\glew\lib\$(Platform)\;$(SolutionDir)Libraries\freeglut\lib\$(Platform)\;$(SolutionDir)Libraries\freeimage\lib\$(Platform)\</AdditionalLibraryDirectories>
+    </Link>
+    <PostBuildEvent>
+      <Command>REM Copy shader files
+Mkdir "$(OutDir)shaders"
+Mkdir "$(OutDir)scenarios"
+Mkdir "$(OutDir)textures"
+Copy "$(ProjectDir)shaders\*.vertex" "$(OutDir)shaders"
+Copy "$(ProjectDir)shaders\*.fragment" "$(OutDir)shaders"
+Copy "$(ProjectDir)scenarios\*.xml" "$(OutDir)scenarios"
+Copy "$(ProjectDir)scene.xml" "$(OutDir)"
+Copy "$(ProjectDir)textures\*.*" "$(OutDir)textures"
+Copy "$(SolutionDir)Libraries\PhysX\physx\bin\$(Platform)\*.dll" "$(OutDir)"
+Copy "$(SolutionDir)Libraries\PhysX\pxshared\bin\$(Platform)\*.dll" "$(OutDir)"
+Copy "$(SolutionDir)Libraries\freeglut\bin\$(Platform)\freeglut.dll" "$(OutDir)"
+Copy "$(SolutionDir)Libraries\freeimage\bin\$(Platform)\freeimage.dll" "$(OutDir)"
+Copy "$(SolutionDir)Libraries\glew\bin\$(Platform)\glew32.dll" "$(OutDir)"</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <AdditionalIncludeDirectories>$(SolutionDir)Libraries\PhysX\physx\include\;$(SolutionDir)Libraries\PhysX\pxshared\include\;$(SolutionDir)Libraries\glew\include\;$(SolutionDir)Libraries\glm\include\;$(SolutionDir)Libraries\freeglut\include\;$(SolutionDir)Libraries\rapidxml\include\;$(SolutionDir)Libraries\freeimage\include\</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
+      <IgnoreSpecificDefaultLibraries>mcvcrtd.lib;libcmt.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <AdditionalLibraryDirectories>$(SolutionDir)Libraries\PhysX\physx\lib\$(Platform)\;$(SolutionDir)Libraries\PhysX\pxshared\lib\$(Platform)\;$(SolutionDir)Libraries\glew\lib\$(Platform)\;$(SolutionDir)Libraries\freeglut\lib\$(Platform)\;$(SolutionDir)Libraries\freeimage\lib\$(Platform)\</AdditionalLibraryDirectories>
+    </Link>
+    <PostBuildEvent>
+      <Command>REM Copy shader files
+Mkdir "$(OutDir)shaders"
+Mkdir "$(OutDir)scenarios"
+Mkdir "$(OutDir)textures"
+Copy "$(ProjectDir)shaders\*.vertex" "$(OutDir)shaders"
+Copy "$(ProjectDir)shaders\*.fragment" "$(OutDir)shaders"
+Copy "$(ProjectDir)scenarios\*.xml" "$(OutDir)scenarios"
+Copy "$(ProjectDir)scene.xml" "$(OutDir)"
+Copy "$(ProjectDir)textures\*.*" "$(OutDir)textures"
+Copy "$(SolutionDir)Libraries\PhysX\physx\bin\$(Platform)\*.dll" "$(OutDir)"
+Copy "$(SolutionDir)Libraries\PhysX\pxshared\bin\$(Platform)\*.dll" "$(OutDir)"
+Copy "$(SolutionDir)Libraries\freeglut\bin\$(Platform)\freeglut.dll" "$(OutDir)"
+Copy "$(SolutionDir)Libraries\freeimage\bin\$(Platform)\freeimage.dll" "$(OutDir)"
+Copy "$(SolutionDir)Libraries\glew\bin\$(Platform)\glew32.dll" "$(OutDir)"</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="Actor.cpp" />
+    <ClCompile Include="CubeActor.cpp" />
+    <ClCompile Include="FBO.cpp" />
+    <ClCompile Include="FluidScenario.cpp" />
+    <ClCompile Include="FluidSystem.cpp" />
+    <ClCompile Include="Frustum.cpp" />
+    <ClCompile Include="GLSL.cpp" />
+    <ClCompile Include="GLSLManager.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="OSLowLevel.cpp" />
+    <ClCompile Include="Primitives.cpp" />
+    <ClCompile Include="Renderer.cpp" />
+    <ClCompile Include="Scene.cpp" />
+    <ClCompile Include="ScreenSpaceFluidRendering.cpp" />
+    <ClCompile Include="SphereActor.cpp" />
+    <ClCompile Include="SphericalPointSprites.cpp" />
+    <ClCompile Include="Texture.cpp" />
+    <ClCompile Include="Texture2D.cpp" />
+    <ClCompile Include="TextureCubemap.cpp" />
+    <ClCompile Include="TextureManager.cpp" />
+    <ClCompile Include="Utils.cpp" />
+    <ClCompile Include="VBO.cpp" />
+    <ClCompile Include="XMLUtils.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Actor.h" />
+    <ClInclude Include="Camera.hpp" />
+    <ClInclude Include="CubeActor.h" />
+    <ClInclude Include="FBO.h" />
+    <ClInclude Include="FluidContainer.hpp" />
+    <ClInclude Include="FluidDescription.h" />
+    <ClInclude Include="FluidScenario.h" />
+    <ClInclude Include="FluidSystem.h" />
+    <ClInclude Include="Frustum.h" />
+    <ClInclude Include="GLSL.h" />
+    <ClInclude Include="GLSLManager.h" />
+    <ClInclude Include="Light.h" />
+    <ClInclude Include="OSLowLevel.h" />
+    <ClInclude Include="Primitives.h" />
+    <ClInclude Include="Renderer.h" />
+    <ClInclude Include="Scene.h" />
+    <ClInclude Include="ScreenSpaceFluidRendering.h" />
+    <ClInclude Include="Singleton.hpp" />
+    <ClInclude Include="SphereActor.h" />
+    <ClInclude Include="SphericalPointSprites.h" />
+    <ClInclude Include="Texture.h" />
+    <ClInclude Include="Texture2D.h" />
+    <ClInclude Include="TextureIDs.h" />
+    <ClInclude Include="TextureCubemap.h" />
+    <ClInclude Include="TextureManager.h" />
+    <ClInclude Include="Utils.h" />
+    <ClInclude Include="VBO.h" />
+    <ClInclude Include="XMLUtils.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="LICENSE.txt">
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
+      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
+    </Text>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

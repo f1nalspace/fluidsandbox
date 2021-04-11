@@ -1,0 +1,7 @@
+uniform mat4 mvp;
+varying vec3 texCoord;
+void main(void)
+{
+   gl_Position = mvp * vec4(gl_Vertex.xyz, 1.0);
+   texCoord = gl_MultiTexCoord0;
+}

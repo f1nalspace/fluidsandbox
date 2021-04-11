@@ -1,0 +1,7 @@
+uniform sampler2D fontTex;
+varying vec3 texCoord;
+void main(void)
+{
+	vec4 col = texture2D(fontTex, texCoord);
+    gl_FragColor = vec4(col.xyz, 1.0);
+}

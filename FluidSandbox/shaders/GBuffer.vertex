@@ -1,0 +1,32 @@
+uniform mat4 cam_proj;
+uniform mat4 cam_view;
+
+varying vec3 position;
+varying vec3 normal;
+varying vec3 color;
+varying vec3 vertex;
+//varying vec3 tangent;
+//varying vec3 binormal;
+
+void main() {
+	mat4 modelView = gl_ModelViewMatrix;
+	vertex = gl_Vertex.xyz;
+	position = (modelView * gl_Vertex).xyz;
+	normal = (modelView * vec4(gl_Normal, 0.0)).xyz;  
+	color = gl_Color.xyz;
+	
+	/*
+	vec3 c1 = cross(gl_Normal, vec3(0.0, 0.0, 1.0)); 
+	vec3 c2 = cross(gl_Normal, vec3(0.0, 1.0, 0.0)); 
+	if(length(c1) > length(c2))
+		tangent = c1;	
+	else
+		tangent = c2;	
+	tangent = normalize(tangent);
+	binormal = normalize(cross(gl_Normal, tangent)); 
+	*/
+	
+	
+	gl_TexCoord[0] = gl_MultiTexCoord0;
+	gl_Position = cam_proj * cam_view * modelView * gl_Vertex;
+}

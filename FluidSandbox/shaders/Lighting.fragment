@@ -1,0 +1,12 @@
+varying vec3 normal, posEye;
+uniform vec4 color;
+const vec3 lightDir = vec3(0.577, 0.577, 0.577);
+void main (void)
+{
+	const float shininess = 100.0;
+	float diffuse = dot(normal, lightDir)*0.5+0.5;
+	vec3 v = normalize(-posEye);
+    vec3 h = normalize(lightDir + v);
+    float specular = pow(max(0.0, dot(normal, h)), shininess);
+	gl_FragData[0] = color * diffuse + specular;
+}

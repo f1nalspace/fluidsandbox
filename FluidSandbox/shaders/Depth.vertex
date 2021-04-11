@@ -1,0 +1,16 @@
+uniform float pointRadius;
+uniform float pointScale;
+uniform mat4 projMat;
+uniform mat4 viewMat;
+varying vec3 posEye;
+varying float radius;
+void main(void) {
+	mat4 mvp = projMat * viewMat;
+	posEye = vec3(viewMat * vec4(gl_Vertex.xyz, 1.0));
+	float dist = length(posEye);
+	radius = pointRadius * gl_Vertex.w;
+	gl_PointSize = radius * (pointScale / dist);
+	gl_TexCoord[0] = gl_MultiTexCoord0;
+	gl_Position = mvp * vec4(gl_Vertex.xyz, 1.0);
+	gl_FrontColor = gl_Color;
+}

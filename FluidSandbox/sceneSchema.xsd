@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema targetNamespace="http://www.finalspace.org/FluidSimulation"
+	elementFormDefault="qualified" xmlns="http://www.w3.org/2001/XMLSchema"
+	xmlns:fs="http://www.finalspace.org/FluidSimulation">
+
+	<element name="Scene" type="fs:scene"></element>
+
+	<simpleType name="vec3ValueType">
+		<annotation>
+			<documentation>
+				A x,y,z vector in format 0.0, 0.0, 0.0
+				(whitespaces
+				are ignored)
+			</documentation>
+		</annotation>
+		<restriction base="string">
+			<whiteSpace value="collapse"></whiteSpace>
+		</restriction>
+	</simpleType>
+
+	<simpleType name="vec4ValueType">
+		<annotation>
+			<documentation>
+				A x,y,z,w vector in format 0.0, 0.0, 0.0, 0.0
+				(whitespaces
+				are ignored)
+			</documentation>
+		</annotation>
+		<restriction base="string">
+			<whiteSpace value="collapse"></whiteSpace>
+		</restriction>
+	</simpleType>
+
+	<complexType name="scene">
+		<sequence>
+			<element name="System" type="fs:System"></element>
+			<element name="FluidColors">
+				<complexType>
+					<sequence>
+						<element name="FluidColor" type="fs:fluidColor"></element>
+					</sequence>
+				</complexType>
+			</element>
+			<element name="FluidSystem" type="fs:fluidSystem"></element>
+			<element name="Properties" type="fs:properties"></element>
+		</sequence>
+	</complexType>
+
+    <complexType name="System">
+    <sequence minOccurs="1" maxOccurs="1">
+		<element name="CPUThreads" type="int" default="4">
+		</element>
+	</sequence>
+    </complexType>
+
+	<complexType name="fluidColor">
+		<attribute name="base" type="fs:vec4ValueType" use="required"></attribute>
+		<attribute name="falloff" type="fs:vec4ValueType"
+			use="required">
+		</attribute>
+		<attribute name="name" type="string" use="required"></attribute>
+		<attribute name="clear" type="boolean" default="false"
+			use="optional">
+		</attribute>
+		<attribute name="default" type="boolean" default="false"></attribute>
+		<attribute name="falloffScale" type="float" default="0.1"></attribute>
+	</complexType>
+	
+    <complexType name="fluidSystem">
+    <sequence minOccurs="1" maxOccurs="1">
+		<element name="Restitution" type="float" default="0.3">
+		</element>
+		<element name="Damping" type="float" default="0.0">
+		</element>
+		<element name="DynamicFriction" type="float" default="0.001">
+		</element>
+		<element name="MaxMotionDistance" type="float" default="0.3">
+		</element>
+		<element name="RestOffsetFactor" type="float" default="0.3">
+		</element>
+		<element name="ContactOffsetFactor" type="float" default="2.0">
+		</element>
+		<element name="ParticleMass" type="float" default="0.005">
+		</element>
+		<element name="Viscosity" type="float" default="45.0">
+		</element>
+		<element name="Stiffness" type="float" default="60.0">
+		</element>
+		<element name="ParticleDistanceFactor" type="float" default="2.0">
+		</element>
+		<element name="ParticleRenderFactor" type="float" default="1.5">
+		</element>
+		<element name="ParticleRadius" type="float" default="0.05">
+		</element>
+	</sequence>
+    </complexType>
+	
+	<complexType name="properties">
+		<element name="BackgroundColor" type="fs:vec3ValueType" default="0.0, 0.0, 0.0"></element>
+	</complexType>
+</schema>

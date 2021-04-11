@@ -1,0 +1,15 @@
+uniform sampler2D depthSampler;
+uniform float zfar;
+uniform float znear;
+
+float linearizeDepth(sampler2D tex, vec2 uv)
+{
+  float z = texture2D(tex, uv).x;
+  return (2.0 * znear) / (zfar + znear - z * (zfar - znear));	
+}
+void main() 
+{ 
+  vec2 uv = gl_TexCoord[0].xy;
+  float d = linearizeDepth(depthSampler, uv);
+  gl_FragColor.rgb = vec4(d, d, d, 1.0);
+}

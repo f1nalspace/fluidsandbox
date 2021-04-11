@@ -1,0 +1,166 @@
+uniform sampler2D depthTex;
+uniform sampler2D thicknessTex;
+uniform sampler2D sceneTex;
+uniform samplerCube skyboxCubemap;
+uniform float xFactor;
+uniform float yFactor;
+uniform float zFar;
+uniform float zNear;
+uniform float minDepth;
+uniform float falloffScale;
+uniform vec4 colorFalloff;
+uniform vec4 fluidColor;
+uniform int showType;
+
+const vec3 lightDir = vec3(0.577, 0.577, 0.577);
+const float shininess = 40.0;
+const vec4 specularColor = vec4(0.5, 0.5, 0.5, 1.0);
+const float fresPower = 2.0;
+const float fresScale = 0.4;
+const float fresBias = 0.1;
+const vec3 thicknessRefraction = vec3(0.02, 0.03, 0.06);
+
+#define	SWOWTYPE_NOTHING 0
+#define	SWOWTYPE_DEPTH 1
+#define	SWOWTYPE_NORMAL 2
+#define	SWOWTYPE_COLOR 3
+#define	SWOWTYPE_DIFFUSE 4
+#define	SWOWTYPE_SPECULAR 5
+#define	SWOWTYPE_DIFFUSE_SPECULAR 6
+#define	SWOWTYPE_SCENE 7
+#define	SWOWTYPE_FRESNEL 8
+#define	SWOWTYPE_REFRACTION 9
+#define SWOWTYPE_REFLECTION 10
+#define	SWOWTYPE_FRESNEL_REFLECTION 11
+#define	SWOWTYPE_THICKNESS 12
+#define	SWOWTYPE_ABSORBTION 13
+
+vec3 uvToEye(vec2 texCoord,float z)
+{
+	// Convert texture coordinate to homogeneous space
+	vec2 xyPos = (texCoord * 2.0 - 1.0);
+	float a = zFar/(zFar-zNear);
+	float b = zFar*zNear/(zNear-zFar);
+	float rd=b/(z-a);
+	return vec3(xyPos.x,xyPos.y,-1.0)*rd; 
+}
+
+float linearizeDepth(float exp_depth, float near, float far) {
+    return (2.0 * near) / (far + near -  exp_depth * (far - near)); 
+}
+
+void main()
+{
+	float depth = texture2D(depthTex,gl_TexCoord[0].xy).x;
+	
+	// Debug calculations
+	float linearDepth = linearizeDepth(depth,zNear,zFar);
+	
+	// Calculate normal
+	vec3 eyePos = uvToEye(gl_TexCoord[0].xy,depth);
+	
+	vec2 texCoord1 = vec2(gl_TexCoord[0].x+xFactor,gl_TexCoord[0].y);
+	vec2 texCoord2 = vec2(gl_TexCoord[0].x-xFactor,gl_TexCoord[0].y);
+	
+	vec3 ddx = uvToEye(texCoord1, texture2D(depthTex,texCoord1.xy).x)-eyePos;
+	vec3 ddx2 = eyePos-uvToEye(texCoord2, texture2D(depthTex,texCoord2.xy).x);
+	if(abs(ddx.z)>abs(ddx2.z))
+	{
+		ddx = ddx2;
+	}
+
+	texCoord1 = vec2(gl_TexCoord[0].x,gl_TexCoord[0].y+yFactor);
+	texCoord2 = vec2(gl_TexCoord[0].x,gl_TexCoord[0].y-yFactor);
+
+	vec3 ddy = uvToEye(texCoord1, texture2D(depthTex,texCoord1.xy).x)-eyePos;
+	vec3 ddy2 = eyePos-uvToEye(texCoord2, texture2D(depthTex,texCoord2.xy).x);
+	if(abs(ddy.z)>abs(ddy2.z))
+	{
+		ddy = ddy2;
+	}
+
+	vec3 n = cross(ddx, ddy);
+	n = normalize(n);
+	
+	//vec3 n = normalize(cross(dFdx(eyePos.xyz), dFdy(eyePos.xyz)));
+	
+	// Diffuse light
+	float diffuse = dot(n, lightDir)*0.5+0.5;
+	
+	// Phong specular
+	vec3 v = normalize(-eyePos);
+	vec3 h = normalize(lightDir + v);
+	float specular = pow(max(0.0, dot(n, h)), shininess);
+	
+	// Fresnel reflection
+	float fresnel = fresBias + fresScale * pow(1.0 - max(0.0, dot(n, v)), fresPower);
+	vec3 r = reflect(-v, n);
+	r = r * gl_NormalMatrix;
+	
+	// Get reflection color from skybox
+  	vec4 reflectColor = textureCube(skyboxCubemap, r);
+	
+	// Color due to absorption
+	float thickness = texture2D(thicknessTex, gl_TexCoord[0].xy).x;
+	vec4 absorbColor = exp(-thickness*(falloffScale*colorFalloff));
+	
+	// Scene reflection based on thickness
+	vec3 refraction = thickness * thicknessRefraction;
+	vec4 sceneCol;
+	sceneCol.r = texture2D(sceneTex, gl_TexCoord[0].xy + (n.xy * refraction.x)).r;
+	sceneCol.g = texture2D(sceneTex, gl_TexCoord[0].xy + (n.xy * refraction.y)).g;
+	sceneCol.b = texture2D(sceneTex, gl_TexCoord[0].xy + (n.xy * refraction.z)).b;
+	sceneCol.a = 1.0;
+	
+	vec4 outColor;
+	switch (showType) {
+		case SWOWTYPE_DEPTH:
+			outColor = vec4(linearDepth,linearDepth,linearDepth,1.0);
+			break;
+		case SWOWTYPE_NORMAL:
+			outColor = vec4(n.xyz,1.0);
+			break;
+		case SWOWTYPE_COLOR:
+			outColor = vec4(fluidColor.xyz, 1.0);
+			break;
+		case SWOWTYPE_DIFFUSE:
+			outColor = vec4(diffuse,diffuse,diffuse,1.0);
+			break;
+		case SWOWTYPE_SPECULAR:
+			outColor = vec4(specular*specularColor.xyz, 1.0);
+			break;
+		case SWOWTYPE_DIFFUSE_SPECULAR:
+			outColor = vec4(diffuse*specularColor.xyz*specular, 1.0);
+			break;
+		case SWOWTYPE_SCENE:
+			outColor = texture2D(sceneTex, gl_TexCoord[0].xy);
+			break;
+		case SWOWTYPE_FRESNEL:
+			outColor = vec4(fresnel,fresnel,fresnel, 1.0);
+			break;
+		case SWOWTYPE_REFRACTION:
+			outColor = vec4(refraction, 1.0);
+			break;
+		case SWOWTYPE_REFLECTION:
+			outColor = sceneCol * reflectColor;
+			break;
+		case SWOWTYPE_FRESNEL_REFLECTION:
+			outColor = sceneCol * reflectColor * fresnel;
+			break;
+		case SWOWTYPE_THICKNESS:
+			outColor = vec4(thickness,thickness,thickness, 1.0);
+			break;
+		case SWOWTYPE_ABSORBTION:
+			outColor = vec4(absorbColor.xyz, 1.0);
+			break;
+		default:
+			outColor = vec4(0.0);
+			break;
+	}
+	
+	// Mix everything together
+	gl_FragColor = outColor;
+	if (showType != SWOWTYPE_SCENE) {
+		gl_FragDepth = texture2D(depthTex, gl_TexCoord[0].xy).x;
+	}
+}

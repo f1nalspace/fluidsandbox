@@ -1,0 +1,61 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="Actor.cpp" />
+    <ClCompile Include="CubeActor.cpp" />
+    <ClCompile Include="FBO.cpp" />
+    <ClCompile Include="FluidScenario.cpp" />
+    <ClCompile Include="FluidSystem.cpp" />
+    <ClCompile Include="Frustum.cpp" />
+    <ClCompile Include="GLSL.cpp" />
+    <ClCompile Include="GLSLManager.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="OSLowLevel.cpp" />
+    <ClCompile Include="Primitives.cpp" />
+    <ClCompile Include="Renderer.cpp" />
+    <ClCompile Include="Scene.cpp" />
+    <ClCompile Include="ScreenSpaceFluidRendering.cpp" />
+    <ClCompile Include="SphereActor.cpp" />
+    <ClCompile Include="SphericalPointSprites.cpp" />
+    <ClCompile Include="Texture.cpp" />
+    <ClCompile Include="Texture2D.cpp" />
+    <ClCompile Include="TextureCubemap.cpp" />
+    <ClCompile Include="TextureManager.cpp" />
+    <ClCompile Include="Utils.cpp" />
+    <ClCompile Include="VBO.cpp" />
+    <ClCompile Include="XMLUtils.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Actor.h" />
+    <ClInclude Include="Camera.hpp" />
+    <ClInclude Include="CubeActor.h" />
+    <ClInclude Include="FBO.h" />
+    <ClInclude Include="FluidContainer.hpp" />
+    <ClInclude Include="FluidDescription.h" />
+    <ClInclude Include="FluidScenario.h" />
+    <ClInclude Include="FluidSystem.h" />
+    <ClInclude Include="Frustum.h" />
+    <ClInclude Include="GLSL.h" />
+    <ClInclude Include="GLSLManager.h" />
+    <ClInclude Include="Light.h" />
+    <ClInclude Include="OSLowLevel.h" />
+    <ClInclude Include="Primitives.h" />
+    <ClInclude Include="Renderer.h" />
+    <ClInclude Include="Scene.h" />
+    <ClInclude Include="ScreenSpaceFluidRendering.h" />
+    <ClInclude Include="Singleton.hpp" />
+    <ClInclude Include="SphereActor.h" />
+    <ClInclude Include="SphericalPointSprites.h" />
+    <ClInclude Include="Texture.h" />
+    <ClInclude Include="Texture2D.h" />
+    <ClInclude Include="TextureCubemap.h" />
+    <ClInclude Include="TextureManager.h" />
+    <ClInclude Include="Utils.h" />
+    <ClInclude Include="VBO.h" />
+    <ClInclude Include="XMLUtils.h" />
+    <ClInclude Include="TextureIDs.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="LICENSE.txt" />
+  </ItemGroup>
+</Project>

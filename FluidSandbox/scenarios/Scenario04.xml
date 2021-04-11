@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Scenario xmlns:fs="http://www.finalspace.org/FluidSimulation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.finalspace.org/FluidSimulation FluidScenarioSchema.xsd ">
+	<Name>Test scenario 5</Name>
+	<ActorProperties>
+		<CreatePosition>0.0, 8.0, 0.0</CreatePosition>
+	</ActorProperties>
+	<Variables>
+		<PoolColor>0.0, 0.0, 0.2, 0.25</PoolColor>
+		<WallColor>1.0, 0.0, 0.0, 0.75</WallColor>
+		<PoolHeight>4.0</PoolHeight>
+		<PoolDepth>2.0</PoolDepth>
+		<PoolWidth>5.0</PoolWidth>
+		<PoolLeftRight>4.975000</PoolLeftRight>
+		<PoolTopBottom>1.975000</PoolTopBottom>
+	</Variables>
+	<Actors>
+		<Actor type="static" primitive="cube" pos="{%PoolLeftRight}, {%PoolHeight}, 0.000000" size="0.025000, {%PoolHeight}, {%PoolDepth}" color="{%PoolColor}" time="-1" />
+		<Actor type="static" primitive="cube" pos="-{%PoolLeftRight}, {%PoolHeight}, 0.000000" size="0.025000, {%PoolHeight}, {%PoolDepth}" color="{%PoolColor}" time="-1" />
+		<Actor type="static" primitive="cube" pos="0.000000, {%PoolHeight}, -{%PoolTopBottom}" size="{%PoolWidth}, {%PoolHeight}, 0.025000" color="{%PoolColor}" time="-1" />
+		<Actor type="static" primitive="cube" pos="0.000000, {%PoolHeight}, {%PoolTopBottom}" size="{%PoolWidth}, {%PoolHeight}, 0.025000" color="{%PoolColor}" time="-1" />
+		<Actor blending="false" type="static" primitive="cube" pos="3.500000, 0.750000, 0.000000" size="1.500000, 0.750000, 1.975" color="{%WallColor}" time="-1" />
+		<Actor blending="false" type="static" primitive="cube" pos="0.500000, 0.500000, 0.000000" size="1.500000, 0.500000, 1.975" color="{%WallColor}" time="-1" />
+		<Actor blending="false" type="static" primitive="cube" pos="-2.500000, 0.250000, 0.000000" size="1.500000, 0.250000, 1.975" color="{%WallColor}" time="-1" />
+	</Actors>
+	<Fluids>
+		<Fluid type="blob" pos="4.0, 4.0, 0.0" size="2.0, 2.0, 2.5" time="-1"></Fluid>
+	</Fluids>
+</Scenario>
