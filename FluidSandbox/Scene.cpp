@@ -8,7 +8,7 @@ CScene::CScene(const float fluidViscosity, const float fluidStiffness, const flo
 {
 	fluidRestitution = 0.3f;
 	fluidDamping = 0.0f;
-	fluidDynamicFrictionn = 0.001f;
+	fluidDynamicFriction = 0.001f;
 	fluidMaxMotionDistance = 0.3f;
 	fluidRestOffset = 0.12f;
 	fluidContactOffset = 0.036f;
@@ -107,19 +107,19 @@ void CScene::load(const char* filename)
 			rapidxml::xml_node<> *fluidSystemNode = rootNode->first_node("FluidSystem");
 			if (fluidSystemNode)
 			{
-				setFluidRestitution(XMLUtils::findNodeFloat(fluidSystemNode, "Restitution", 0.3f));
-				setFluidDamping(XMLUtils::findNodeFloat(fluidSystemNode, "Damping", 0.0f));
-				setFluidDynamicFriction(XMLUtils::findNodeFloat(fluidSystemNode, "DynamicFriction", 0.001f));
-				setFluidMaxMotionDistance(XMLUtils::findNodeFloat(fluidSystemNode, "MaxMotionDistance", 0.3f));
-				setFluidRestOffset(XMLUtils::findNodeFloat(fluidSystemNode, "RestOffset", 0.3f));
-				setFluidContactOffset(XMLUtils::findNodeFloat(fluidSystemNode, "ContactOffset", 2.0f));
-				setFluidParticleMass(XMLUtils::findNodeFloat(fluidSystemNode, "ParticleMass", 0.005f));
-				setFluidViscosity(XMLUtils::findNodeFloat(fluidSystemNode, "Viscosity", defaultFluidViscosity));
-				setFluidStiffness(XMLUtils::findNodeFloat(fluidSystemNode, "Stiffness", defaultFluidStiffness));
-				setFluidParticleRadius(XMLUtils::findNodeFloat(fluidSystemNode, "ParticleRadius", 0.05f));
-				setFluidParticleDistanceFactor(XMLUtils::findNodeFloat(fluidSystemNode, "ParticleDistanceFactor", defaultFluidParticleDistanceFactor));
-				setFluidParticleRenderFactor(XMLUtils::findNodeFloat(fluidSystemNode, "ParticleRenderFactor", defaultFluidParticleRenderFactor));
-				setFluidParticleMinDenstiy(XMLUtils::findNodeFloat(fluidSystemNode, "ParticleMinDensity", 0.01f));
+				fluidRestitution = XMLUtils::findNodeFloat(fluidSystemNode, "Restitution", 0.3f);
+				fluidDamping = XMLUtils::findNodeFloat(fluidSystemNode, "Damping", 0.0f);
+				fluidDynamicFriction = XMLUtils::findNodeFloat(fluidSystemNode, "DynamicFriction", 0.001f);
+				fluidMaxMotionDistance = XMLUtils::findNodeFloat(fluidSystemNode, "MaxMotionDistance", 0.3f);
+				fluidRestOffset = XMLUtils::findNodeFloat(fluidSystemNode, "RestOffset", 0.3f);
+				fluidContactOffset = XMLUtils::findNodeFloat(fluidSystemNode, "ContactOffset", 2.0f);
+				fluidParticleMass = XMLUtils::findNodeFloat(fluidSystemNode, "ParticleMass", 0.005f);
+				fluidViscosity = XMLUtils::findNodeFloat(fluidSystemNode, "Viscosity", defaultFluidViscosity);
+				fluidStiffness = XMLUtils::findNodeFloat(fluidSystemNode, "Stiffness", defaultFluidStiffness);
+				fluidParticleRadius = XMLUtils::findNodeFloat(fluidSystemNode, "ParticleRadius", 0.05f);
+				fluidParticleDistanceFactor = XMLUtils::findNodeFloat(fluidSystemNode, "ParticleDistanceFactor", defaultFluidParticleDistanceFactor);
+				fluidParticleRenderFactor = XMLUtils::findNodeFloat(fluidSystemNode, "ParticleRenderFactor", defaultFluidParticleRenderFactor);
+				fluidParticleMinDensity = XMLUtils::findNodeFloat(fluidSystemNode, "ParticleMinDensity", 0.01f);
 			}
 
 			// Properties

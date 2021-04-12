@@ -11,11 +11,11 @@
 class CFluidSystem
 {
 private:
-	unsigned int maxParticles;
-	unsigned int currentParticles;
 	physx::PxParticleExt::IndexPool* indexPool;
 	physx::PxPhysics* physics;
 	physx::PxParticleFluid* particleFluid;
+	unsigned int maxParticles;
+	unsigned int currentParticles;
 public:
 	CFluidSystem(physx::PxPhysics* physics, FluidDescription &desc, const unsigned int maxParticles);
 	~CFluidSystem(void);
