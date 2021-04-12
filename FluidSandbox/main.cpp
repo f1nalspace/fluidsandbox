@@ -34,10 +34,7 @@ Todo:
 
 	- No more pragma comment lib for the libraries, just configure it in the project directly
 
-	- Do not use any std::map or std::string classes while running the simulation.
-	  See CFBO::textures
-	  Use numeric ids instead and simply map it to a static array with fixed size
-	  More than 8 texture render targets are not possible anyway
+	- Do not use std::string classes while running the simulation!
 
 	- Do not use std::vector, simple static or growable arrays will do (We never remove from a array - only clear)
 
