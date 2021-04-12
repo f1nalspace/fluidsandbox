@@ -1,32 +1,32 @@
 #include "OSLowLevel.h"
 
+#include <fstream>
+#include <iostream>
+
 COSLowLevel::COSLowLevel(void)
 {
 	qpcFrequency = 0;
 }
 
-int COSLowLevel::getNumCPUCores() 
+size_t COSLowLevel::getNumCPUCores() 
 { 
-	int nNumCPUCores = 1;
-	#ifdef WIN32
-		SYSTEM_INFO sysinfo;
-		GetSystemInfo( &sysinfo );
-		nNumCPUCores = sysinfo.dwNumberOfProcessors;
-	#endif
-	return nNumCPUCores;
+	SYSTEM_INFO sysinfo;
+	GetSystemInfo( &sysinfo );
+	size_t result = sysinfo.dwNumberOfProcessors;
+	return result;
 }
 
 
-string COSLowLevel::getTextFileContent(const char* filename)
+const std::string COSLowLevel::getTextFileContent(const std::string &filename)
 {
-	string result = "";
-	ifstream myfile(filename);
+	std::string result = "";
+	std::ifstream myfile(filename);
 	if (myfile && myfile.is_open())
 	{
-		string line;
+		std::string line;
 		while ( myfile.good() )
 		{
-			getline (myfile,line);
+			std::getline (myfile,line);
 			result += line + "\n";
 		}
 		myfile.close();
@@ -36,13 +36,13 @@ string COSLowLevel::getTextFileContent(const char* filename)
 
 bool COSLowLevel::fileExists(const char* filename)
 {
-	ifstream myfile(filename);
+	std::ifstream myfile(filename);
 	return !myfile.fail();
 }
 
-vector<string> COSLowLevel::getFilesInDirectory(const string &str)
+std::vector<std::string> COSLowLevel::getFilesInDirectory(const std::string &str)
 {
-	vector<string> r;
+	std::vector<std::string> r;
 
 	WIN32_FIND_DATAA FindFileData;
 	HANDLE hFind;
@@ -68,19 +68,19 @@ double COSLowLevel::getTimeMilliSeconds() {
 	return (double)(cur * 1000.0 / qpcFrequency);
 }
 
-string COSLowLevel::getAppPath(const int argc, char** argv) {
+const std::string COSLowLevel::getAppPath(const int argc, char** argv) {
 	char buffer[MAX_PATH];
 	GetModuleFileNameA(NULL, buffer, MAX_PATH);
-	string fullpath = buffer;
-	return string(fullpath, 0, fullpath.rfind("\\"));
+	std::string fullpath = buffer;
+	return std::string(fullpath, 0, fullpath.rfind("\\"));
 }
 
-string COSLowLevel::pathCombine(const string p1, const string p2) {
-	string s = p1;
+const std::string COSLowLevel::pathCombine(const std::string p1, const std::string p2) {
+	std::string s = p1;
 	if (s.length() > 0 && s.compare(s.length()-1, 1, "\\") != 0) {
 		s += "\\";
 	}
-	string a = p2;
+	std::string a = p2;
 	if (a.length() > 0 && a.compare(0, 1, "\\") == 0) {
 		a = "\\" + a;
 	}

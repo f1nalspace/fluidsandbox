@@ -1,10 +1,7 @@
 #pragma once
 
-#include <fstream>
-#include <iostream>
 #include <string>
 #include <vector>
-using namespace std;
 
 #ifdef WIN32
 	#include <Windows.h>
@@ -19,12 +16,12 @@ private:
 	LONGLONG qpcFrequency;
 public:
 	COSLowLevel(void);
-	int getNumCPUCores();
-	string getTextFileContent(const char* filename);
+	size_t getNumCPUCores();
+	const std::string getTextFileContent(const std::string &filename);
 	bool fileExists(const char* filename);
-	vector<string> getFilesInDirectory(const string &str);
+	std::vector<std::string> getFilesInDirectory(const std::string &str);
 	double getTimeMilliSeconds();
-	string getAppPath(const int argc, char** argv);
-	string pathCombine(const string p1, const string p2);
+	const std::string getAppPath(const int argc, char** argv);
+	const std::string pathCombine(const std::string p1, const std::string p2);
 };
 
