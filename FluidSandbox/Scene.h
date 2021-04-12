@@ -1,9 +1,6 @@
 #pragma once
-#include <vector>
-using namespace std;
 
-#include <rapidxml/rapidxml.hpp>
-using namespace rapidxml;
+#include <vector>
 
 #include "ScreenSpaceFluidRendering.h"
 #include "XMLUtils.h"
@@ -11,8 +8,8 @@ using namespace rapidxml;
 class CScene
 {
 private:
-	PxVec3 backgroundColor;
-	vector<FluidColor*> fluidColors;
+	physx::PxVec3 backgroundColor;
+	std::vector<FluidColor*> fluidColors;
 	float fluidRestitution;
 	float fluidDamping;
 	float fluidDynamicFrictionn;
@@ -76,8 +73,8 @@ public:
 	inline void setFluidParticleMinDenstiy(const float value) { fluidParticleMinDensity = value; };
 	inline void setNumCPUThreads(const int value) { numCPUThreads = value; };
 
-	inline PxVec3 getBackgroundColor() { return backgroundColor; };
-	inline void setBackgroundColor(const PxVec3 value) { backgroundColor = value; };
+	inline physx::PxVec3 getBackgroundColor() { return backgroundColor; };
+	inline void setBackgroundColor(const physx::PxVec3 value) { backgroundColor = value; };
 
 	void load(const char* filename);
 };

@@ -1,5 +1,7 @@
 #include "FBO.h"
 
+#include <iostream>
+
 CFBO::CFBO(int width, int height)
 {
     this->width = width;
@@ -12,7 +14,7 @@ CFBO::CFBO(int width, int height)
 CFBO::~CFBO(void)
 {
     // Remove textures
-    for(map<const char*, CTexture2D*>::iterator it = textures.begin(); it != textures.end(); ++it)
+    for(std::map<const char*, CTexture2D*>::iterator it = textures.begin(); it != textures.end(); ++it)
         delete it->second;
 
     textures.clear();
@@ -121,7 +123,7 @@ void CFBO::resize(int width, int height)
     this->height = height;
 
     // Recreate textures
-    for(map<const char*, CTexture2D*>::iterator it = textures.begin(); it != textures.end(); ++it)
+    for(std::map<const char*, CTexture2D*>::iterator it = textures.begin(); it != textures.end(); ++it)
         it->second->resize(width, height);
 
     // Update FBO
@@ -138,7 +140,7 @@ void CFBO::update()
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, bufferId);
 
     // Update/Add textures to framebuffer
-    for(map<const char*, CTexture2D*>::iterator it = textures.begin(); it != textures.end(); ++it)
+    for(std::map<const char*, CTexture2D*>::iterator it = textures.begin(); it != textures.end(); ++it)
     {
         CTexture2D* tex = it->second;
         GLuint userdata = tex->getUserData();

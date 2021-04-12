@@ -1,8 +1,11 @@
 #pragma once
+#include <string>
+
+#include <math.h>
+
 #include <GL/glew.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <math.h>
 
 #include "GLSL.h"
 #include "Texture.h"
@@ -23,19 +26,19 @@ const int SSFShaderIndex_Debug = 5;
 
 struct FluidColor
 {
-	PxVec4 color;
-	PxVec4 falloff;
+	physx::PxVec4 color;
+	physx::PxVec4 falloff;
 	bool isClear;
-	string name;
+	std::string name;
 	float falloffScale;
 	FluidColor(){
-		this->color = PxVec4(0.5f, 0.69f, 1.0f, 1.0f);
-		this->falloff = PxVec4(2.0f, 1.0f, 0.5f, 0.5f);
+		this->color = physx::PxVec4(0.5f, 0.69f, 1.0f, 1.0f);
+		this->falloff = physx::PxVec4(2.0f, 1.0f, 0.5f, 0.5f);
 		this->isClear = false;
 		this->name = "";
 		this->falloffScale = 0.1f;
 	}
-	FluidColor(const PxVec4& color, const PxVec4& falloff, const bool &isClear, const char* name){
+	FluidColor(const physx::PxVec4& color, const physx::PxVec4& falloff, const bool &isClear, const char *name){
 		this->color = color;
 		this->falloff = falloff;
 		this->isClear = isClear;

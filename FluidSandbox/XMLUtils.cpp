@@ -2,9 +2,9 @@
 
 namespace XMLUtils
 {
-	vector<xml_node<>*> getChilds(xml_node<>* parent) {
-		vector<xml_node<>*> r;
-		xml_node<> *cur = parent->first_node();
+	std::vector<rapidxml::xml_node<>*> getChilds(rapidxml::xml_node<>* parent) {
+		std::vector<rapidxml::xml_node<>*> r;
+		rapidxml::xml_node<> *cur = parent->first_node();
 		if (cur) {
 			r.push_back(cur);
 			while ((cur = cur->next_sibling())) {
@@ -14,10 +14,10 @@ namespace XMLUtils
 		return r;
 	}
 
-	vector<xml_node<>*> getChilds(xml_node<>* parent, const char* search)
+	std::vector<rapidxml::xml_node<>*> getChilds(rapidxml::xml_node<>* parent, const char* search)
 	{
-		vector<xml_node<>*> r;
-		xml_node<> *cur = parent->first_node(search);
+		std::vector<rapidxml::xml_node<>*> r;
+		rapidxml::xml_node<> *cur = parent->first_node(search);
 		if (cur) {
 			r.push_back(cur);
 			while ((cur = cur->next_sibling(search))) {
@@ -27,28 +27,28 @@ namespace XMLUtils
 		return r;
 	}
 
-	string findNodeValue(xml_node<>* parent, const char* search, const char* def) {
-		string r = def;
-		xml_node<> *foundNode = parent->first_node(search);
+	std::string findNodeValue(rapidxml::xml_node<>* parent, const char* search, const char* def) {
+		std::string r = def;
+		rapidxml::xml_node<> *foundNode = parent->first_node(search);
 		if (foundNode) {
 			r = foundNode->value();
 		}
 		return r;
 	}
 
-	float findNodeFloat(xml_node<>* parent, const char* search, const float def)
+	float findNodeFloat(rapidxml::xml_node<>* parent, const char* search, const float def)
 	{
 		float r = def;
-		xml_node<> *foundNode = parent->first_node(search);
+		rapidxml::xml_node<> *foundNode = parent->first_node(search);
 		if (foundNode) {
 			r = Utils::toFloat(foundNode->value());
 		}
 		return r;
 	}
 
-	string getAttribute(xml_node<>* parent, const char* attr, const char* def)
+	std::string getAttribute(rapidxml::xml_node<>* parent, const char* attr, const char* def)
 	{
-		xml_attribute<> *foundAttr = parent->first_attribute(attr);
+		rapidxml::xml_attribute<> *foundAttr = parent->first_attribute(attr);
 		if (foundAttr) {
 			return foundAttr->value();
 		} else {

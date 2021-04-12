@@ -1,12 +1,12 @@
 #pragma once
 
-#include <iostream>
-#include <GL/glew.h>
 #include <map>
 #include <assert.h>
 #include <malloc.h>
+
+#include <GL/glew.h>
+
 #include "Texture2D.h"
-using namespace std;
 
 struct eqstr
 {
@@ -21,7 +21,7 @@ class CFBO
 private:
 	GLuint bufferId;
 	int maxColorAttachments;
-	map<const char*, CTexture2D*> textures;
+	std::map<const char*, CTexture2D*> textures;
 	int width;
 	int height;
 public:

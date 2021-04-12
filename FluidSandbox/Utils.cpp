@@ -106,7 +106,7 @@ namespace Utils {
 			return (str.compare("true") == 0) || (str.compare("1") == 0);
 	}
 
-	PxVec3 toVec3(const std::string &str, const PxVec3 def) {
+	physx::PxVec3 toVec3(const std::string &str, const physx::PxVec3 def) {
 		std::vector<std::string> splitted = split(str, ",");
 		if(splitted.size() == 3) {
 			std::string x = splitted[0];
@@ -115,13 +115,13 @@ namespace Utils {
 			trim(x);
 			trim(y);
 			trim(z);
-			return PxVec3(toFloat(x), toFloat(y), toFloat(z));
+			return physx::PxVec3(toFloat(x), toFloat(y), toFloat(z));
 		} else {
 			return def;
 		}
 	}
 
-	PxVec4 toVec4(const std::string &str) {
+	physx::PxVec4 toVec4(const std::string &str) {
 		std::vector<std::string> splitted = split(str.c_str(), ",");
 		if(splitted.size() == 4) {
 			std::string x = splitted[0];
@@ -132,31 +132,31 @@ namespace Utils {
 			trim(y);
 			trim(z);
 			trim(w);
-			return PxVec4(toFloat(x), toFloat(y), toFloat(z), toFloat(w));
+			return physx::PxVec4(toFloat(x), toFloat(y), toFloat(z), toFloat(w));
 		} else {
-			return PxVec4(0.0f);
+			return physx::PxVec4(0.0f);
 		}
 	}
 
 	FluidType toFluidType(const char *str) {
 		if(strcmp(str, "sphere") == 0)
-			return FluidTypeSphere;
+			return FluidType::FluidTypeSphere;
 		else if(strcmp(str, "blob") == 0)
-			return FluidTypeBlob;
+			return FluidType::FluidTypeBlob;
 		else if(strcmp(str, "wall") == 0)
-			return FluidTypeWall;
+			return FluidType::FluidTypeWall;
 		else if(strcmp(str, "drop") == 0)
-			return FluidTypeDrop;
+			return FluidType::FluidTypeDrop;
 		else
-			return FluidTypeBlob;
+			return FluidType::FluidTypeBlob;
 	}
 
 	EActorType toActorType(const char *str) {
 		if(strcmp(str, "static") == 0)
-			return ActorTypeStatic;
+			return EActorType::ActorTypeStatic;
 		else if(strcmp(str, "dynamic") == 0)
-			return ActorTypeDynamic;
+			return EActorType::ActorTypeDynamic;
 		else
-			return ActorTypeStatic;
+			return EActorType::ActorTypeStatic;
 	}
 }

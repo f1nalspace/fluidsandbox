@@ -1,9 +1,13 @@
 #include "FluidScenario.h"
 
+#include <iostream>
+
+#include <rapidxml/rapidxml.hpp>
+
 CFluidScenario::CFluidScenario()
 {
 	this->name = "";
-	this->actorCreatePosition = PxVec3(0.0f, 0.0f, 0.0f);
+	this->actorCreatePosition = physx::PxVec3(0.0f, 0.0f, 0.0f);
 	this->viscosity = 20.0f;
 	this->stiffness = 35.0f;
 	this->damping = 0.0f;
@@ -11,7 +15,7 @@ CFluidScenario::CFluidScenario()
 	this->particleRenderFactor = 1.0f;
 	this->particleRadius = 0.05f;
 	this->particleMinDensity = 0.01f;
-	this->gravity = PxVec3(0.0f, -9.8f, 0.0f);
+	this->gravity = physx::PxVec3(0.0f, -9.8f, 0.0f);
 }
 
 
@@ -34,41 +38,41 @@ CFluidScenario* CFluidScenario::load(const char* filename, CScene* scene)
 {
 	if (COSLowLevel::getInstance()->fileExists(filename))
 	{
-		cout << "  Load scenario from file '" << filename << "'" << endl;
+		std::cout << "  Load scenario from file '" << filename << "'" << std::endl;
 
-		string xml = COSLowLevel::getInstance()->getTextFileContent(filename);
-		vector<char> xml_copy = Utils::toCharVector(xml);
+		std::string xml = COSLowLevel::getInstance()->getTextFileContent(filename);
+		std::vector<char> xml_copy = Utils::toCharVector(xml);
 
-		map<string, string> variables;
+		std::map<std::string, std::string> variables;
 
 		// First get variables
-		xml_document<> doc;
+		rapidxml::xml_document<> doc;
 		try{
 			doc.parse<0>(&xml_copy[0]);
 		}
 		catch (...) {
-			cerr << "could not parse xml!" << endl;
+			std::cerr << "could not parse xml!" << std::endl;
 			return NULL;
 		}
-		xml_node<> *rootNode = doc.first_node("Scenario");
+		rapidxml::xml_node<> *rootNode = doc.first_node("Scenario");
 		if (rootNode) {
-			xml_node<> *varsNode = rootNode->first_node("Variables");
+			rapidxml::xml_node<> *varsNode = rootNode->first_node("Variables");
 			if (varsNode) {
-				vector<xml_node<>*> childs = XMLUtils::getChilds(varsNode);
-				vector<xml_node<>*>::iterator p;
+				std::vector<rapidxml::xml_node<>*> childs = XMLUtils::getChilds(varsNode);
+				std::vector<rapidxml::xml_node<>*>::iterator p;
 				for (p = childs.begin(); p!=childs.end(); ++p) {
-					xml_node<> *varNode = *p;
-					variables.insert(pair<string, string>(varNode->name(), varNode->value()));
+					rapidxml::xml_node<> *varNode = *p;
+					variables.insert(std::pair<std::string, std::string>(varNode->name(), varNode->value()));
 				}
 			}
 		}
 
 		// Now replace all strings in xml content
-		map<string, string>::iterator p;
+		std::map<std::string, std::string>::iterator p;
 		for (p = variables.begin(); p != variables.end(); ++p) {
-			string name = p->first;
+			std::string name = p->first;
 			name = "{%" + name + "}";
-			string value = p->second;
+			std::string value = p->second;
 			Utils::replaceString(xml, name, value);
 		}
 
@@ -82,19 +86,19 @@ CFluidScenario* CFluidScenario::load(const char* filename, CScene* scene)
 		rootNode = doc.first_node("Scenario");
 		if (rootNode) {
 			// Name
-			xml_node<> *nameNode = rootNode->first_node("Name");
+			rapidxml::xml_node<> *nameNode = rootNode->first_node("Name");
 			if (nameNode) {
 				newScenario->setName(nameNode->value());
 			}
 
 			// Gravity
-			xml_node<> *gravitiyNode = rootNode->first_node("Gravity");
+			rapidxml::xml_node<> *gravitiyNode = rootNode->first_node("Gravity");
 			if (gravitiyNode) {
-				newScenario->setGravity(Utils::toVec3(gravitiyNode->value(), PxVec3(0.0f, -9.8f, 0.0f)));
+				newScenario->setGravity(Utils::toVec3(gravitiyNode->value(), physx::PxVec3(0.0f, -9.8f, 0.0f)));
 			}
 
 			// Fluid properties
-			xml_node<> *fpNode = rootNode->first_node("FluidProperties");
+			rapidxml::xml_node<> *fpNode = rootNode->first_node("FluidProperties");
 			if (fpNode) {
 				newScenario->setViscosity(XMLUtils::findNodeFloat(fpNode, "Viscosity", scene->getFluidViscosity()));
 				newScenario->setStiffness(XMLUtils::findNodeFloat(fpNode, "Stiffness", scene->getFluidStiffness()));
@@ -114,38 +118,38 @@ CFluidScenario* CFluidScenario::load(const char* filename, CScene* scene)
 			}
 
 			// Actor properties
-			xml_node<> *apNode = rootNode->first_node("ActorProperties");
+			rapidxml::xml_node<> *apNode = rootNode->first_node("ActorProperties");
 			if (apNode) {
-				newScenario->setActorCreatePosition(Utils::toVec3(XMLUtils::findNodeValue(apNode, "CreatePosition", "0, 0, 0"), PxVec3(0.0f)));
+				newScenario->setActorCreatePosition(Utils::toVec3(XMLUtils::findNodeValue(apNode, "CreatePosition", "0, 0, 0"), physx::PxVec3(0.0f)));
 			}
 
 			// Actors
-			xml_node<> *actorsNode = rootNode->first_node("Actors");
+			rapidxml::xml_node<> *actorsNode = rootNode->first_node("Actors");
 			if (actorsNode) {
-				vector<xml_node<>*> actors = XMLUtils::getChilds(actorsNode, "Actor");
-				vector<xml_node<>*>::iterator p;
+				std::vector<rapidxml::xml_node<>*> actors = XMLUtils::getChilds(actorsNode, "Actor");
+				std::vector<rapidxml::xml_node<>*>::iterator p;
 				for (p = actors.begin(); p!=actors.end(); ++p) {
-					xml_node<> *actorNode = *p;
+					rapidxml::xml_node<> *actorNode = *p;
 
-					string type = XMLUtils::getAttribute(actorNode, "type", "");
+					std::string type = XMLUtils::getAttribute(actorNode, "type", "");
 					EActorType atype = Utils::toActorType(type.c_str());
 
-					string primitive = XMLUtils::getAttribute(actorNode, "primitive", "");
+					std::string primitive = XMLUtils::getAttribute(actorNode, "primitive", "");
 
-					PxVec3 pos = Utils::toVec3(XMLUtils::getAttribute(actorNode, "pos", "0, 0, 0"), PxVec3(0.0f));
-					PxVec3 size = Utils::toVec3(XMLUtils::getAttribute(actorNode, "size", "0, 0, 0"), PxVec3(0.0f));
+					physx::PxVec3 pos = Utils::toVec3(XMLUtils::getAttribute(actorNode, "pos", "0, 0, 0"), physx::PxVec3(0.0f));
+					physx::PxVec3 size = Utils::toVec3(XMLUtils::getAttribute(actorNode, "size", "0, 0, 0"), physx::PxVec3(0.0f));
 
-					PxVec4 color = Utils::toVec4(XMLUtils::getAttribute(actorNode, "color", "1, 1, 1, 1"));
-					PxVec3 velocity = Utils::toVec3(XMLUtils::getAttribute(actorNode, "vel", "0, 0, 0"), PxVec3(0.0f));
-					PxVec3 rotate = Utils::toVec3(XMLUtils::getAttribute(actorNode, "rotate", "0, 0, 0"), PxVec3(0.0f));
+					physx::PxVec4 color = Utils::toVec4(XMLUtils::getAttribute(actorNode, "color", "1, 1, 1, 1"));
+					physx::PxVec3 velocity = Utils::toVec3(XMLUtils::getAttribute(actorNode, "vel", "0, 0, 0"), physx::PxVec3(0.0f));
+					physx::PxVec3 rotate = Utils::toVec3(XMLUtils::getAttribute(actorNode, "rotate", "0, 0, 0"), physx::PxVec3(0.0f));
 
-					string defaultDensity = Utils::toString(scene->getDefaultActorDensity());
+					std::string defaultDensity = Utils::toString(scene->getDefaultActorDensity());
 
 					int actorTime = Utils::toInt(XMLUtils::getAttribute(actorNode, "time", "0"));
 					float density = Utils::toFloat(XMLUtils::getAttribute(actorNode, "density", defaultDensity.c_str()));
 					float radius = Utils::toFloat(XMLUtils::getAttribute(actorNode, "radius", "0.5"));
 					bool visible = Utils::toBool(XMLUtils::getAttribute(actorNode, "visible", "true"));
-					bool blending = Utils::toBool(XMLUtils::getAttribute(actorNode, "blending", atype == ActorTypeStatic ? "true" : "false"));
+					bool blending = Utils::toBool(XMLUtils::getAttribute(actorNode, "blending", atype == EActorType::ActorTypeStatic ? "true" : "false"));
 					bool particleDrain = Utils::toBool(XMLUtils::getAttribute(actorNode, "particleDrain", "false"));
 
 					CActor* newactor = NULL;
@@ -158,7 +162,7 @@ CFluidScenario* CFluidScenario::load(const char* filename, CScene* scene)
 						typedActor->setRadius(radius);
 						newactor = typedActor;
 					} else {
-						cerr << "    Actor primitive type '" << primitive << "' is not valid!" << endl;
+						std::cerr << "    Actor primitive type '" << primitive << "' is not valid!" << std::endl;
 					}
 
 					newactor->setPos(pos);
@@ -179,17 +183,17 @@ CFluidScenario* CFluidScenario::load(const char* filename, CScene* scene)
 			}
 
 			// Fluids
-			xml_node<> *fluidsNode = rootNode->first_node("Fluids");
+			rapidxml::xml_node<> *fluidsNode = rootNode->first_node("Fluids");
 			if (fluidsNode) {
-				vector<xml_node<>*> fluids = XMLUtils::getChilds(fluidsNode, "Fluid");
-				vector<xml_node<>*>::iterator p;
+				std::vector<rapidxml::xml_node<>*> fluids = XMLUtils::getChilds(fluidsNode, "Fluid");
+				std::vector<rapidxml::xml_node<>*>::iterator p;
 				for (p = fluids.begin(); p!=fluids.end(); ++p) {
-					xml_node<> *fluidNode = *p;
-					string fluidTypeStr = XMLUtils::getAttribute(fluidNode, "type", "blob");
+					rapidxml::xml_node<> *fluidNode = *p;
+					std::string fluidTypeStr = XMLUtils::getAttribute(fluidNode, "type", "blob");
 					FluidType fluidType = Utils::toFluidType(fluidTypeStr.c_str());
-					PxVec3 pos = Utils::toVec3(XMLUtils::getAttribute(fluidNode, "pos", "0, 0, 0"), PxVec3(0.0f));
-					PxVec3 size = Utils::toVec3(XMLUtils::getAttribute(fluidNode, "size", "0, 0, 0"), PxVec3(0.0f));
-					PxVec3 velocity = Utils::toVec3(XMLUtils::getAttribute(fluidNode, "vel", "0, 0, 0"), PxVec3(0.0f));
+					physx::PxVec3 pos = Utils::toVec3(XMLUtils::getAttribute(fluidNode, "pos", "0, 0, 0"), physx::PxVec3(0.0f));
+					physx::PxVec3 size = Utils::toVec3(XMLUtils::getAttribute(fluidNode, "size", "0, 0, 0"), physx::PxVec3(0.0f));
+					physx::PxVec3 velocity = Utils::toVec3(XMLUtils::getAttribute(fluidNode, "vel", "0, 0, 0"), physx::PxVec3(0.0f));
 					int fluidTime = Utils::toInt(XMLUtils::getAttribute(fluidNode, "time", "0"));
 					float radius = Utils::toFloat(XMLUtils::getAttribute(fluidNode, "radius", "0.0"));
 					bool isEmitter = Utils::toBool(XMLUtils::getAttribute(fluidNode, "isEmitter", "false"));

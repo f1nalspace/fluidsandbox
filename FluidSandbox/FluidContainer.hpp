@@ -1,8 +1,8 @@
 #pragma once
-#include <PxPhysicsAPI.h> 
-using namespace physx;
 
-enum FluidType {
+#include <PxPhysicsAPI.h> 
+
+enum class FluidType {
 	FluidTypeSphere = 3,
 	FluidTypeBlob = 2,
 	FluidTypeWall = 1,
@@ -11,9 +11,9 @@ enum FluidType {
 
 struct FluidContainer
 {
-	PxVec3 Pos;
-	PxVec3 Size;
-	PxVec3 Vel;
+	physx::PxVec3 Pos;
+	physx::PxVec3 Size;
+	physx::PxVec3 Vel;
 	float Radius;
 	int Time;
 	float TimeElapsed;
@@ -27,10 +27,10 @@ struct FluidContainer
 	bool EmitterCoolDownActive;
 	float EmitterCoolDownElapsed;
 
-	FluidContainer(PxVec3 pos, PxVec3 size, FluidType type){
+	FluidContainer(physx::PxVec3 pos, physx::PxVec3 size, FluidType type){
 		Pos = pos;
 		Size = size;
-		Vel = PxVec3(0.0f);
+		Vel = physx::PxVec3(0.0f);
 		Time = 0;
 		TimeElapsed = 0.0f;
 		Type = type;

@@ -1,5 +1,8 @@
 #include "Scene.h"
 
+#include <iostream>
+
+#include <rapidxml/rapidxml.hpp>
 
 CScene::CScene(const float fluidViscosity, const float fluidStiffness, const float fluidParticleDistanceFactor, const float fluidParticleRenderFactor, const float fluidParticleRadius, const float fluidParticleMinDensity, const float defaultActorDensity)
 {
@@ -23,7 +26,7 @@ CScene::CScene(const float fluidViscosity, const float fluidStiffness, const flo
 	this->fluidParticleRenderFactor = fluidParticleRenderFactor;
 	this->fluidParticleRadius = fluidParticleRadius;
 	this->fluidParticleMinDensity = fluidParticleMinDensity;
-	backgroundColor = PxVec3(0.0f, 0.0f, 0.0f);
+	backgroundColor = physx::PxVec3(0.0f, 0.0f, 0.0f);
 	numCPUThreads = 4;
 	resetFluidColors();
 }
@@ -41,12 +44,12 @@ void CScene::resetFluidColors()
 	}
 	fluidColors.clear();
 
-	addFluidColor(new FluidColor(PxVec4(0.0f, 0.0f, 0.0f, 0.0f), PxVec4(2.0f, 1.0f, 0.5f, 0.75f), true, "Clear"));
-	addFluidColor(new FluidColor(PxVec4(0.5f, 0.69f, 1.0f, 1.0f), PxVec4(2.0f, 1.0f, 0.5f, 0.75f), false, "Blue"));
-	addFluidColor(new FluidColor(PxVec4(1.0f, 0.1f, 0.1f, 0.89f), PxVec4(0.5f, 1.0f, 1.0f, 0.75f), false, "Red"));
-	addFluidColor(new FluidColor(PxVec4(0.69f, 1.0f, 0.5f, 1.0f), PxVec4(1.0f, 0.25f, 1.0f, 0.75f), false, "Green"));
-	addFluidColor(new FluidColor(PxVec4(1.0f, 1.0f, 0.5f, 1.0f), PxVec4(0.25f, 0.25f, 1.0f, 0.75f), false, "Yellow"));
-	addFluidColor(new FluidColor(PxVec4(0.0f, 1.0f, 0.5f, 1.0f), PxVec4(0.25f, 0.25f, 1.0f, 0.75f), false, "Yellow 2"));
+	addFluidColor(new FluidColor(physx::PxVec4(0.0f, 0.0f, 0.0f, 0.0f), physx::PxVec4(2.0f, 1.0f, 0.5f, 0.75f), true, "Clear"));
+	addFluidColor(new FluidColor(physx::PxVec4(0.5f, 0.69f, 1.0f, 1.0f), physx::PxVec4(2.0f, 1.0f, 0.5f, 0.75f), false, "Blue"));
+	addFluidColor(new FluidColor(physx::PxVec4(1.0f, 0.1f, 0.1f, 0.89f), physx::PxVec4(0.5f, 1.0f, 1.0f, 0.75f), false, "Red"));
+	addFluidColor(new FluidColor(physx::PxVec4(0.69f, 1.0f, 0.5f, 1.0f), physx::PxVec4(1.0f, 0.25f, 1.0f, 0.75f), false, "Green"));
+	addFluidColor(new FluidColor(physx::PxVec4(1.0f, 1.0f, 0.5f, 1.0f), physx::PxVec4(0.25f, 0.25f, 1.0f, 0.75f), false, "Yellow"));
+	addFluidColor(new FluidColor(physx::PxVec4(0.0f, 1.0f, 0.5f, 1.0f), physx::PxVec4(0.25f, 0.25f, 1.0f, 0.75f), false, "Yellow 2"));
 	fluidColorDefaultIndex = 0;
 }
 
@@ -54,37 +57,37 @@ void CScene::load(const char* filename)
 {
 	if (COSLowLevel::getInstance()->fileExists(filename))
 	{
-		cout << "  Load scene from file '" << filename << "'" << endl;
+		std::cout << "  Load scene from file '" << filename << "'" << std::endl;
 
 		fluidColors.clear();
 		fluidColorDefaultIndex = 0;
 
-		string xml = COSLowLevel::getInstance()->getTextFileContent(filename);
-		vector<char> xml_copy = Utils::toCharVector(xml);
+		std::string xml = COSLowLevel::getInstance()->getTextFileContent(filename);
+		std::vector<char> xml_copy = Utils::toCharVector(xml);
 
-		xml_document<> doc;
+		rapidxml::xml_document<> doc;
 		doc.parse<0>(&xml_copy[0]);
-		xml_node<> *rootNode = doc.first_node("Scene");
+		rapidxml::xml_node<> *rootNode = doc.first_node("Scene");
 		if (rootNode) {
 
 			// System
-			xml_node<> *systemNode = rootNode->first_node("System");
+			rapidxml::xml_node<> *systemNode = rootNode->first_node("System");
 			if (systemNode) {
 				numCPUThreads =	Utils::toInt(XMLUtils::findNodeValue(systemNode, "CPUThreads", "4"));
 			}
 
 			// Fluid colors
-			xml_node<> *fluidColorsNode = rootNode->first_node("FluidColors");
+			rapidxml::xml_node<> *fluidColorsNode = rootNode->first_node("FluidColors");
 			if (fluidColorsNode) {
-				vector<xml_node<>*> colors = XMLUtils::getChilds(fluidColorsNode, "FluidColor");
-				vector<xml_node<>*>::iterator p;
+				std::vector<rapidxml::xml_node<>*> colors = XMLUtils::getChilds(fluidColorsNode, "FluidColor");
+				std::vector<rapidxml::xml_node<>*>::iterator p;
 				int index = 0;
 				for (p = colors.begin(); p!=colors.end(); ++p) {
-					xml_node<> *colorNode = *p;
+					rapidxml::xml_node<> *colorNode = *p;
 					bool isclear = Utils::toBool(XMLUtils::getAttribute(colorNode, "clear", "false"));
-					PxVec4 baseColor = Utils::toVec4(XMLUtils::getAttribute(colorNode, "base", "0.0, 0.0, 0.0, 0.0"));
-					PxVec4 falloff = Utils::toVec4(XMLUtils::getAttribute(colorNode, "falloff", "0.0, 0.0, 0.0, 0.0"));
-					string name = XMLUtils::getAttribute(colorNode, "name", "");
+					physx::PxVec4 baseColor = Utils::toVec4(XMLUtils::getAttribute(colorNode, "base", "0.0, 0.0, 0.0, 0.0"));
+					physx::PxVec4 falloff = Utils::toVec4(XMLUtils::getAttribute(colorNode, "falloff", "0.0, 0.0, 0.0, 0.0"));
+					std::string name = XMLUtils::getAttribute(colorNode, "name", "");
 					bool isdefault = Utils::toBool(XMLUtils::getAttribute(colorNode, "default", "false"));
 					FluidColor* ncolor = new FluidColor(baseColor, falloff, isclear, name.c_str());
 					ncolor->falloffScale = Utils::toFloat(XMLUtils::getAttribute(colorNode, "falloffScale", isclear ? "0.0" : "0.1"));
@@ -96,12 +99,12 @@ void CScene::load(const char* filename)
 
 			}
 			if (fluidColors.size() == 0){
-				cout << "    Warning: No fluid colors found, reset to default values" << endl;
+				std::cout << "    Warning: No fluid colors found, reset to default values" << std::endl;
 				resetFluidColors();
 			}
 
 			// Fluid system
-			xml_node<> *fluidSystemNode = rootNode->first_node("FluidSystem");
+			rapidxml::xml_node<> *fluidSystemNode = rootNode->first_node("FluidSystem");
 			if (fluidSystemNode)
 			{
 				setFluidRestitution(XMLUtils::findNodeFloat(fluidSystemNode, "Restitution", 0.3f));
@@ -120,9 +123,9 @@ void CScene::load(const char* filename)
 			}
 
 			// Properties
-			xml_node<> *propertiesNode = rootNode->first_node("Properties");
+			rapidxml::xml_node<> *propertiesNode = rootNode->first_node("Properties");
 			if (propertiesNode) {
-				backgroundColor = Utils::toVec3(XMLUtils::findNodeValue(propertiesNode, "BackgroundColor", "0.0, 0.0, 0.0"), PxVec3(0.0f));
+				backgroundColor = Utils::toVec3(XMLUtils::findNodeValue(propertiesNode, "BackgroundColor", "0.0, 0.0, 0.0"), physx::PxVec3(0.0f));
 			}
 		}
 	}

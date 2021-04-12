@@ -22,8 +22,8 @@ namespace Utils {
 	int toInt(const std::string &str);
 	unsigned int toUInt(const std::string &str);
 	bool toBool(const std::string &str);
-	PxVec3 toVec3(const std::string &str, const PxVec3 def);
-	PxVec4 toVec4(const std::string &str);
+	physx::PxVec3 toVec3(const std::string &str, const physx::PxVec3 def);
+	physx::PxVec4 toVec4(const std::string &str);
 	FluidType toFluidType(const char *str);
 	EActorType toActorType(const char *str);
 	const std::string toString(const float value);

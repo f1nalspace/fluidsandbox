@@ -5,6 +5,7 @@
 #include <map>
 
 #include <PxPhysicsAPI.h> 
+
 #include <glm/glm.hpp>
 
 #include "FluidContainer.hpp"
@@ -15,15 +16,11 @@
 #include "CubeActor.h"
 #include "SphereActor.h"
 #include "Scene.h"
-using namespace std;
-
-#include <rapidxml/rapidxml.hpp>
-using namespace rapidxml;
 
 class CFluidScenario
 {
 private:
-	string name;
+	std::string name;
 	float viscosity;
 	float stiffness;
 	float damping;
@@ -31,10 +28,10 @@ private:
 	float particleRenderFactor;
 	float particleRadius;
 	float particleMinDensity;
-	vector<CActor*> actors;
-	vector<FluidContainer*> fluidContainers;
-	PxVec3 actorCreatePosition;
-	PxVec3 gravity;
+	std::vector<CActor*> actors;
+	std::vector<FluidContainer*> fluidContainers;
+	physx::PxVec3 actorCreatePosition;
+	physx::PxVec3 gravity;
 public:
 	CFluidScenario();
 	~CFluidScenario(void);
@@ -53,8 +50,8 @@ public:
 	float getParticleRenderFactor() { return particleRenderFactor; }
 	float getParticleRadius() { return particleRadius; }
 	float getParticleMinDensity() { return particleMinDensity; }
-	PxVec3 getActorCreatePosition() { return actorCreatePosition; }
-	PxVec3 getGravity() { return gravity; }
+	physx::PxVec3 getActorCreatePosition() { return actorCreatePosition; }
+	physx::PxVec3 getGravity() { return gravity; }
 	void setViscosity(const float value) { viscosity = value; }
 	void setStiffness(const float value) { stiffness = value; }
 	void setDamping(const float value) { damping = value; }
@@ -62,8 +59,8 @@ public:
 	void setParticleRenderFactor(const float value) { particleRenderFactor = value; }
 	void setParticleRadius(const float value) { particleRadius = value; }
 	void setParticleMinDensity(const float value) { particleMinDensity = value; }
-	void setActorCreatePosition(PxVec3 pos) { actorCreatePosition = pos; }
+	void setActorCreatePosition(physx::PxVec3 pos) { actorCreatePosition = pos; }
 	void setName(const char* name) { this->name = name; }
-	void setGravity(const PxVec3 value) { gravity = value; }
+	void setGravity(const physx::PxVec3 value) { gravity = value; }
 };
 

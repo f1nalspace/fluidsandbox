@@ -7,21 +7,21 @@ CFrustum::CFrustum(void) {
 CFrustum::~CFrustum(void) {
 }
 
-bool CFrustum::containsPoint(PxVec3 pos) {
+bool CFrustum::containsPoint(physx::PxVec3 pos) {
 	for(int p = 0; p < 6; p++)
 		if(frustum[p][0] * pos.x + frustum[p][1] * pos.y + frustum[p][2] * pos.z + frustum[p][3] <= 0)
 			return false;
 	return true;
 }
 
-bool CFrustum::containsSphere(PxVec3 pos, float radius) {
+bool CFrustum::containsSphere(physx::PxVec3 pos, float radius) {
 	for(int p = 0; p < 6; p++)
 		if(frustum[p][0] * pos.x + frustum[p][1] * pos.y + frustum[p][2] * pos.z + frustum[p][3] <= -radius)
 			return false;
 	return true;
 }
 
-bool CFrustum::containsBounds(PxBounds3 bounds) {
+bool CFrustum::containsBounds(physx::PxBounds3 bounds) {
 	for(int p = 0; p < 6; p++) {
 		if(frustum[p][0] * (bounds.minimum.x) + frustum[p][1] * (bounds.minimum.y) + frustum[p][2] * (bounds.minimum.z) + frustum[p][3] > 0)
 			continue;

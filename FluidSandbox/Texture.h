@@ -1,6 +1,9 @@
 #pragma once
+
 #include <assert.h>
+
 #include <GL/glew.h>
+
 class CTexture
 {
 private:

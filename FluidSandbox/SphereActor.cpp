@@ -2,7 +2,7 @@
 
 
 CSphereActor::CSphereActor(const EActorType type): 
-	CActor(type, ActorPrimitiveSphere)
+	CActor(type, EActorPrimitive::ActorPrimitiveSphere)
 {
 	radius = 0.5f;
 }

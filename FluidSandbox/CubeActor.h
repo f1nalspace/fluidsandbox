@@ -1,14 +1,16 @@
 #pragma once
+
 #include "actor.h"
+
 class CCubeActor :
 	public CActor
 {
 private:
-	PxVec3 size;
+	physx::PxVec3 size;
 public:
 	CCubeActor(const EActorType type);
 	~CCubeActor(void);
-	void setSize(const PxVec3 size) { this->size = size; }
-	PxVec3 getSize() { return size; }
+	void setSize(const physx::PxVec3 size) { this->size = size; }
+	physx::PxVec3 getSize() { return size; }
 };
 

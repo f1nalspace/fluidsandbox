@@ -1,15 +1,15 @@
 #include "FluidSystem.h"
 
-CFluidSystem::CFluidSystem(PxPhysics* physics, FluidDescription &desc, const unsigned int maxParticles)
+CFluidSystem::CFluidSystem(physx::PxPhysics* physics, FluidDescription &desc, const unsigned int maxParticles)
 {
 	this->physics = physics;
 	this->maxParticles = maxParticles;
-	this->indexPool = PxParticleExt::createIndexPool(maxParticles);
+	this->indexPool = physx::PxParticleExt::createIndexPool(maxParticles);
 	this->currentParticles = 0;
 	this->particleFluid = physics->createParticleFluid(desc.maxParticles);
-	this->particleFluid->setParticleReadDataFlag(PxParticleReadDataFlag::ePOSITION_BUFFER, true);
-	this->particleFluid->setParticleReadDataFlag(PxParticleReadDataFlag::eDENSITY_BUFFER, true);
-	this->particleFluid->setParticleReadDataFlag(PxParticleReadDataFlag::eVELOCITY_BUFFER, true);
+	this->particleFluid->setParticleReadDataFlag(physx::PxParticleReadDataFlag::ePOSITION_BUFFER, true);
+	this->particleFluid->setParticleReadDataFlag(physx::PxParticleReadDataFlag::eDENSITY_BUFFER, true);
+	this->particleFluid->setParticleReadDataFlag(physx::PxParticleReadDataFlag::eVELOCITY_BUFFER, true);
 	this->particleFluid->setStiffness(desc.stiffness);
 	this->particleFluid->setViscosity(desc.viscosity);
 	this->particleFluid->setRestitution(desc.restitution);
@@ -30,48 +30,48 @@ CFluidSystem::~CFluidSystem(void)
 	this->particleFluid = NULL;
 }
 
-int CFluidSystem::createParticles(const unsigned int numParticles, PxVec3 *pos, PxVec3 *vel)
+int CFluidSystem::createParticles(const unsigned int numParticles, physx::PxVec3 *pos, physx::PxVec3 *vel)
 {
-	vector<PxU32> indicesList;
-	vector<PxVec3> positions;
-	vector<PxVec3> velocities;
+	std::vector<physx::PxU32> indicesList;
+	std::vector<physx::PxVec3> positions;
+	std::vector<physx::PxVec3> velocities;
 
 	int addedParticles = 0; 
 	for (unsigned int i = 0; i < numParticles; i++) {
 		if (this->currentParticles < this->maxParticles) {
 			positions.push_back(pos[i]);
 			velocities.push_back(vel[i]);
-			indicesList.push_back(PxU32(0));
+			indicesList.push_back(physx::PxU32(0));
 			addedParticles++;
 			this->currentParticles++;
 		}
 	}
 
-	PxStrideIterator<PxU32> indexBuffer(&indicesList[0]);
-	PxU32 numAllocated = indexPool->allocateIndices(addedParticles, indexBuffer);
+	physx::PxStrideIterator<physx::PxU32> indexBuffer(&indicesList[0]);
+	physx::PxU32 numAllocated = indexPool->allocateIndices(addedParticles, indexBuffer);
 
-	PxParticleCreationData particleCreationData;
+	physx::PxParticleCreationData particleCreationData;
 	particleCreationData.numParticles = addedParticles;
 	particleCreationData.indexBuffer = indexBuffer;
-	particleCreationData.positionBuffer = PxStrideIterator<PxVec3>(&positions[0]);
-	particleCreationData.velocityBuffer = PxStrideIterator<PxVec3>(&velocities[0]);
+	particleCreationData.positionBuffer = physx::PxStrideIterator<physx::PxVec3>(&positions[0]);
+	particleCreationData.velocityBuffer = physx::PxStrideIterator<physx::PxVec3>(&velocities[0]);
 
 	this->particleFluid->createParticles(particleCreationData);
 
 	return addedParticles;
 }
 
-PxParticleFluidReadData* CFluidSystem::lockReadData()
+physx::PxParticleFluidReadData* CFluidSystem::lockReadData()
 {
 	return this->particleFluid->lockParticleFluidReadData();
 }
 
-void CFluidSystem::setExternalAcceleration(const PxVec3 &acc)
+void CFluidSystem::setExternalAcceleration(const physx::PxVec3 &acc)
 {
 	this->particleFluid->setExternalAcceleration(acc);
 }
 
-void CFluidSystem::releaseParticles(const PxStrideIterator<PxU32> &indices, const PxU32 count)
+void CFluidSystem::releaseParticles(const physx::PxStrideIterator<physx::PxU32> &indices, const physx::PxU32 count)
 {
 	this->particleFluid->releaseParticles(count, indices);
 	indexPool->freeIndices(count, indices);
@@ -80,40 +80,40 @@ void CFluidSystem::releaseParticles(const PxStrideIterator<PxU32> &indices, cons
 	if (this->currentParticles < 0) this->currentParticles = 0;
 }
 
-void CFluidSystem::addForce(const PxVec3 &acc, const PxForceMode::Enum &mode)
+void CFluidSystem::addForce(const physx::PxVec3 &acc, const physx::PxForceMode::Enum &mode)
 {
-	vector<PxU32> indices;
+	std::vector<physx::PxU32> indices;
 	for (unsigned int i = 0; i < currentParticles; i++) {
 		indices.push_back(i);
 	}
-	PxStrideIterator<const PxU32> indexBuffer(&indices[0]);
-	vector<PxVec3> forces;
+	physx::PxStrideIterator<const physx::PxU32> indexBuffer(&indices[0]);
+	std::vector<physx::PxVec3> forces;
 	for (unsigned int i = 0; i < currentParticles; i++) {
-		forces.push_back(PxVec3(acc));
+		forces.push_back(physx::PxVec3(acc));
 	}
-	PxStrideIterator<const PxVec3> forceBuffer(&forces[0]);
+	physx::PxStrideIterator<const physx::PxVec3> forceBuffer(&forces[0]);
 	this->particleFluid->addForces(this->currentParticles, indexBuffer, forceBuffer, mode);
 }
 
 void CFluidSystem::writeToVBO(float* data, unsigned int &count, const bool noDensity, const float minDensity)
 {
-	vector<PxU32> deletedPartices;
+	std::vector<physx::PxU32> deletedPartices;
 	count = 0;
-	PxParticleFluidReadData* rd = this->particleFluid->lockParticleFluidReadData();
+	physx::PxParticleFluidReadData* rd = this->particleFluid->lockParticleFluidReadData();
 	if (rd)
 	{
 		int idx = 0;
-		PxStrideIterator<const PxParticleFlags> flagsIt(rd->flagsBuffer);
-		PxStrideIterator<const PxVec3> positionIt(rd->positionBuffer);
-		PxStrideIterator<const PxF32> densityIt(rd->densityBuffer);
-		PxStrideIterator<const PxVec3> velocityIt(rd->velocityBuffer);
+		physx::PxStrideIterator<const physx::PxParticleFlags> flagsIt(rd->flagsBuffer);
+		physx::PxStrideIterator<const physx::PxVec3> positionIt(rd->positionBuffer);
+		physx::PxStrideIterator<const physx::PxF32> densityIt(rd->densityBuffer);
+		physx::PxStrideIterator<const physx::PxVec3> velocityIt(rd->velocityBuffer);
 		for (unsigned i = 0; i < rd->validParticleRange; ++i, ++flagsIt, ++positionIt, ++densityIt, ++velocityIt) 
 		{
-			bool drain = *flagsIt & PxParticleFlag::eCOLLISION_WITH_DRAIN;
+			bool drain = *flagsIt & physx::PxParticleFlag::eCOLLISION_WITH_DRAIN;
 			if (drain) {
 				deletedPartices.push_back(i);
 			}
-			if (*flagsIt & PxParticleFlag::eVALID && !drain)
+			if (*flagsIt & physx::PxParticleFlag::eVALID && !drain)
 			{
 				data[idx+0] = positionIt->x;
 				data[idx+1] = positionIt->y;
@@ -132,6 +132,6 @@ void CFluidSystem::writeToVBO(float* data, unsigned int &count, const bool noDen
 		rd->unlock();
 	}
 	if (deletedPartices.size() > 0) {
-		releaseParticles(PxStrideIterator<PxU32>(&deletedPartices[0]), (PxU32)deletedPartices.size());
+		releaseParticles(physx::PxStrideIterator<physx::PxU32>(&deletedPartices[0]), (physx::PxU32)deletedPartices.size());
 	}
 }

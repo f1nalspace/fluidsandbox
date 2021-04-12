@@ -2,7 +2,7 @@
 
 
 CCubeActor::CCubeActor(const EActorType type) : 
-	CActor(type, ActorPrimitiveCube)
+	CActor(type, EActorPrimitive::ActorPrimitiveCube)
 {
 	
 }

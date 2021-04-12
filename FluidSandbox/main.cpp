@@ -77,8 +77,6 @@ License:
 #include <math.h>
 #include <typeinfo>
 
-using namespace std;
-
 // OpenGL (Glut + Glew)
 #include <GL/glew.h>
 #include <GL/wglew.h>
@@ -92,7 +90,6 @@ using namespace std;
 
 // PhysX API
 #include <PxPhysicsAPI.h>
-using namespace physx;
 
 // PhysX required libs
 #ifdef _DEBUG
@@ -132,7 +129,6 @@ using namespace physx;
 
 // XML
 #include "rapidxml/rapidxml.hpp"
-using namespace rapidxml;
 
 // Free image
 #include "freeimage/FreeImage.h"
@@ -160,14 +156,14 @@ using namespace rapidxml;
 #include "TextureIDs.h"
 
 // App path
-string appPath = "";
+std::string appPath = "";
 
 // Application
 const char *APPLICATION_NAME = "Fluid Sandbox";
 const char *APPLICATION_VERSION = "1.8.0";
 const char *APPLICATION_AUTHOR = "Torsten Spaete";
 const char *APPLICATION_COPYRIGHT = "© 2015-2021 Torsten Spaete - All rights reserved";
-const string APPTITLE = APPLICATION_NAME + string(" v") + APPLICATION_VERSION + string(" by ") + APPLICATION_AUTHOR;
+const std::string APPTITLE = APPLICATION_NAME + std::string(" v") + APPLICATION_VERSION + std::string(" by ") + APPLICATION_AUTHOR;
 
 // Math stuff
 const float DEG2RAD = (float)M_PI / 180.0f;
@@ -177,22 +173,22 @@ const char *PVD_Host = "localhost";
 const int PVD_Port = 5425;
 
 // PhysX SDK & Scene
-static PxFoundation *gPhysXFoundation = NULL;
-static PxPhysics *gPhysicsSDK = NULL;
-static PxDefaultErrorCallback gDefaultErrorCallback;
-static PxDefaultAllocator gDefaultAllocatorCallback;
-static PxSimulationFilterShader gDefaultFilterShader = PxDefaultSimulationFilterShader;
-static PxMaterial *gDefaultMaterial = NULL;
-static PxScene *gScene = NULL;
+static physx::PxFoundation *gPhysXFoundation = NULL;
+static physx::PxPhysics *gPhysicsSDK = NULL;
+static physx::PxDefaultErrorCallback gDefaultErrorCallback;
+static physx::PxDefaultAllocator gDefaultAllocatorCallback;
+static physx::PxSimulationFilterShader gDefaultFilterShader = physx::PxDefaultSimulationFilterShader;
+static physx::PxMaterial *gDefaultMaterial = NULL;
+static physx::PxScene *gScene = NULL;
 #ifdef PVD_ENABLED
-static PxPvd *gPhysXVisualDebugger = NULL;
-static PxPvdTransport *gPhysXPvdTransport = NULL;
+static physx::PxPvd *gPhysXVisualDebugger = NULL;
+static physx::PxPvdTransport *gPhysXPvdTransport = NULL;
 static bool gIsPhysXPvdConnected = false;
 #endif
 
 // For GPU Acceleration
-static PxGpuDispatcher *gGPUDispatcher = NULL;
-static PxCudaContextManager *gCudaContextManager = NULL;
+static physx::PxGpuDispatcher *gGPUDispatcher = NULL;
+static physx::PxCudaContextManager *gCudaContextManager = NULL;
 
 // Window vars
 bool windowFullscreen = false;
@@ -207,11 +203,11 @@ const float defaultZNear = 0.1f;
 const float defaultZFar = 1000.0f;
 
 // PhysX Simulation step 60 steps per second
-PxReal gTimeSimulationStep = 1.0f / 60.0f;
+physx::PxReal gTimeSimulationStep = 1.0f / 60.0f;
 bool gStoppedEmitter = false;
 
 // List of added actors and rigid bodies settings
-vector<PxActor *> gActors;
+std::vector<physx::PxActor *> gActors;
 const float gDefaultRigidBodyDensity = 0.05f;
 
 // Current geometry type
@@ -240,7 +236,7 @@ float gFluidParticleRadius = 0.05f;
 float gDefaultFluidParticleFactor = 2.0f;
 float gFluidParticleRenderFactor = 1.5f;
 float gFluidParticleDistance = gFluidParticleRadius * gDefaultFluidParticleFactor;
-PxVec3 gRigidBodyFallPos(0.0f, 10.0f, 0.0f);
+physx::PxVec3 gRigidBodyFallPos(0.0f, 10.0f, 0.0f);
 
 // Debug types
 #define	SWOWTYPE_FINAL 0
@@ -285,7 +281,7 @@ float gFluidDamping = 0.0f;
 float gFluidDynamicFriction = 0.0f;
 float gFluidParticleMass = 0.0f;
 
-vector<CFluidScenario *> gFluidScenarios;
+std::vector<CFluidScenario *> gFluidScenarios;
 CFluidScenario *gActiveFluidScenario = NULL;
 int gActiveFluidScenarioIdx = -1;
 
@@ -358,10 +354,10 @@ float gTotalTimeElapsed = 0;
 bool paused = false;
 
 // Default colors
-PxVec4 DefaultStaticRigidBodyColor(0.0f, 0.0f, 0.1f, 0.3f);
-PxVec4 DefaultDynamicRigidBodyCubeColor(0.85f, 0.0f, 0.0f, 1.0f);
-PxVec4 DefaultDynamicRigidBodySphereColor(0, 0.85f, 0.0f, 1.0f);
-PxVec4 DefaultDynamicRigidBodyCapsuleColor(0.85f, 0.85f, 0.0f, 1.0f);
+physx::PxVec4 DefaultStaticRigidBodyColor(0.0f, 0.0f, 0.1f, 0.3f);
+physx::PxVec4 DefaultDynamicRigidBodyCubeColor(0.85f, 0.0f, 0.0f, 1.0f);
+physx::PxVec4 DefaultDynamicRigidBodySphereColor(0, 0.85f, 0.0f, 1.0f);
+physx::PxVec4 DefaultDynamicRigidBodyCapsuleColor(0.85f, 0.85f, 0.0f, 1.0f);
 
 struct OSDRenderPosition {
 	int x;
@@ -394,53 +390,53 @@ float getRandomFloat(float min, float max) {
 	return min + ((base + fine / scale) * (max - min));
 }
 
-PxQuat createQuatRotation(const PxVec3 &rotate) {
-	PxQuat rot = PxQuat(rotate.x, PxVec3(1.0f, 0.0f, 0.0f));
-	rot *= PxQuat(rotate.y, PxVec3(0.0f, 1.0f, 0.0f));
-	rot *= PxQuat(rotate.z, PxVec3(0.0f, 0.0f, 1.0f));
+physx::PxQuat createQuatRotation(const physx::PxVec3 &rotate) {
+	physx::PxQuat rot = physx::PxQuat(rotate.x, physx::PxVec3(1.0f, 0.0f, 0.0f));
+	rot *= physx::PxQuat(rotate.y, physx::PxVec3(0.0f, 1.0f, 0.0f));
+	rot *= physx::PxQuat(rotate.z, physx::PxVec3(0.0f, 0.0f, 1.0f));
 	return rot;
 }
 
-void AddBox(PxVec3 dimensions, CCubeActor *cubeactor) {
+void AddBox(physx::PxVec3 dimensions, CCubeActor *cubeactor) {
 	// Create box
-	PxReal density = cubeactor ? cubeactor->getDensitiy() : gDefaultRigidBodyDensity;
-	PxTransform transform(cubeactor ? cubeactor->getPos() : gRigidBodyFallPos,
-		cubeactor ? createQuatRotation(cubeactor->getRotate()) : PxQuat(Deg2Rad(RandomRadius()), PxVec3(0, 1, 0)));
-	PxBoxGeometry geometry(dimensions);
+	physx::PxReal density = cubeactor ? cubeactor->getDensitiy() : gDefaultRigidBodyDensity;
+	physx::PxTransform transform(cubeactor ? cubeactor->getPos() : gRigidBodyFallPos,
+		cubeactor ? createQuatRotation(cubeactor->getRotate()) : physx::PxQuat(Deg2Rad(RandomRadius()), physx::PxVec3(0, 1, 0)));
+	physx::PxBoxGeometry geometry(dimensions);
 
-	PxRigidDynamic *nactor = PxCreateDynamic(*gPhysicsSDK, transform, geometry, *gDefaultMaterial, density);
-	PxRigidBodyExt::updateMassAndInertia(*nactor, density);
+	physx::PxRigidDynamic *nactor = PxCreateDynamic(*gPhysicsSDK, transform, geometry, *gDefaultMaterial, density);
+	physx::PxRigidBodyExt::updateMassAndInertia(*nactor, density);
 	nactor->userData = cubeactor;
 	nactor->setAngularDamping(0.75);
-	nactor->setLinearVelocity(cubeactor ? cubeactor->getVelocity() : PxVec3(0, 0, 0));
+	nactor->setLinearVelocity(cubeactor ? cubeactor->getVelocity() : physx::PxVec3(0, 0, 0));
 
 	if(!nactor)
-		cerr << "create box actor failed!" << endl;
+		std::cerr << "create box actor failed!" << std::endl;
 
 	gScene->addActor(*nactor);
 
 	gActors.push_back(nactor);
 }
 
-string vecToString(const PxVec3 &p) {
+std::string vecToString(const physx::PxVec3 &p) {
 	char str[255];
 	sprintf_s(str, "%f, %f, %f", p.x, p.y, p.z);
 	return str;
 }
 
-void setActorDrain(PxActor *actor, CActor *cactor) {
+void setActorDrain(physx::PxActor *actor, CActor *cactor) {
 	if(!cactor->getParticleDrain()) return;
 
-	PxType actorType = actor->getConcreteType();
-	if(actorType == PxConcreteType::eRIGID_STATIC || actorType == PxConcreteType::eRIGID_DYNAMIC) {
-		PxRigidActor *rigActor = (PxRigidActor *)actor;
-		PxU32 nShapes = rigActor->getNbShapes();
-		PxShape **shapes = new PxShape * [nShapes];
+	physx::PxType actorType = actor->getConcreteType();
+	if(actorType == physx::PxConcreteType::eRIGID_STATIC || actorType == physx::PxConcreteType::eRIGID_DYNAMIC) {
+		physx::PxRigidActor *rigActor = (physx::PxRigidActor *)actor;
+		physx::PxU32 nShapes = rigActor->getNbShapes();
+		physx::PxShape **shapes = new physx::PxShape * [nShapes];
 		rigActor->getShapes(shapes, nShapes);
 
 		while(nShapes--) {
-			PxShapeFlags flags = shapes[nShapes]->getFlags();
-			flags |= PxShapeFlag::ePARTICLE_DRAIN;
+			physx::PxShapeFlags flags = shapes[nShapes]->getFlags();
+			flags |= physx::PxShapeFlag::ePARTICLE_DRAIN;
 			shapes[nShapes]->setFlags(flags);
 		}
 
@@ -452,14 +448,14 @@ void AddBoxStatic(CCubeActor *cubeActor) {
 	assert(cubeActor != NULL);
 
 	// Create static box
-	PxTransform transform(cubeActor->getPos(), createQuatRotation(cubeActor->getRotate()));
-	PxBoxGeometry geometry(cubeActor->getSize());
+	physx::PxTransform transform(cubeActor->getPos(), createQuatRotation(cubeActor->getRotate()));
+	physx::PxBoxGeometry geometry(cubeActor->getSize());
 
-	PxRigidStatic *nactor = PxCreateStatic(*gPhysicsSDK, transform, geometry, *gDefaultMaterial);
+	physx::PxRigidStatic *nactor = PxCreateStatic(*gPhysicsSDK, transform, geometry, *gDefaultMaterial);
 	nactor->userData = cubeActor;
 
 	if(!nactor)
-		cerr << "create box static actor failed!" << endl;
+		std::cerr << "create box static actor failed!" << std::endl;
 
 	gScene->addActor(*nactor);
 	setActorDrain(nactor, cubeActor);
@@ -469,15 +465,15 @@ void AddBoxStatic(CCubeActor *cubeActor) {
 
 void AddSphereStatic(CSphereActor *sphereActor) {
 	// Create static sphere
-	PxTransform transform(sphereActor ? sphereActor->getPos() : gRigidBodyFallPos,
-		sphereActor ? createQuatRotation(sphereActor->getRotate()) : PxQuat(Deg2Rad(RandomRadius()), PxVec3(0, 1, 0)));
-	PxSphereGeometry geometry(sphereActor ? sphereActor->getRadius() : 0.5f);
+	physx::PxTransform transform(sphereActor ? sphereActor->getPos() : gRigidBodyFallPos,
+		sphereActor ? createQuatRotation(sphereActor->getRotate()) : physx::PxQuat(Deg2Rad(RandomRadius()), physx::PxVec3(0, 1, 0)));
+	physx::PxSphereGeometry geometry(sphereActor ? sphereActor->getRadius() : 0.5f);
 
-	PxRigidStatic *nactor = PxCreateStatic(*gPhysicsSDK, transform, geometry, *gDefaultMaterial);
+	physx::PxRigidStatic *nactor = PxCreateStatic(*gPhysicsSDK, transform, geometry, *gDefaultMaterial);
 	nactor->userData = sphereActor;
 
 	if(!nactor)
-		cerr << "create sphere static actor failed!" << endl;
+		std::cerr << "create sphere static actor failed!" << std::endl;
 
 	gScene->addActor(*nactor);
 
@@ -486,19 +482,19 @@ void AddSphereStatic(CSphereActor *sphereActor) {
 
 void AddSphere(CSphereActor *sphereActor) {
 	// Create sphere
-	PxReal density = sphereActor ? sphereActor->getDensitiy() : gDefaultRigidBodyDensity;
-	PxTransform transform(sphereActor ? sphereActor->getPos() : gRigidBodyFallPos,
-		sphereActor ? createQuatRotation(sphereActor->getRotate()) : PxQuat(PxIdentity));
-	PxSphereGeometry geometry(sphereActor ? sphereActor->getRadius() : 0.5f);
+	physx::PxReal density = sphereActor ? sphereActor->getDensitiy() : gDefaultRigidBodyDensity;
+	physx::PxTransform transform(sphereActor ? sphereActor->getPos() : gRigidBodyFallPos,
+		sphereActor ? createQuatRotation(sphereActor->getRotate()) : physx::PxQuat(physx::PxIdentity));
+	physx::PxSphereGeometry geometry(sphereActor ? sphereActor->getRadius() : 0.5f);
 
-	PxRigidDynamic *nactor = PxCreateDynamic(*gPhysicsSDK, transform, geometry, *gDefaultMaterial, density);
-	PxRigidBodyExt::updateMassAndInertia(*nactor, density);
+	physx::PxRigidDynamic *nactor = PxCreateDynamic(*gPhysicsSDK, transform, geometry, *gDefaultMaterial, density);
+	physx::PxRigidBodyExt::updateMassAndInertia(*nactor, density);
 	nactor->setAngularDamping(0.75);
-	nactor->setLinearVelocity(sphereActor ? sphereActor->getVelocity() : PxVec3(0, 0, 0));
+	nactor->setLinearVelocity(sphereActor ? sphereActor->getVelocity() : physx::PxVec3(0, 0, 0));
 	nactor->userData = sphereActor;
 
 	if(!nactor)
-		cerr << "create sphere actor failed!" << endl;
+		std::cerr << "create sphere actor failed!" << std::endl;
 
 	gScene->addActor(*nactor);
 
@@ -507,25 +503,25 @@ void AddSphere(CSphereActor *sphereActor) {
 
 void AddCapsule() {
 	// Create capsule
-	PxReal density = gDefaultRigidBodyDensity;
-	PxTransform transform(gRigidBodyFallPos, PxQuat(Deg2Rad(RandomRadius()), PxVec3(0, 1, 0)));
-	PxCapsuleGeometry geometry(0.5, 1.0);
+	physx::PxReal density = gDefaultRigidBodyDensity;
+	physx::PxTransform transform(gRigidBodyFallPos, physx::PxQuat(Deg2Rad(RandomRadius()), physx::PxVec3(0, 1, 0)));
+	physx::PxCapsuleGeometry geometry(0.5, 1.0);
 
-	PxRigidDynamic *nactor = PxCreateDynamic(*gPhysicsSDK, transform, geometry, *gDefaultMaterial, density);
-	PxRigidBodyExt::updateMassAndInertia(*nactor, density);
+	physx::PxRigidDynamic *nactor = PxCreateDynamic(*gPhysicsSDK, transform, geometry, *gDefaultMaterial, density);
+	physx::PxRigidBodyExt::updateMassAndInertia(*nactor, density);
 	nactor->setAngularDamping(0.75);
-	nactor->setLinearVelocity(PxVec3(0, 0, 0));
+	nactor->setLinearVelocity(physx::PxVec3(0, 0, 0));
 
 	if(!nactor)
-		cerr << "create capsule actor failed!" << endl;
+		std::cerr << "create capsule actor failed!" << std::endl;
 
 	gScene->addActor(*nactor);
 
 	gActors.push_back(nactor);
 }
 
-bool PointInSphere(const PxVec3 &spherePos, const float &sphereRadius, const PxVec3 point, const float particleRadius) {
-	PxVec3 distance = spherePos - point;
+bool PointInSphere(const physx::PxVec3 &spherePos, const float &sphereRadius, const physx::PxVec3 point, const float particleRadius) {
+	physx::PxVec3 distance = spherePos - point;
 	float length = distance.magnitude();
 	float sumRadius = sphereRadius + particleRadius;
 	return length <= sumRadius;
@@ -533,8 +529,8 @@ bool PointInSphere(const PxVec3 &spherePos, const float &sphereRadius, const PxV
 
 void AddWater(FluidContainer *container, const FluidType type) {
 	unsigned int numParticles = 0;
-	vector<PxVec3> particlePositionBuffer;
-	vector<PxVec3> particleVelocityBuffer;
+	std::vector<physx::PxVec3> particlePositionBuffer;
+	std::vector<physx::PxVec3> particleVelocityBuffer;
 
 	float distance = gFluidParticleDistance;
 
@@ -548,7 +544,7 @@ void AddWater(FluidContainer *container, const FluidType type) {
 		float sizeY = container->Size.y;
 		float sizeZ = container->Size.z;
 
-		if(type == FluidTypeSphere) {
+		if(type == FluidType::FluidTypeSphere) {
 			if(container->Radius < 0.00001f)
 				container->Radius = ((sizeX + sizeY + sizeZ) / 3.0f) / 2.0f;
 		}
@@ -563,12 +559,12 @@ void AddWater(FluidContainer *container, const FluidType type) {
 
 		int idx;
 
-		if(type == FluidTypeDrop)  // Single drop
+		if(type == FluidType::FluidTypeDrop)  // Single drop
 		{
 			numParticles++;
-			particlePositionBuffer.push_back(PxVec3(centerX, centerY, centerZ));
+			particlePositionBuffer.push_back(physx::PxVec3(centerX, centerY, centerZ));
 			particleVelocityBuffer.push_back(container->Vel);
-		} else if(type == FluidTypeWall)  // Water quad
+		} else if(type == FluidType::FluidTypeWall)  // Water quad
 		{
 			float zpos = centerZ - (dZ / 2.0f);
 			idx = 0;
@@ -578,7 +574,7 @@ void AddWater(FluidContainer *container, const FluidType type) {
 
 				for(int x = 0; x < numX; x++) {
 					numParticles++;
-					particlePositionBuffer.push_back(PxVec3(xpos, centerY, zpos));
+					particlePositionBuffer.push_back(physx::PxVec3(xpos, centerY, zpos));
 					particleVelocityBuffer.push_back(container->Vel);
 					idx++;
 					xpos += distance;
@@ -586,7 +582,7 @@ void AddWater(FluidContainer *container, const FluidType type) {
 
 				zpos += distance;
 			}
-		} else if(type == FluidTypeBlob)  // Water blob
+		} else if(type == FluidType::FluidTypeBlob)  // Water blob
 		{
 			float zpos = centerZ - (dZ / 2.0f);
 			idx = 0;
@@ -599,7 +595,7 @@ void AddWater(FluidContainer *container, const FluidType type) {
 
 					for(int x = 0; x < numX; x++) {
 						numParticles++;
-						particlePositionBuffer.push_back(PxVec3(xpos, ypos, zpos));
+						particlePositionBuffer.push_back(physx::PxVec3(xpos, ypos, zpos));
 						particleVelocityBuffer.push_back(container->Vel);
 						idx++;
 						xpos += distance;
@@ -610,9 +606,9 @@ void AddWater(FluidContainer *container, const FluidType type) {
 
 				zpos += distance;
 			}
-		} else if(type == FluidTypeSphere)  // Water sphere
+		} else if(type == FluidType::FluidTypeSphere)  // Water sphere
 		{
-			PxVec3 center = PxVec3(centerX, centerY, centerZ);
+			physx::PxVec3 center = physx::PxVec3(centerX, centerY, centerZ);
 
 			float radius = container->Radius;
 			float zpos = centerZ - (dZ / 2.0f);
@@ -625,7 +621,7 @@ void AddWater(FluidContainer *container, const FluidType type) {
 					float xpos = centerX - (dX / 2.0f);
 
 					for(int x = 0; x < numX; x++) {
-						PxVec3 point = PxVec3(xpos, ypos, zpos);
+						physx::PxVec3 point = physx::PxVec3(xpos, ypos, zpos);
 
 						if(PointInSphere(center, radius, point, gFluidParticleRadius)) {
 							numParticles++;
@@ -663,17 +659,17 @@ void AddWater(FluidType waterType) {
 
 void AddPlane() {
 	// Create ground plane
-	PxTransform pose = PxTransform(PxVec3(0.0f, 0, 0.0f), PxQuat(PxHalfPi, PxVec3(0.0f, 0.0f, 1.0f)));
+	physx::PxTransform pose = physx::PxTransform(physx::PxVec3(0.0f, 0, 0.0f), physx::PxQuat(physx::PxHalfPi, physx::PxVec3(0.0f, 0.0f, 1.0f)));
 
-	PxRigidStatic *plane = gPhysicsSDK->createRigidStatic(pose);
+	physx::PxRigidStatic *plane = gPhysicsSDK->createRigidStatic(pose);
 
 	if(!plane)
-		cerr << "create plane failed!" << endl;
+		std::cerr << "create plane failed!" << std::endl;
 
-	PxShape *shape = plane->createShape(PxPlaneGeometry(), *gDefaultMaterial);
+	physx::PxShape *shape = plane->createShape(physx::PxPlaneGeometry(), *gDefaultMaterial);
 
 	if(!shape)
-		cerr << "create shape failed!" << endl;
+		std::cerr << "create shape failed!" << std::endl;
 
 	gScene->addActor(*plane);
 	gActors.push_back(plane);
@@ -684,9 +680,9 @@ void ClearScene() {
 	if(gFluidSystem)
 		delete gFluidSystem;
 
-	// Remove actrors
+	// Remove actors
 	for(long index = 0; index < (long)gActors.size(); ++index) {
-		PxActor *act = gActors.at(index);
+		physx::PxActor *act = gActors.at(index);
 		gScene->removeActor(*act);
 		act->release();
 	}
@@ -698,20 +694,20 @@ void ClearScene() {
 }
 
 void AddScenarioActor(CActor *actor) {
-	if(actor->getPrimitive() == ActorPrimitiveCube) {
+	if(actor->getPrimitive() == EActorPrimitive::ActorPrimitiveCube) {
 		CCubeActor *cube = (CCubeActor *)actor;
 
-		if(actor->getType() == ActorTypeStatic) {
+		if(actor->getType() == EActorType::ActorTypeStatic) {
 			AddBoxStatic(cube);
-		} else if(actor->getType() == ActorTypeDynamic) {
+		} else if(actor->getType() == EActorType::ActorTypeDynamic) {
 			AddBox(cube->getSize(), cube);
 		}
-	} else if(actor->getPrimitive() == ActorPrimitiveSphere) {
+	} else if(actor->getPrimitive() == EActorPrimitive::ActorPrimitiveSphere) {
 		CSphereActor *sphere = (CSphereActor *)actor;
 
-		if(actor->getType() == ActorTypeStatic)
+		if(actor->getType() == EActorType::ActorTypeStatic)
 			AddSphereStatic(sphere);
-		else if(actor->getType() == ActorTypeDynamic)
+		else if(actor->getType() == EActorType::ActorTypeDynamic)
 			AddSphere(sphere);
 	}
 }
@@ -724,7 +720,7 @@ void SaveFluidPositions() {
 }
 
 void advanceSimulation(float dtime) {
-	const PxReal timestep = 1.0f / 60.0f;
+	const physx::PxReal timestep = 1.0f / 60.0f;
 	while(dtime > 0.0f) {
 		gScene->simulate(timestep);
 		gScene->fetchResults(true);
@@ -798,7 +794,7 @@ void ResetScene() {
 		gFluidViscosity = gActiveScene->getFluidViscosity();
 		gFluidStiffness = gActiveScene->getFluidStiffness();
 		gFluidParticleDistance = gFluidParticleRadius * gActiveScene->getFluidParticleDistanceFactor();
-		gRigidBodyFallPos = PxVec3(0.0f, 4.0f, 0.0f);
+		gRigidBodyFallPos = physx::PxVec3(0.0f, 4.0f, 0.0f);
 		gFluidParticleRenderFactor = gActiveScene->getFluidParticleRenderFactor();
 	}
 
@@ -809,19 +805,19 @@ void ResetScene() {
 	gFluidSystem = CreateParticleFluidSystem();
 
 	// Set GPU accelearion for particle fluid if supported
-	gFluidSystem->setParticleBaseFlag(PxParticleBaseFlag::eCOLLISION_TWOWAY, true);
+	gFluidSystem->setParticleBaseFlag(physx::PxParticleBaseFlag::eCOLLISION_TWOWAY, true);
 
 	if(gGPUDispatcher && gFluidUseGPUAcceleration)
-		gFluidSystem->setParticleBaseFlag(PxParticleBaseFlag::eGPU, true);
+		gFluidSystem->setParticleBaseFlag(physx::PxParticleBaseFlag::eGPU, true);
 
 	if(gFluidSystem) {
-		PxActor *fluidActor = gFluidSystem->getActor();
+		physx::PxActor *fluidActor = gFluidSystem->getActor();
 		gScene->addActor(*fluidActor);
 		gActors.push_back(fluidActor);
 	}
 
 	if(gActiveFluidScenario) {
-		// Adding actors immediatly
+		// Adding actors immediately
 		for(int i = 0; i < gActiveFluidScenario->getActors(); i++) {
 			CActor *actor = gActiveFluidScenario->getActor(i);
 			actor->setTimeElapsed(0.0f);
@@ -831,7 +827,7 @@ void ResetScene() {
 			}
 		}
 
-		// Adding waters immediatly
+		// Adding waters immediately
 		for(int i = 0; i < gActiveFluidScenario->getFluidContainers(); i++) {
 			FluidContainer *container = gActiveFluidScenario->getFluidContainer(i);
 			container->TimeElapsed = 0.0f;
@@ -852,21 +848,21 @@ void ResetScene() {
 }
 
 void InitializePhysX() {
-	cout << "  PhysX Version: " << PX_PHYSICS_VERSION_MAJOR << "." << PX_PHYSICS_VERSION_MINOR << "." << PX_PHYSICS_VERSION_BUGFIX << endl;
-	cout << "  PhysX Foundation Version: " << PX_FOUNDATION_VERSION_MAJOR << "." << PX_FOUNDATION_VERSION_MINOR << "." << PX_FOUNDATION_VERSION_BUGFIX << endl;
+	std::cout << "  PhysX Version: " << PX_PHYSICS_VERSION_MAJOR << "." << PX_PHYSICS_VERSION_MINOR << "." << PX_PHYSICS_VERSION_BUGFIX << std::endl;
+	std::cout << "  PhysX Foundation Version: " << PX_FOUNDATION_VERSION_MAJOR << "." << PX_FOUNDATION_VERSION_MINOR << "." << PX_FOUNDATION_VERSION_BUGFIX << std::endl;
 
 	// Create Physics SDK
 	gPhysXFoundation = PxCreateFoundation(PX_FOUNDATION_VERSION, gDefaultAllocatorCallback, gDefaultErrorCallback);
-	gPhysicsSDK = PxCreatePhysics(PX_PHYSICS_VERSION, *gPhysXFoundation, PxTolerancesScale());
+	gPhysicsSDK = PxCreatePhysics(PX_PHYSICS_VERSION, *gPhysXFoundation, physx::PxTolerancesScale());
 
 	if(gPhysicsSDK == NULL) {
-		cerr << "  Could not create PhysX SDK, exiting!" << endl;
+		std::cerr << "  Could not create PhysX SDK, exiting!" << std::endl;
 		exit(1);
 	}
 
 	// Initialize PhysX Extensions
 	if(!PxInitExtensions(*gPhysicsSDK, NULL)) {
-		cerr << "  Could not initialize PhysX extensions, exiting!" << endl;
+		std::cerr << "  Could not initialize PhysX extensions, exiting!" << std::endl;
 		exit(1);
 	}
 
@@ -893,8 +889,8 @@ void InitializePhysX() {
 #endif
 
 	// Create the scene
-	PxSceneDesc sceneDesc(gPhysicsSDK->getTolerancesScale());
-	sceneDesc.gravity = PxVec3(0.0f, -9.8f, 0.0f);
+	physx::PxSceneDesc sceneDesc(gPhysicsSDK->getTolerancesScale());
+	sceneDesc.gravity = physx::PxVec3(0.0f, -9.8f, 0.0f);
 
 	// Default filter shader (No idea whats that about)
 	sceneDesc.filterShader = gDefaultFilterShader;
@@ -906,11 +902,11 @@ void InitializePhysX() {
 		numThreads = COSLowLevel::getInstance()->getNumCPUCores();
 
 	printf("  CPU acceleration supported (%d threads)\n", numThreads);
-	sceneDesc.cpuDispatcher = PxDefaultCpuDispatcherCreate(numThreads);
+	sceneDesc.cpuDispatcher = physx::PxDefaultCpuDispatcherCreate(numThreads);
 
 	// GPU Dispatcher
 	gFluidUseGPUAcceleration = false;
-	PxCudaContextManagerDesc cudaContextManagerDesc;
+	physx::PxCudaContextManagerDesc cudaContextManagerDesc;
 	gCudaContextManager = PxCreateCudaContextManager(*gPhysXFoundation, cudaContextManagerDesc);
 
 	if(gCudaContextManager) {
@@ -929,17 +925,17 @@ void InitializePhysX() {
 	gScene = gPhysicsSDK->createScene(sceneDesc);
 
 	if(!gScene) {
-		cerr << "Could not create scene, exiting!" << endl;
+		std::cerr << "Could not create scene, exiting!" << std::endl;
 		exit(1);
 	}
 
-	gScene->setVisualizationParameter(PxVisualizationParameter::eSCALE, 1.0f);
-	gScene->setVisualizationParameter(PxVisualizationParameter::eCOLLISION_SHAPES, 1.0f);
+	gScene->setVisualizationParameter(physx::PxVisualizationParameter::eSCALE, 1.0f);
+	gScene->setVisualizationParameter(physx::PxVisualizationParameter::eCOLLISION_SHAPES, 1.0f);
 
 	gDefaultMaterial = gPhysicsSDK->createMaterial(0.3f, 0.3f, 0.1f);
 }
 
-glm::mat4 getColumnMajor(PxMat33 m, PxVec3 t) {
+glm::mat4 getColumnMajor(physx::PxMat33 m, physx::PxVec3 t) {
 	glm::mat4 mat = glm::mat4(1.0f);
 
 	mat[0][0] = m.column0[0];
@@ -1078,7 +1074,7 @@ void UpdatePhysX(const float frametime) {
 		int current = glutGet(GLUT_ELAPSED_TIME);
 
 		if(current > gFluidLatestExternalAccelerationTime) {
-			gFluidSystem->setExternalAcceleration(PxVec3(0.0f, 0.0f, 0.0f));
+			gFluidSystem->setExternalAcceleration(physx::PxVec3(0.0f, 0.0f, 0.0f));
 			gFluidLatestExternalAccelerationTime = -1;
 		}
 	}
@@ -1089,26 +1085,26 @@ void UpdatePhysX(const float frametime) {
 	}
 }
 
-PxVec4 getColor(PxActor *actor, const PxVec4 &defaultColor) {
+physx::PxVec4 getColor(physx::PxActor *actor, const physx::PxVec4 &defaultColor) {
 	if(actor->userData) {
 		CActor *a = (CActor *)actor->userData;
 		return a->getColor();
 	} else {
-		PxType actorType = actor->getConcreteType();
-		if(actorType == PxConcreteType::eRIGID_STATIC)
+		physx::PxType actorType = actor->getConcreteType();
+		if(actorType == physx::PxConcreteType::eRIGID_STATIC)
 			return DefaultStaticRigidBodyColor;
 		else
 			return defaultColor;
 	}
 }
 
-void DrawBox(PxShape *pShape) {
-	PxVec4 color = getColor(pShape->getActor(), DefaultDynamicRigidBodyCubeColor);
+void DrawBox(physx::PxShape *pShape) {
+	physx::PxVec4 color = getColor(pShape->getActor(), DefaultDynamicRigidBodyCubeColor);
 
-	PxTransform pT = PxShapeExt::getGlobalPose(*pShape, *pShape->getActor());
-	PxBoxGeometry bg;
+	physx::PxTransform pT = physx::PxShapeExt::getGlobalPose(*pShape, *pShape->getActor());
+	physx::PxBoxGeometry bg;
 	pShape->getBoxGeometry(bg);
-	PxMat33 m = PxMat33(pT.q);
+	physx::PxMat33 m = physx::PxMat33(pT.q);
 	glm::mat4 mat = getColumnMajor(m, pT.p);
 	glm::mat4 multm = gCamera.GetModelViewProjection() * mat;
 	gRenderer->LoadMatrix(multm);
@@ -1119,13 +1115,13 @@ void DrawBox(PxShape *pShape) {
 	gLightingShader->disable();
 }
 
-void DrawSphere(PxShape *pShape) {
-	PxVec4 color = getColor(pShape->getActor(), DefaultDynamicRigidBodySphereColor);
+void DrawSphere(physx::PxShape *pShape) {
+	physx::PxVec4 color = getColor(pShape->getActor(), DefaultDynamicRigidBodySphereColor);
 
-	PxTransform pT = PxShapeExt::getGlobalPose(*pShape, *pShape->getActor());
-	PxSphereGeometry sg;
+	physx::PxTransform pT = physx::PxShapeExt::getGlobalPose(*pShape, *pShape->getActor());
+	physx::PxSphereGeometry sg;
 	pShape->getSphereGeometry(sg);
-	PxMat33 m = PxMat33(pT.q);
+	physx::PxMat33 m = physx::PxMat33(pT.q);
 	glm::mat4 mat = getColumnMajor(m, pT.p);
 	glm::mat4 multm = gCamera.GetModelViewProjection() * mat;
 	gRenderer->LoadMatrix(multm);
@@ -1136,13 +1132,13 @@ void DrawSphere(PxShape *pShape) {
 	gLightingShader->disable();
 }
 
-void DrawCapsule(PxShape *pShape) {
-	PxVec4 color = getColor(pShape->getActor(), DefaultDynamicRigidBodyCapsuleColor);
+void DrawCapsule(physx::PxShape *pShape) {
+	physx::PxVec4 color = getColor(pShape->getActor(), DefaultDynamicRigidBodyCapsuleColor);
 
-	PxTransform pT = PxShapeExt::getGlobalPose(*pShape, *pShape->getActor());
-	PxCapsuleGeometry cg;
+	physx::PxTransform pT = physx::PxShapeExt::getGlobalPose(*pShape, *pShape->getActor());
+	physx::PxCapsuleGeometry cg;
 	pShape->getCapsuleGeometry(cg);
-	PxMat33 m = PxMat33(pT.q);
+	physx::PxMat33 m = physx::PxMat33(pT.q);
 	glm::mat4 mat = getColumnMajor(m, pT.p);
 	glm::mat4 multm = gCamera.GetModelViewProjection() * mat;
 
@@ -1161,27 +1157,27 @@ void DrawCapsule(PxShape *pShape) {
 	gLightingShader->disable();
 }
 
-void DrawShape(PxShape *shape) {
-	PxGeometryType::Enum type = shape->getGeometryType();
+void DrawShape(physx::PxShape *shape) {
+	physx::PxGeometryType::Enum type = shape->getGeometryType();
 
 	switch(type) {
-		case PxGeometryType::eBOX:
+		case physx::PxGeometryType::eBOX:
 			DrawBox(shape);
 			break;
 
-		case PxGeometryType::eSPHERE:
+		case physx::PxGeometryType::eSPHERE:
 			DrawSphere(shape);
 			break;
 
-		case PxGeometryType::eCAPSULE:
+		case physx::PxGeometryType::eCAPSULE:
 			DrawCapsule(shape);
 			break;
 	}
 }
 
-void DrawBounds(const PxBounds3 &bounds) {
-	PxVec3 center = bounds.getCenter();
-	PxVec3 scale = bounds.getDimensions();
+void DrawBounds(const physx::PxBounds3 &bounds) {
+	physx::PxVec3 center = bounds.getCenter();
+	physx::PxVec3 scale = bounds.getDimensions();
 
 	GLfloat mat_diffuse[4] = { 0, 1, 1, 1 };
 	glColor4fv(mat_diffuse);
@@ -1192,8 +1188,8 @@ void DrawBounds(const PxBounds3 &bounds) {
 	DrawGLCube(scale.x / 2, scale.y / 2, scale.z / 2);
 }
 
-void DrawActorBounding(PxActor *actor) {
-	PxBounds3 bounds = actor->getWorldBounds();
+void DrawActorBounding(physx::PxActor *actor) {
+	physx::PxBounds3 bounds = actor->getWorldBounds();
 
 	if(CFrustum::getInstance()->containsBounds(bounds)) {
 		gDrawedActors++;
@@ -1201,8 +1197,8 @@ void DrawActorBounding(PxActor *actor) {
 	}
 }
 
-void DrawActor(PxActor *actor) {
-	PxBounds3 bounds = actor->getWorldBounds();
+void DrawActor(physx::PxActor *actor) {
+	physx::PxBounds3 bounds = actor->getWorldBounds();
 
 	if(CFrustum::getInstance()->containsBounds(bounds)) {
 		bool isVisible = true;
@@ -1217,11 +1213,11 @@ void DrawActor(PxActor *actor) {
 		if(isVisible) {
 			gDrawedActors++;
 
-			PxType actorType = actor->getConcreteType();
-			if(actorType == PxConcreteType::eRIGID_STATIC || actorType == PxConcreteType::eRIGID_DYNAMIC) {
-				PxRigidActor *rigActor = (PxRigidActor *)actor;
-				PxU32 nShapes = rigActor->getNbShapes();
-				PxShape **shapes = new PxShape * [nShapes];
+			physx::PxType actorType = actor->getConcreteType();
+			if(actorType == physx::PxConcreteType::eRIGID_STATIC || actorType == physx::PxConcreteType::eRIGID_DYNAMIC) {
+				physx::PxRigidActor *rigActor = (physx::PxRigidActor *)actor;
+				physx::PxU32 nShapes = rigActor->getNbShapes();
+				physx::PxShape **shapes = new physx::PxShape *[nShapes];
 
 				if(blending) {
 					gRenderer->SetBlending(true);
@@ -1249,7 +1245,7 @@ void DrawActor(PxActor *actor) {
 void RenderActors() {
 	// Render all the actors in the scene
 	for(long index = 0; index < (long)gActors.size(); ++index) {
-		PxActor *act = gActors.at(index);
+		physx::PxActor *act = gActors.at(index);
 		DrawActor(act);
 	}
 }
@@ -1257,7 +1253,7 @@ void RenderActors() {
 void RenderActorBoundings() {
 	// Render all the actors in the scene as bounding volume
 	for(long index = 0; index < (long)gActors.size(); ++index) {
-		PxActor *act = gActors.at(index);
+		physx::PxActor *act = gActors.at(index);
 		DrawActorBounding(act);
 	}
 }
@@ -1548,7 +1544,7 @@ void RenderOSDLine(OSDRenderPosition &osdpos, char *value) {
 	osdpos.newLine();
 }
 
-string drawingError = "";
+std::string drawingError = "";
 void RenderOSD() {
 	char buffer[256];
 
@@ -1836,7 +1832,7 @@ void OnRender() {
 	Update(proj, mdlv, 1.0f / 60.0f);
 
 	// Clear back buffer
-	PxVec3 backcolor = gActiveScene->getBackgroundColor();
+	physx::PxVec3 backcolor = gActiveScene->getBackgroundColor();
 	gRenderer->ClearColor(backcolor.x, backcolor.y, backcolor.z, 0.0f);
 	gRenderer->Clear(ClearFlags::Color | ClearFlags::Depth);
 
@@ -1903,7 +1899,7 @@ void Motion(int x, int y) {
 void AddActorByState(unsigned int state) {
 	switch(state) {
 		case 1:
-			AddBox(PxVec3(0.5, 0.5, 0.5), NULL);
+			AddBox(physx::PxVec3(0.5, 0.5, 0.5), NULL);
 			break;
 
 		case 2:
@@ -1915,19 +1911,19 @@ void AddActorByState(unsigned int state) {
 			break;
 
 		case 4:
-			AddWater(FluidTypeDrop);
+			AddWater(FluidType::FluidTypeDrop);
 			break;
 
 		case 5:
-			AddWater(FluidTypeWall);
+			AddWater(FluidType::FluidTypeWall);
 			break;
 
 		case 6:
-			AddWater(FluidTypeBlob);
+			AddWater(FluidType::FluidTypeBlob);
 			break;
 
 		case 7:
-			AddWater(FluidTypeSphere);
+			AddWater(FluidType::FluidTypeSphere);
 			break;
 
 		default:
@@ -1937,45 +1933,45 @@ void AddActorByState(unsigned int state) {
 
 void ToggleFluidGPUAcceleration() {
 	if(gGPUDispatcher) {
-		PxActor *fluidActor = gFluidSystem->getActor();
+		physx::PxActor *fluidActor = gFluidSystem->getActor();
 		gFluidUseGPUAcceleration = !gFluidUseGPUAcceleration;
 		gScene->removeActor(*fluidActor);
-		gFluidSystem->setParticleBaseFlag(PxParticleBaseFlag::eGPU, gFluidUseGPUAcceleration);
+		gFluidSystem->setParticleBaseFlag(physx::PxParticleBaseFlag::eGPU, gFluidUseGPUAcceleration);
 		gScene->addActor(*fluidActor);
 	}
 }
 
-void SetFluidExternalAcceleration(const PxVec3 &acc) {
+void SetFluidExternalAcceleration(const physx::PxVec3 &acc) {
 	gFluidLatestExternalAccelerationTime = glutGet(GLUT_ELAPSED_TIME) + 3000; // 3 Seconds
 	gFluidSystem->setExternalAcceleration(acc);
 }
 
 void KeyDownSpecial(int key, int x, int y) {
 	const float accSpeed = 10.0f;
-	const PxForceMode::Enum accMode = PxForceMode::eACCELERATION;
+	const physx::PxForceMode::Enum accMode = physx::PxForceMode::eACCELERATION;
 
 	switch(key) {
 		case GLUT_KEY_RIGHT:
 		{
-			gFluidSystem->addForce(PxVec3(1.0f * accSpeed, 0.0f, 0.0f), accMode);
+			gFluidSystem->addForce(physx::PxVec3(1.0f * accSpeed, 0.0f, 0.0f), accMode);
 			break;
 		}
 
 		case GLUT_KEY_LEFT:
 		{
-			gFluidSystem->addForce(PxVec3(-1.0f * accSpeed, 0.0f, 0.0f), accMode);
+			gFluidSystem->addForce(physx::PxVec3(-1.0f * accSpeed, 0.0f, 0.0f), accMode);
 			break;
 		}
 
 		case GLUT_KEY_UP:
 		{
-			gFluidSystem->addForce(PxVec3(0.0f, 0.0f, -1.0f * accSpeed), accMode);
+			gFluidSystem->addForce(physx::PxVec3(0.0f, 0.0f, -1.0f * accSpeed), accMode);
 			break;
 		}
 
 		case GLUT_KEY_DOWN:
 		{
-			gFluidSystem->addForce(PxVec3(0.0f, 0.0f, 1.0f * accSpeed), accMode);
+			gFluidSystem->addForce(physx::PxVec3(0.0f, 0.0f, 1.0f * accSpeed), accMode);
 			break;
 		}
 	}
@@ -2297,10 +2293,10 @@ void OnIdle() {
 
 void LoadFluidScenarios() {
 	// Load scenarios
-	vector<string> scenFiles = COSLowLevel::getInstance()->getFilesInDirectory("scenarios\\*.xml");
+	std::vector<std::string> scenFiles = COSLowLevel::getInstance()->getFilesInDirectory("scenarios\\*.xml");
 
 	for(unsigned int i = 0; i < scenFiles.size(); i++) {
-		string filename = "scenarios\\";
+		std::string filename = "scenarios\\";
 		filename += scenFiles[i];
 		CFluidScenario *scenario = CFluidScenario::load(filename.c_str(), gActiveScene);
 		gFluidScenarios.push_back(scenario);
@@ -2312,7 +2308,7 @@ void LoadFluidScenarios() {
 	} else {
 		gActiveFluidScenarioIdx = -1;
 		gActiveFluidScenario = NULL;
-		cerr << "  No fluid scenario found, fluid cannot be used!" << endl;
+		std::cerr << "  No fluid scenario found, fluid cannot be used!" << std::endl;
 	}
 }
 
@@ -2526,7 +2522,7 @@ void main(int argc, char **argv) {
 
 	// Initialize glew
 	if(glewInit() != GLEW_OK) {
-		cerr << "Could not initialize glew!" << endl;
+		std::cerr << "Could not initialize glew!" << std::endl;
 		exit(1);
 	}
 
@@ -2543,15 +2539,15 @@ void main(int argc, char **argv) {
 		(!glewIsSupported("GL_ARB_texture_float GL_ARB_point_sprite GL_ARB_framebuffer_object")) ||
 		(maxColorAttachments < 4)) {
 		printf("failed\n");
-		cerr << endl << "Your graphics adapter is not supported, press any key to exit!" << endl;
-		cerr << "Required opengl version:" << endl;
-		cerr << "  OpenGL version 2.0 or higher" << endl;
-		cerr << "Required opengl extensions:" << endl;
-		cerr << "  GL_ARB_texture_float" << endl;
-		cerr << "  GL_ARB_point_sprite" << endl;
-		cerr << "  GL_ARB_framebuffer_object" << endl;
-		cerr << "Required constants:" << endl;
-		cerr << "  GL_MAX_COLOR_ATTACHMENTS >= 4" << endl;
+		std::cerr << std::endl << "Your graphics adapter is not supported, press any key to exit!" << std::endl;
+		std::cerr << "Required opengl version:" << std::endl;
+		std::cerr << "  OpenGL version 2.0 or higher" << std::endl;
+		std::cerr << "Required opengl extensions:" << std::endl;
+		std::cerr << "  GL_ARB_texture_float" << std::endl;
+		std::cerr << "  GL_ARB_point_sprite" << std::endl;
+		std::cerr << "  GL_ARB_framebuffer_object" << std::endl;
+		std::cerr << "Required constants:" << std::endl;
+		std::cerr << "  GL_MAX_COLOR_ATTACHMENTS >= 4" << std::endl;
 		getchar();
 		exit(1);
 	} else

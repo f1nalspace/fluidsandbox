@@ -1,5 +1,6 @@
 #include "GLSL.h"
 
+#include <iostream>
 
 CGLSL::CGLSL(void)
 {
