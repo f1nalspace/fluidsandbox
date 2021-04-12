@@ -213,8 +213,8 @@ void CScreenSpaceFluidRendering::WaterPass(const glm::mat4 &mvp, CCamera &cam, C
 	shader->uniform1i(shader->ulocSkyboxCubemap, 3);
 	shader->uniform1f(shader->ulocXFactor, 1.0f/((float)iFBOWidth));
 	shader->uniform1f(shader->ulocYFactor, 1.0f/((float)iFBOHeight));
-	shader->uniform1f(shader->ulocZFar, cam.GetFarClip());
-	shader->uniform1f(shader->ulocZNear, cam.GetNearClip());
+	shader->uniform1f(shader->ulocZFar, cam.farClip);
+	shader->uniform1f(shader->ulocZNear, cam.nearClip);
 	shader->uniform1f(shader->ulocMinDepth, MIN_DEPTH);
 	shader->uniform4f(shader->ulocColorFalloff, (GLfloat*)&color->falloff[0]);
 	shader->uniform1f(shader->ulocFalloffScale, color->falloffScale);
@@ -266,9 +266,9 @@ void CScreenSpaceFluidRendering::RenderSSF(CCamera &cam, const unsigned int numP
 	GLint latestDrawBuffer = fullFrameBuffer->getDrawBuffer();
 
 	// Get required matrices
-	glm::mat4 mvp = cam.GetModelViewProjection();
-	glm::mat4 mview = cam.GetModelview();
-	glm::mat4 mproj = cam.GetProjection();
+	glm::mat4 mvp = cam.mvp;
+	glm::mat4 mview = cam.modelview;
+	glm::mat4 mproj = cam.projection;
 
 	// Calculate ortho matrix
 	glm::mat4 orthoProj = glm::ortho(0.0f,1.0f,1.0f,0.0f);
@@ -342,9 +342,9 @@ void CScreenSpaceFluidRendering::Render(CCamera &cam, const unsigned int numPoin
 	assert(pPointSpritesShader);
 	assert(pPointSprites);
 
-	glm::mat4 mview = cam.GetModelview();
-	glm::mat4 mproj = cam.GetProjection();
-	glm::mat4 mvp = cam.GetModelViewProjection();
+	glm::mat4 mproj = cam.projection;
+	glm::mat4 mview = cam.modelview;
+	glm::mat4 mvp = cam.mvp;
 
 	bool waterIsColored = !dstate.fluidColor->isClear;
 
@@ -358,7 +358,7 @@ void CScreenSpaceFluidRendering::Render(CCamera &cam, const unsigned int numPoin
 				pRenderer->SetColor(&dstate.fluidColor->color[0]);
 			else
 				pRenderer->SetColor(1,1,1,1);
-			RenderPointSprites(numPointSprites, mproj, mview, cam.GetFarClip(), cam.GetNearClip(), pPointSpritesShader, wH);
+			RenderPointSprites(numPointSprites, mproj, mview, cam.farClip, cam.nearClip, pPointSpritesShader, wH);
 			pRenderer->SetColor(1,1,1,1);
 			break;
 		}
@@ -369,7 +369,7 @@ void CScreenSpaceFluidRendering::Render(CCamera &cam, const unsigned int numPoin
 				pRenderer->SetColor(&dstate.fluidColor->color[0]);
 			else
 				pRenderer->SetColor(1,1,1,1);
-			RenderPointSprites(numPointSprites, mproj, mview, cam.GetFarClip(), cam.GetNearClip(), NULL, wH);
+			RenderPointSprites(numPointSprites, mproj, mview, cam.farClip, cam.nearClip, NULL, wH);
 			pRenderer->SetColor(1,1,1,1);
 			break;
 		}

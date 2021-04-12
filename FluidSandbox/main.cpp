@@ -1104,7 +1104,7 @@ void DrawBox(physx::PxShape *pShape) {
 	pShape->getBoxGeometry(bg);
 	physx::PxMat33 m = physx::PxMat33(pT.q);
 	glm::mat4 mat = getColumnMajor(m, pT.p);
-	glm::mat4 multm = gCamera.GetModelViewProjection() * mat;
+	glm::mat4 multm = gCamera.mvp * mat;
 	gRenderer->LoadMatrix(multm);
 
 	gLightingShader->enable();
@@ -1121,7 +1121,7 @@ void DrawSphere(physx::PxShape *pShape) {
 	pShape->getSphereGeometry(sg);
 	physx::PxMat33 m = physx::PxMat33(pT.q);
 	glm::mat4 mat = getColumnMajor(m, pT.p);
-	glm::mat4 multm = gCamera.GetModelViewProjection() * mat;
+	glm::mat4 multm = gCamera.mvp * mat;
 	gRenderer->LoadMatrix(multm);
 
 	gLightingShader->enable();
@@ -1138,7 +1138,7 @@ void DrawCapsule(physx::PxShape *pShape) {
 	pShape->getCapsuleGeometry(cg);
 	physx::PxMat33 m = physx::PxMat33(pT.q);
 	glm::mat4 mat = getColumnMajor(m, pT.p);
-	glm::mat4 multm = gCamera.GetModelViewProjection() * mat;
+	glm::mat4 multm = gCamera.mvp * mat;
 
 	gLightingShader->enable();
 	gLightingShader->uniform4f(gLightingShader->ulocColor, &color[0]);
@@ -1180,8 +1180,7 @@ void DrawBounds(const physx::PxBounds3 &bounds) {
 	GLfloat mat_diffuse[4] = { 0, 1, 1, 1 };
 	glColor4fv(mat_diffuse);
 
-	glm::mat4 m = gCamera.GetModelViewProjection();
-	glm::mat4 mvp = glm::translate(m, glm::vec3(center.x, center.y, center.z));
+	glm::mat4 mvp = glm::translate(gCamera.mvp, glm::vec3(center.x, center.y, center.z));
 	gRenderer->LoadMatrix(mvp);
 	DrawGLCube(scale.x / 2, scale.y / 2, scale.z / 2);
 }
@@ -1821,9 +1820,9 @@ void OnRender() {
 
 	// Create camera
 	gCamera = CCamera(0.0f, 4.0f, dist, Deg2Rad(rX), Deg2Rad(rY), defaultZNear, defaultZFar, Deg2Rad(defaultFov), (float)windowWidth / (float)windowHeight);
-	glm::mat4 mvp = gCamera.GetModelViewProjection();
-	glm::mat4 proj = gCamera.GetProjection();
-	glm::mat4 mdlv = gCamera.GetModelview();
+	glm::mat4 mvp = gCamera.mvp;
+	glm::mat4 proj = gCamera.projection;
+	glm::mat4 mdlv = gCamera.modelview;
 	gRenderer->LoadMatrix(mvp);
 
 	// Update (Frustum and PhysX)
