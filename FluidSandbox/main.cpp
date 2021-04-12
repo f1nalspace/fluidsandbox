@@ -51,7 +51,7 @@ Todo:
 	- Abstract rendering so we can support multiple renderer (GL 3.x, Vulkan)
 =======================================================================================
 License:
-  
+
 	This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0
 	You can find a a copy of the license file in the source directory (LICENSE.txt)
 	If a copy of the MPL was not distributed with this file, You can obtain one at https://www.mozilla.org/MPL/2.0/.
@@ -397,16 +397,16 @@ physx::PxQuat createQuatRotation(const physx::PxVec3 &rotate) {
 
 void AddBox(physx::PxVec3 dimensions, CCubeActor *cubeactor) {
 	// Create box
-	physx::PxReal density = cubeactor ? cubeactor->getDensitiy() : gDefaultRigidBodyDensity;
-	physx::PxTransform transform(cubeactor ? cubeactor->getPos() : gRigidBodyFallPos,
-		cubeactor ? createQuatRotation(cubeactor->getRotate()) : physx::PxQuat(Deg2Rad(RandomRadius()), physx::PxVec3(0, 1, 0)));
+	physx::PxReal density = cubeactor ? cubeactor->density : gDefaultRigidBodyDensity;
+	physx::PxTransform transform(cubeactor ? cubeactor->pos : gRigidBodyFallPos,
+		cubeactor ? createQuatRotation(cubeactor->rotate) : physx::PxQuat(Deg2Rad(RandomRadius()), physx::PxVec3(0, 1, 0)));
 	physx::PxBoxGeometry geometry(dimensions);
 
 	physx::PxRigidDynamic *nactor = PxCreateDynamic(*gPhysicsSDK, transform, geometry, *gDefaultMaterial, density);
 	physx::PxRigidBodyExt::updateMassAndInertia(*nactor, density);
 	nactor->userData = cubeactor;
 	nactor->setAngularDamping(0.75);
-	nactor->setLinearVelocity(cubeactor ? cubeactor->getVelocity() : physx::PxVec3(0, 0, 0));
+	nactor->setLinearVelocity(cubeactor ? cubeactor->velocity : physx::PxVec3(0, 0, 0));
 
 	if(!nactor)
 		std::cerr << "create box actor failed!" << std::endl;
@@ -423,7 +423,7 @@ std::string vecToString(const physx::PxVec3 &p) {
 }
 
 void setActorDrain(physx::PxActor *actor, CActor *cactor) {
-	if(!cactor->getParticleDrain()) return;
+	if(!cactor->particleDrain) return;
 
 	physx::PxType actorType = actor->getConcreteType();
 	if(actorType == physx::PxConcreteType::eRIGID_STATIC || actorType == physx::PxConcreteType::eRIGID_DYNAMIC) {
@@ -446,8 +446,8 @@ void AddBoxStatic(CCubeActor *cubeActor) {
 	assert(cubeActor != NULL);
 
 	// Create static box
-	physx::PxTransform transform(cubeActor->getPos(), createQuatRotation(cubeActor->getRotate()));
-	physx::PxBoxGeometry geometry(cubeActor->getSize());
+	physx::PxTransform transform(cubeActor->pos, createQuatRotation(cubeActor->rotate));
+	physx::PxBoxGeometry geometry(cubeActor->size);
 
 	physx::PxRigidStatic *nactor = PxCreateStatic(*gPhysicsSDK, transform, geometry, *gDefaultMaterial);
 	nactor->userData = cubeActor;
@@ -463,8 +463,8 @@ void AddBoxStatic(CCubeActor *cubeActor) {
 
 void AddSphereStatic(CSphereActor *sphereActor) {
 	// Create static sphere
-	physx::PxTransform transform(sphereActor ? sphereActor->getPos() : gRigidBodyFallPos,
-		sphereActor ? createQuatRotation(sphereActor->getRotate()) : physx::PxQuat(Deg2Rad(RandomRadius()), physx::PxVec3(0, 1, 0)));
+	physx::PxTransform transform(sphereActor ? sphereActor->pos : gRigidBodyFallPos,
+		sphereActor ? createQuatRotation(sphereActor->rotate) : physx::PxQuat(Deg2Rad(RandomRadius()), physx::PxVec3(0, 1, 0)));
 	physx::PxSphereGeometry geometry(sphereActor ? sphereActor->getRadius() : 0.5f);
 
 	physx::PxRigidStatic *nactor = PxCreateStatic(*gPhysicsSDK, transform, geometry, *gDefaultMaterial);
@@ -480,15 +480,15 @@ void AddSphereStatic(CSphereActor *sphereActor) {
 
 void AddSphere(CSphereActor *sphereActor) {
 	// Create sphere
-	physx::PxReal density = sphereActor ? sphereActor->getDensitiy() : gDefaultRigidBodyDensity;
-	physx::PxTransform transform(sphereActor ? sphereActor->getPos() : gRigidBodyFallPos,
-		sphereActor ? createQuatRotation(sphereActor->getRotate()) : physx::PxQuat(physx::PxIdentity));
+	physx::PxReal density = sphereActor ? sphereActor->density : gDefaultRigidBodyDensity;
+	physx::PxTransform transform(sphereActor ? sphereActor->pos : gRigidBodyFallPos,
+		sphereActor ? createQuatRotation(sphereActor->rotate) : physx::PxQuat(physx::PxIdentity));
 	physx::PxSphereGeometry geometry(sphereActor ? sphereActor->getRadius() : 0.5f);
 
 	physx::PxRigidDynamic *nactor = PxCreateDynamic(*gPhysicsSDK, transform, geometry, *gDefaultMaterial, density);
 	physx::PxRigidBodyExt::updateMassAndInertia(*nactor, density);
 	nactor->setAngularDamping(0.75);
-	nactor->setLinearVelocity(sphereActor ? sphereActor->getVelocity() : physx::PxVec3(0, 0, 0));
+	nactor->setLinearVelocity(sphereActor ? sphereActor->velocity : physx::PxVec3(0, 0, 0));
 	nactor->userData = sphereActor;
 
 	if(!nactor)
@@ -692,20 +692,20 @@ void ClearScene() {
 }
 
 void AddScenarioActor(CActor *actor) {
-	if(actor->getPrimitive() == EActorPrimitive::ActorPrimitiveCube) {
+	if(actor->primitive == EActorPrimitive::ActorPrimitiveCube) {
 		CCubeActor *cube = (CCubeActor *)actor;
 
-		if(actor->getType() == EActorType::ActorTypeStatic) {
+		if(actor->type == EActorType::ActorTypeStatic) {
 			AddBoxStatic(cube);
-		} else if(actor->getType() == EActorType::ActorTypeDynamic) {
-			AddBox(cube->getSize(), cube);
+		} else if(actor->type == EActorType::ActorTypeDynamic) {
+			AddBox(cube->size, cube);
 		}
-	} else if(actor->getPrimitive() == EActorPrimitive::ActorPrimitiveSphere) {
+	} else if(actor->primitive == EActorPrimitive::ActorPrimitiveSphere) {
 		CSphereActor *sphere = (CSphereActor *)actor;
 
-		if(actor->getType() == EActorType::ActorTypeStatic)
+		if(actor->type == EActorType::ActorTypeStatic)
 			AddSphereStatic(sphere);
-		else if(actor->getType() == EActorType::ActorTypeDynamic)
+		else if(actor->type == EActorType::ActorTypeDynamic)
 			AddSphere(sphere);
 	}
 }
@@ -818,9 +818,9 @@ void ResetScene() {
 		// Adding actors immediately
 		for(int i = 0; i < gActiveFluidScenario->getActors(); i++) {
 			CActor *actor = gActiveFluidScenario->getActor(i);
-			actor->setTimeElapsed(0.0f);
+			actor->timeElapsed = 0.0f;
 
-			if(actor->getTime() == -1) {
+			if(actor->time == -1) {
 				AddScenarioActor(actor);
 			}
 		}
@@ -1086,7 +1086,7 @@ void UpdatePhysX(const float frametime) {
 physx::PxVec4 getColor(physx::PxActor *actor, const physx::PxVec4 &defaultColor) {
 	if(actor->userData) {
 		CActor *a = (CActor *)actor->userData;
-		return a->getColor();
+		return a->color;
 	} else {
 		physx::PxType actorType = actor->getConcreteType();
 		if(actorType == physx::PxConcreteType::eRIGID_STATIC)
@@ -1204,8 +1204,8 @@ void DrawActor(physx::PxActor *actor) {
 
 		if(actor->userData) {
 			CActor *a = (CActor *)actor->userData;
-			isVisible = a->getVisible();
-			blending = a->getBlending();
+			isVisible = a->visible;
+			blending = a->blending;
 		}
 
 		if(isVisible) {
@@ -1215,7 +1215,7 @@ void DrawActor(physx::PxActor *actor) {
 			if(actorType == physx::PxConcreteType::eRIGID_STATIC || actorType == physx::PxConcreteType::eRIGID_DYNAMIC) {
 				physx::PxRigidActor *rigActor = (physx::PxRigidActor *)actor;
 				physx::PxU32 nShapes = rigActor->getNbShapes();
-				physx::PxShape **shapes = new physx::PxShape *[nShapes];
+				physx::PxShape **shapes = new physx::PxShape * [nShapes];
 
 				if(blending) {
 					gRenderer->SetBlending(true);
@@ -1267,7 +1267,7 @@ void ShutdownPhysX() {
 
 #ifdef PVD_ENABLED
 	if(gPhysXVisualDebugger != NULL) {
-		if (gPhysXVisualDebugger->isConnected())
+		if(gPhysXVisualDebugger->isConnected())
 			gPhysXVisualDebugger->disconnect();
 		gPhysXVisualDebugger->release();
 	}
@@ -1438,7 +1438,7 @@ const char *GetFluidDebugType(unsigned int type) {
 			return "Thickness only\0";
 
 		case SWOWTYPE_ABSORBTION:
-			return "Color absorbition only\0";
+			return "Color absorption only\0";
 
 		default:
 			return "Unknown\0";
@@ -1452,11 +1452,11 @@ void CreateActorsBasedOnTime(const float frametime) {
 		for(int i = 0; i < gActiveFluidScenario->getActors(); i++) {
 			CActor *actor = gActiveFluidScenario->getActor(i);
 
-			if(actor->getTime() > 0) {
-				if(actor->getTimeElapsed() < (float)actor->getTime()) {
-					actor->setTimeElapsed(actor->getTimeElapsed() + frametime);
+			if(actor->time > 0) {
+				if(actor->timeElapsed < (float)actor->time) {
+					actor->timeElapsed += frametime;
 
-					if(actor->getTimeElapsed() >= (float)actor->getTime()) {
+					if(actor->timeElapsed >= (float)actor->time) {
 						AddScenarioActor(actor);
 					}
 				}
@@ -2533,7 +2533,7 @@ void main(int argc, char **argv) {
 	int maxColorAttachments = 0;
 	glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, &maxColorAttachments);
 
-	if((!GLEW_VERSION_2_0) || 
+	if((!GLEW_VERSION_2_0) ||
 		(!glewIsSupported("GL_ARB_texture_float GL_ARB_point_sprite GL_ARB_framebuffer_object")) ||
 		(maxColorAttachments < 4)) {
 		printf("failed\n");

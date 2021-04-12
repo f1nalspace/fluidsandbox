@@ -155,7 +155,7 @@ CFluidScenario* CFluidScenario::load(const char* filename, CScene* scene)
 					CActor* newactor = NULL;
 					if (strcmp(primitive.c_str(), "cube") == 0) {
 						CCubeActor* typedActor = new CCubeActor(atype);
-						typedActor->setSize(size);
+						typedActor->size = size;
 						newactor = typedActor;
 					} else if (strcmp(primitive.c_str(), "sphere") == 0) {
 						CSphereActor* typedActor = new CSphereActor(atype);
@@ -165,15 +165,15 @@ CFluidScenario* CFluidScenario::load(const char* filename, CScene* scene)
 						std::cerr << "    Actor primitive type '" << primitive << "' is not valid!" << std::endl;
 					}
 
-					newactor->setPos(pos);
-					newactor->setTime(actorTime);
-					newactor->setColor(color);
-					newactor->setDensity(density);
-					newactor->setVelocity(velocity);
-					newactor->setVisible(visible);
-					newactor->setBlending(blending);
-					newactor->setRotate(rotate);
-					newactor->setParticleDrain(particleDrain);
+					newactor->pos = pos;
+					newactor->time = actorTime;
+					newactor->color = color;
+					newactor->density = density;
+					newactor->velocity = velocity;
+					newactor->visible = visible;
+					newactor->blending = blending;
+					newactor->rotate = rotate;
+					newactor->particleDrain = particleDrain;
 
 					if (newactor) {
 						newScenario->addActor(newactor);
