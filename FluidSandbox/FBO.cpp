@@ -7,26 +7,33 @@ CFBO::CFBO(int width, int height)
     this->width = width;
     this->height = height;
     this->bufferId = 0;
-    this->maxColorAttachments = 0;
-    glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, &maxColorAttachments);
+    this->textureCount = 0;
+	for(uint32_t i = 0; i < MaxTextureCount; ++i)
+		textures[i] = NULL;
+
+    GLint temp;
+    glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, &temp);
+    maxColorAttachments = temp;
 }
 
 CFBO::~CFBO(void)
 {
     // Remove textures
-    for(std::map<const char*, CTexture2D*>::iterator it = textures.begin(); it != textures.end(); ++it)
+    for(std::map<FBOTextureID, CTexture2D*>::iterator it = textureMap.begin(); it != textureMap.end(); ++it)
         delete it->second;
 
-    textures.clear();
+    textureMap.clear();
+    textureCount = 0;
 
     if(bufferId)
         glDeleteFramebuffers(1, &bufferId);
 }
 
-int CFBO::getMaxColorAttachments()
+uint32_t CFBO::getMaxColorAttachments()
 {
     int temp = 0;
     glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, &temp);
+    uint32_t result = temp;
     return temp;
 }
 
@@ -73,9 +80,9 @@ bool StatusFBO()
     }
 }
 
-void CFBO::addTextureTarget(GLint internalFormat, GLenum format, GLenum type, GLenum fbotype, const char* name, GLuint texfilter)
+uint32_t CFBO::addTextureTarget(GLint internalFormat, GLenum format, GLenum type, GLenum fbotype, const FBOTextureID id, GLuint texfilter)
 {
-    assert((int)textures.size() < maxColorAttachments);
+    assert(textureCount < MaxTextureCount);
 
     // Create new texture
     GLuint texFilters[2] = {texfilter, texfilter};
@@ -83,13 +90,16 @@ void CFBO::addTextureTarget(GLint internalFormat, GLenum format, GLenum type, GL
     newtex->setUserData(fbotype);
     newtex->upload(NULL);
 
-    // Add texture to map
-    textures[name] = newtex;
+    // Add texture to array and map
+    uint32_t result = textureCount++;
+    textures[result] = newtex;
+    textureMap[id] = newtex;
+    return(result);
 }
 
-void CFBO::addRenderTarget(GLint internalFormat, GLenum format, GLenum type, GLenum fbotype, const char* name, GLuint texfilter)
+uint32_t CFBO::addRenderTarget(GLint internalFormat, GLenum format, GLenum type, GLenum fbotype, const FBOTextureID id, GLuint texfilter)
 {
-    assert((int)textures.size() < maxColorAttachments);
+	assert(textureCount < MaxTextureCount);
 
     // Create new texture
     GLuint texFilters[2] = {texfilter, texfilter};
@@ -97,13 +107,16 @@ void CFBO::addRenderTarget(GLint internalFormat, GLenum format, GLenum type, GLe
     newtex->setUserData(fbotype);
     newtex->upload(NULL);
 
-    // Add texture to map
-    textures[name] = newtex;
+    // Add texture to array and map
+    uint32_t result = textureCount++;
+    textures[result] = newtex;
+    textureMap[id] = newtex;
+    return(result);
 }
 
-CTexture2D* CFBO::getTexture(const char* name)
+CTexture2D* CFBO::getTexture(const FBOTextureID id)
 {
-    return textures[name];
+    return textureMap[id];
 }
 
 void CFBO::enable()
@@ -123,7 +136,7 @@ void CFBO::resize(int width, int height)
     this->height = height;
 
     // Recreate textures
-    for(std::map<const char*, CTexture2D*>::iterator it = textures.begin(); it != textures.end(); ++it)
+    for(std::map<FBOTextureID, CTexture2D*>::iterator it = textureMap.begin(); it != textureMap.end(); ++it)
         it->second->resize(width, height);
 
     // Update FBO
@@ -140,7 +153,7 @@ void CFBO::update()
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, bufferId);
 
     // Update/Add textures to framebuffer
-    for(std::map<const char*, CTexture2D*>::iterator it = textures.begin(); it != textures.end(); ++it)
+    for(std::map<FBOTextureID, CTexture2D*>::iterator it = textureMap.begin(); it != textureMap.end(); ++it)
     {
         CTexture2D* tex = it->second;
         GLuint userdata = tex->getUserData();
@@ -156,9 +169,9 @@ void CFBO::update()
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 }
 
-void CFBO::changeDepthTexture(const char* name)
+void CFBO::changeDepthTexture(const FBOTextureID id)
 {
-    CTexture2D* tex = getTexture(name);
+    CTexture2D* tex = getTexture(id);
 
     if(tex)
         glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, tex->getID(), 0);
