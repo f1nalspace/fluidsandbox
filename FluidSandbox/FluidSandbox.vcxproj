@@ -240,6 +240,7 @@ Copy "$(SolutionDir)Libraries\glew\bin\$(Platform)\glew32.dll" "$(OutDir)"</Comm
     <ClCompile Include="GLSLManager.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="OSLowLevel.cpp" />
+    <ClCompile Include="AllShaders.cpp" />
     <ClCompile Include="Primitives.cpp" />
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="Scene.cpp" />
@@ -268,6 +269,7 @@ Copy "$(SolutionDir)Libraries\glew\bin\$(Platform)\glew32.dll" "$(OutDir)"</Comm
     <ClInclude Include="GLSLManager.h" />
     <ClInclude Include="Light.h" />
     <ClInclude Include="OSLowLevel.h" />
+    <ClInclude Include="AllShaders.h" />
     <ClInclude Include="Primitives.h" />
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="Scene.h" />

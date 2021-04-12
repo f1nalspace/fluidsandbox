@@ -24,6 +24,7 @@
     <ClCompile Include="Utils.cpp" />
     <ClCompile Include="VBO.cpp" />
     <ClCompile Include="XMLUtils.cpp" />
+    <ClCompile Include="AllShaders.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Actor.h" />
@@ -54,6 +55,7 @@
     <ClInclude Include="VBO.h" />
     <ClInclude Include="XMLUtils.h" />
     <ClInclude Include="TextureIDs.h" />
+    <ClInclude Include="AllShaders.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="LICENSE.txt" />

@@ -8,6 +8,8 @@ private:
 	GLuint program;
 	void printShaderInfoLog(GLuint obj);
 	void printProgramInfoLog(GLuint obj);
+protected:
+	virtual void updateUniformLocations(){}
 public:
 	CGLSL(void);
 	~CGLSL(void);

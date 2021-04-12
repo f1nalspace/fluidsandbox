@@ -14,6 +14,7 @@
 #include "Renderer.h"
 #include "Camera.hpp"
 #include "Utils.h"
+#include "AllShaders.h"
 
 const int SSFShaderCount = 6;
 
@@ -22,7 +23,7 @@ const int SSFShaderIndex_ThicknessPass = 1;
 const int SSFShaderIndex_DepthBlurFast = 2;
 const int SSFShaderIndex_ClearWater = 3;
 const int SSFShaderIndex_ColorWater = 4;
-const int SSFShaderIndex_Debug = 5;
+const int SSFShaderIndex_DebugWater = 5;
 
 struct FluidColor
 {
@@ -83,25 +84,36 @@ const float MIN_DEPTH = -9999.0f;
 class CScreenSpaceFluidRendering
 {
 private:
+	CGLSL *aShaders[SSFShaderCount];
+
+	CFBO *cFrameBuffer;
+	CFBO *cFrameBufferDepth;
+	CRenderer *pRenderer;
+	CSphericalPointSprites *pPointSprites;
+	CPointSpritesShader *pPointSpritesShader;
+
+	CDepthShader *depthShader;
+	CThicknessShader *thicknessShader;
+	CWa *depthBlurShader;
+	CWaterShader *clearWaterShader;
+	CWaterShader *colorWaterShader;
+	CWaterShader *debugWaterShader;
+
+	CTexture *pSceneTexture;
+	CTexture *pSkyboxCubemap;
+
 	int iFBOWidth;
 	int iFBOHeight;
 	int iWindowWidth;
 	int iWindowHeight;
 	float fFBOFactor;
 	float fNewFBOFactor;
-	CFBO* cFrameBuffer;
-	CFBO* cFrameBufferDepth;
-	CRenderer* pRenderer;
-	CSphericalPointSprites* pPointSprites;
-	CGLSL* pPointSpritesShader;
-	CGLSL* aShaders[SSFShaderCount];
-	CTexture* pSceneTexture;
-	CTexture* pSkyboxCubemap;
 	float particleRadius;
+
 	void DepthPass(unsigned int numPointSprites, const glm::mat4 &proj, const glm::mat4 &view, float zfar, float znear, int wH);
 	void ThicknessPass(unsigned int numPointSprites, const glm::mat4 &proj, const glm::mat4 &view, float zfar, float znear, int wH);
 	void RenderSSF(CCamera &cam, unsigned int numPointSprites, SSFDrawingOptions &dstate, int wW, int wH);
-	void RenderPointSprites(unsigned int numPointSprites, glm::mat4 &proj, glm::mat4 &view, float zfar, float znear, CGLSL* shader, int wH);
+	void RenderPointSprites(unsigned int numPointSprites, glm::mat4 &proj, glm::mat4 &view, float zfar, float znear, CPointSpritesShader* shader, int wH);
 	void RenderFullscreenQuad();
 	void BlurDepthPass(const glm::mat4 &mvp, CTexture2D* depthTexture, float dirX, float dirY);
 	void WaterPass(const glm::mat4 &mvp, CCamera &cam, CTexture2D* depthTexture, CTexture2D* thicknessTexture, FluidColor *color, const int showType);
@@ -112,7 +124,7 @@ public:
 	void Render(CCamera &cam, unsigned int numPointSprites, SSFDrawingOptions &dstate, int wW, int wH);
 	void SetRenderer(CRenderer* value) { pRenderer = value; }
 	void SetPointSprites(CSphericalPointSprites* value) { pPointSprites = value; }
-	void SetPointSpritesShader(CGLSL* value) { pPointSpritesShader = value; }
+	void SetPointSpritesShader(CPointSpritesShader* value) { pPointSpritesShader = value; }
 	void SetSceneTexture(CTexture* texture) { pSceneTexture = texture; }
 	void SetSkyboxCubemap(CTexture* cubemap) { pSkyboxCubemap = cubemap; }
 	bool IsSupported() { return cFrameBuffer != NULL; }

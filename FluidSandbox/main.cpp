@@ -34,8 +34,6 @@ Todo:
 
 	- No more pragma comment lib for the libraries, just configure it in the project directly
 
-	- Cache shader uniform locations to improve performance
-
 	- Do not use any std::map or std::string classes while running the simulation.
 	  See CFBO::textures
 	  Use numeric ids instead and simply map it to a static array with fixed size
@@ -154,6 +152,7 @@ License:
 #include "Light.h"
 #include "GLSLManager.h"
 #include "TextureIDs.h"
+#include "AllShaders.h"
 
 // App path
 std::string appPath = "";
@@ -257,8 +256,8 @@ const int MAX_DEBUGTYPE = SWOWTYPE_ABSORBTION;
 int gFluidDebugType = SWOWTYPE_FINAL;
 
 static CSphericalPointSprites *gPointSprites = NULL;
-static CGLSL *gPointSpritesShader = NULL;
-static CGLSL *gLightingShader = NULL;
+static CPointSpritesShader *gPointSpritesShader = NULL;
+static CLightingShader *gLightingShader = NULL;
 
 bool gFluidUseGPUAcceleration = false;
 
@@ -345,7 +344,7 @@ CCamera gCamera;
 CFBO *gSceneFBO = NULL;
 CGLSL *gSceneShader = NULL;
 CVBO *gSkyboxVBO = NULL;
-CGLSL *gSkyboxShader = NULL;
+CSkyboxShader *gSkyboxShader = NULL;
 CTexture *gSkyboxCubemap = NULL;
 CTexture *gTestTexture = NULL;
 
@@ -1110,7 +1109,7 @@ void DrawBox(physx::PxShape *pShape) {
 	gRenderer->LoadMatrix(multm);
 
 	gLightingShader->enable();
-	gLightingShader->uniform4f(gLightingShader->getUniformLocation("color"), &color[0]);
+	gLightingShader->uniform4f(gLightingShader->ulocColor, &color[0]);
 	DrawGLCube(bg.halfExtents.x, bg.halfExtents.y, bg.halfExtents.z);
 	gLightingShader->disable();
 }
@@ -1127,7 +1126,7 @@ void DrawSphere(physx::PxShape *pShape) {
 	gRenderer->LoadMatrix(multm);
 
 	gLightingShader->enable();
-	gLightingShader->uniform4f(gLightingShader->getUniformLocation("color"), &color[0]);
+	gLightingShader->uniform4f(gLightingShader->ulocColor, &color[0]);
 	glutSolidSphere(sg.radius, 16, 16);
 	gLightingShader->disable();
 }
@@ -1143,7 +1142,7 @@ void DrawCapsule(physx::PxShape *pShape) {
 	glm::mat4 multm = gCamera.GetModelViewProjection() * mat;
 
 	gLightingShader->enable();
-	gLightingShader->uniform4f(gLightingShader->getUniformLocation("color"), &color[0]);
+	gLightingShader->uniform4f(gLightingShader->ulocColor, &color[0]);
 
 	glm::mat4 rotation = glm::rotate(multm, 90.0f, glm::vec3(0.0f, 1.0f, 0.0f));
 	glm::mat4 translation = glm::translate(rotation, glm::vec3(0.0f, 0.0f, -cg.halfHeight));
@@ -1706,8 +1705,8 @@ void RenderSkybox(const glm::mat4 &mvp) {
 	gRenderer->EnableTexture(0, gSkyboxCubemap);
 
 	gSkyboxShader->enable();
-	gSkyboxShader->uniformMatrix4(gSkyboxShader->getUniformLocation("mvp"), &mvp[0][0]);
-	gSkyboxShader->uniform1i(gSkyboxShader->getUniformLocation("cubemap"), 0);
+	gSkyboxShader->uniformMatrix4(gSkyboxShader->ulocMVP, &mvp[0][0]);
+	gSkyboxShader->uniform1i(gSkyboxShader->ulocCubemap, 0);
 
 	gSkyboxVBO->bind();
 	glEnableClientState(GL_VERTEX_ARRAY);
@@ -2364,7 +2363,7 @@ void initResources() {
 
 	// Create spherical point sprites shader
 	printf("  Load spherical point sprites shader\n");
-	gPointSpritesShader = new CGLSL();
+	gPointSpritesShader = new CPointSpritesShader();
 	Utils::attachShaderFromFile(gPointSpritesShader, GL_VERTEX_SHADER, "shaders\\PointSprites.vertex", "    ");
 	Utils::attachShaderFromFile(gPointSpritesShader, GL_FRAGMENT_SHADER, "shaders\\PointSprites.fragment", "    ");
 
@@ -2397,14 +2396,14 @@ void initResources() {
 
 	// Create lightung shader
 	printf("  Create lighting renderer\n");
-	gLightingShader = new CGLSL();
+	gLightingShader = new CLightingShader();
 	Utils::attachShaderFromFile(gLightingShader, GL_VERTEX_SHADER, "shaders\\Lighting.vertex", "    ");
 	Utils::attachShaderFromFile(gLightingShader, GL_FRAGMENT_SHADER, "shaders\\Lighting.fragment", "    ");
 
 	// Create skybox vbo and shader
 	printf("  Create skybox\n");
 	gSkyboxVBO = Primitives::createCube(100, 100, 100, false);
-	gSkyboxShader = new CGLSL();
+	gSkyboxShader = new CSkyboxShader();
 	Utils::attachShaderFromFile(gSkyboxShader, GL_VERTEX_SHADER, "shaders\\Skybox.vertex", "    ");
 	Utils::attachShaderFromFile(gSkyboxShader, GL_FRAGMENT_SHADER, "shaders\\Skybox.fragment", "    ");
 }

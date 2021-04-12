@@ -43,6 +43,8 @@ void CGLSL::attachShader(GLuint shaderType, const char* source)
 		printProgramInfoLog(program);
 	
 	glDeleteShader(sid);
+
+	updateUniformLocations();
 }
 
 void CGLSL::printShaderInfoLog(GLuint obj)

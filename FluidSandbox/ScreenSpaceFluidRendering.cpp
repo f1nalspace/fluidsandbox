@@ -4,8 +4,6 @@
 
 //#define BETTERBLUR
 
-const char* SSFShaderFiles[SSFShaderCount] = {"Depth", "Thickness", "DepthBlur", "ClearWater", "ColorWater", "Debug"};
-
 CScreenSpaceFluidRendering::CScreenSpaceFluidRendering(int width, int height, float particleRadius)
 {
 	this->particleRadius = particleRadius;
@@ -41,14 +39,46 @@ CScreenSpaceFluidRendering::CScreenSpaceFluidRendering(int width, int height, fl
 		cFrameBuffer->update();
 
 		// Create shaders
-		for (int i = 0; i < SSFShaderCount; i++)
 		{
-			std::string temp = "shaders\\";
-			temp += SSFShaderFiles[i];
-			aShaders[i] = new CGLSL();
-			Utils::attachShaderFromFile(aShaders[i], GL_VERTEX_SHADER, (temp + ".vertex").c_str(), "    ");
-			Utils::attachShaderFromFile(aShaders[i], GL_FRAGMENT_SHADER, (temp + ".fragment").c_str(), "    ");
+			std::string depthShaderPath = std::string("shaders\\" + std::string(CDepthShader::ShaderName));
+			aShaders[SSFShaderIndex_DepthPass] = depthShader = new CDepthShader();
+			Utils::attachShaderFromFile(depthShader, GL_VERTEX_SHADER, (depthShaderPath + ".vertex").c_str(), "    ");
+			Utils::attachShaderFromFile(depthShader, GL_FRAGMENT_SHADER, (depthShaderPath + ".fragment").c_str(), "    ");
 		}
+		{
+			std::string thicknessShaderPath = std::string("shaders\\" + std::string(CThicknessShader::ShaderName));
+			aShaders[SSFShaderIndex_ThicknessPass] = thicknessShader = new CThicknessShader();
+			Utils::attachShaderFromFile(thicknessShader, GL_VERTEX_SHADER, (thicknessShaderPath + ".vertex").c_str(), "    ");
+			Utils::attachShaderFromFile(thicknessShader, GL_FRAGMENT_SHADER, (thicknessShaderPath + ".fragment").c_str(), "    ");
+		}
+		{
+			std::string depthBlurShaderPath = std::string("shaders\\" + std::string(CWa::ShaderName));
+			aShaders[SSFShaderIndex_DepthBlurFast] = depthBlurShader = new CWa();
+			Utils::attachShaderFromFile(depthBlurShader, GL_VERTEX_SHADER, (depthBlurShaderPath + ".vertex").c_str(), "    ");
+			Utils::attachShaderFromFile(depthBlurShader, GL_FRAGMENT_SHADER, (depthBlurShaderPath + ".fragment").c_str(), "    ");
+		}
+		{
+			std::string clearWaterShaderPath = std::string("shaders\\" + std::string(CWaterShader::ClearName));
+			aShaders[SSFShaderIndex_ClearWater] = clearWaterShader = new CWaterShader();
+			Utils::attachShaderFromFile(clearWaterShader, GL_VERTEX_SHADER, (clearWaterShaderPath + ".vertex").c_str(), "    ");
+			Utils::attachShaderFromFile(clearWaterShader, GL_FRAGMENT_SHADER, (clearWaterShaderPath + ".fragment").c_str(), "    ");
+		}
+		{
+			std::string colorWaterShaderPath = std::string("shaders\\" + std::string(CWaterShader::ColorName));
+			aShaders[SSFShaderIndex_ColorWater] = colorWaterShader = new CWaterShader();
+			Utils::attachShaderFromFile(colorWaterShader, GL_VERTEX_SHADER, (colorWaterShaderPath + ".vertex").c_str(), "    ");
+			Utils::attachShaderFromFile(colorWaterShader, GL_FRAGMENT_SHADER, (colorWaterShaderPath + ".fragment").c_str(), "    ");
+		}
+		{
+			std::string debugWaterShaderPath = std::string("shaders\\" + std::string(CWaterShader::DebugName));
+			aShaders[SSFShaderIndex_DebugWater] = debugWaterShader = new CWaterShader();
+			Utils::attachShaderFromFile(debugWaterShader, GL_VERTEX_SHADER, (debugWaterShaderPath + ".vertex").c_str(), "    ");
+			Utils::attachShaderFromFile(debugWaterShader, GL_FRAGMENT_SHADER, (debugWaterShaderPath + ".fragment").c_str(), "    ");
+		}
+
+		for (int i = 0; i < SSFShaderCount; i++)
+			assert(aShaders[i] != NULL);
+
 		printf("    Screen space fluid rendering is supported.\n");
 	}
 	else
@@ -77,55 +107,52 @@ CScreenSpaceFluidRendering::~CScreenSpaceFluidRendering(void)
 
 void CScreenSpaceFluidRendering::DepthPass(unsigned int numPointSprites, const glm::mat4 &proj, const glm::mat4 &view, float zfar, float znear, int wH)
 {
-	CGLSL* shader = aShaders[SSFShaderIndex_DepthPass];
-	shader->enable();
-	shader->uniform1f(shader->getUniformLocation("pointScale"), CSphericalPointSprites::GetPointScale(wH, 50.0f));
-	shader->uniform1f(shader->getUniformLocation("pointRadius"), particleRadius);
-	shader->uniform1f(shader->getUniformLocation("near"), znear);
-	shader->uniform1f(shader->getUniformLocation("far"), zfar);
-	shader->uniformMatrix4(shader->getUniformLocation("viewMat"), &view[0][0]);
-	shader->uniformMatrix4(shader->getUniformLocation("projMat"), &proj[0][0]);
+	depthShader->enable();
+	depthShader->uniform1f(depthShader->ulocPointScale, CSphericalPointSprites::GetPointScale(wH, 50.0f));
+	depthShader->uniform1f(depthShader->ulocPointRadius, particleRadius);
+	depthShader->uniform1f(depthShader->ulocNear, znear);
+	depthShader->uniform1f(depthShader->ulocFar, zfar);
+	depthShader->uniformMatrix4(depthShader->ulocViewMat, &view[0][0]);
+	depthShader->uniformMatrix4(depthShader->ulocProjMat, &proj[0][0]);
 	pPointSprites->Draw(numPointSprites);
-	shader->disable();
+	depthShader->disable();
 }
 
 void CScreenSpaceFluidRendering::ThicknessPass(unsigned int numPointSprites, const glm::mat4 &proj, const glm::mat4 &view, float zfar, float znear, int wH)
 {
-	CGLSL* shader = aShaders[SSFShaderIndex_ThicknessPass];
-
 	pRenderer->ClearColor(0,0,0,0);
 	pRenderer->Clear(ClearFlags::Color);
 	pRenderer->SetBlendFunc(GL_ONE, GL_ONE);
 	pRenderer->SetBlending(true);
 	pRenderer->SetDepthMask(false);
 
-	shader->enable();
-	shader->uniform1f(shader->getUniformLocation("pointScale"), CSphericalPointSprites::GetPointScale(wH, 50.0f));
-	shader->uniform1f(shader->getUniformLocation("pointRadius"), particleRadius * 2.0f);
-	shader->uniform1f(shader->getUniformLocation("near"), znear);
-	shader->uniform1f(shader->getUniformLocation("far"), zfar);
-	shader->uniformMatrix4(shader->getUniformLocation("viewMat"), &view[0][0]);
-	shader->uniformMatrix4(shader->getUniformLocation("projMat"), &proj[0][0]);
+	thicknessShader->enable();
+	thicknessShader->uniform1f(thicknessShader->ulocPointScale, CSphericalPointSprites::GetPointScale(wH, 50.0f));
+	thicknessShader->uniform1f(thicknessShader->ulocPointRadius, particleRadius * 2.0f);
+	thicknessShader->uniform1f(thicknessShader->ulocNear, znear);
+	thicknessShader->uniform1f(thicknessShader->ulocFar, zfar);
+	thicknessShader->uniformMatrix4(thicknessShader->ulocViewMat, &view[0][0]);
+	thicknessShader->uniformMatrix4(thicknessShader->ulocProjMat, &proj[0][0]);
 
 	pPointSprites->Draw(numPointSprites);
 
-	shader->disable();
+	thicknessShader->disable();
 
 	pRenderer->SetDepthMask(true);
 	pRenderer->SetBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	pRenderer->SetBlending(false);
 }
 
-void CScreenSpaceFluidRendering::RenderPointSprites(unsigned int numPointSprites, glm::mat4 &proj, glm::mat4 &view, float zfar, float znear, CGLSL* shader, int wH)
+void CScreenSpaceFluidRendering::RenderPointSprites(unsigned int numPointSprites, glm::mat4 &proj, glm::mat4 &view, float zfar, float znear, CPointSpritesShader* shader, int wH)
 {
 	if (shader != NULL){
 		shader->enable();
-		shader->uniform1f(shader->getUniformLocation("pointScale"), CSphericalPointSprites::GetPointScale(wH, 50.0f));
-		shader->uniform1f(shader->getUniformLocation("pointRadius"), particleRadius);
-		shader->uniform1f(shader->getUniformLocation("near"), znear);
-		shader->uniform1f(shader->getUniformLocation("far"), zfar);
-		shader->uniformMatrix4(shader->getUniformLocation("viewMat"), &view[0][0]);
-		shader->uniformMatrix4(shader->getUniformLocation("projMat"), &proj[0][0]);
+		shader->uniform1f(shader->ulocPointScale, CSphericalPointSprites::GetPointScale(wH, 50.0f));
+		shader->uniform1f(shader->ulocPointRadius, particleRadius);
+		shader->uniform1f(shader->ulocNear, znear);
+		shader->uniform1f(shader->ulocFar, zfar);
+		shader->uniformMatrix4(shader->ulocViewMat, &view[0][0]);
+		shader->uniformMatrix4(shader->ulocProjMat, &proj[0][0]);
 	}
 	pPointSprites->Draw(numPointSprites);
 	if (shader != NULL){
@@ -150,15 +177,14 @@ void CScreenSpaceFluidRendering::BlurDepthPass(const glm::mat4 &mvp, CTexture2D*
 	pRenderer->EnableTexture(0, depthTexture);
 
 	// Process depth smooth shader on a fullscreen quad if active
-	CGLSL* shader = aShaders[SSFShaderIndex_DepthBlurFast];
-	shader->enable();
-	shader->uniform1i(shader->getUniformLocation("depthTex"), 0);
-	shader->uniform2f(shader->getUniformLocation("scale"), dirX, dirY);
-	shader->uniform1f(shader->getUniformLocation("radius"), 10.0f);
-	shader->uniform1f(shader->getUniformLocation("minDepth"), MIN_DEPTH);
-	shader->uniformMatrix4(shader->getUniformLocation("mvpMat"), &mvp[0][0]);
+	depthBlurShader->enable();
+	depthBlurShader->uniform1i(depthBlurShader->ulocDepthTex, 0);
+	depthBlurShader->uniform2f(depthBlurShader->ulocScale, dirX, dirY);
+	depthBlurShader->uniform1f(depthBlurShader->ulocRadius, 10.0f);
+	depthBlurShader->uniform1f(depthBlurShader->ulocMinDepth, MIN_DEPTH);
+	depthBlurShader->uniformMatrix4(depthBlurShader->ulocMVPMat, &mvp[0][0]);
 	RenderFullscreenQuad();
-	shader->disable();
+	depthBlurShader->disable();
 
 	// Unbind textures
 	pRenderer->DisableTexture(0, depthTexture);
@@ -177,26 +203,28 @@ void CScreenSpaceFluidRendering::WaterPass(const glm::mat4 &mvp, CCamera &cam, C
 	pRenderer->EnableTexture(3, pSkyboxCubemap); // Skybox Texture3 (Cubemap)
 
 	// Process normal and shading shader on a fullscreen quad
-	CGLSL* shader;
+	CWaterShader* shader;
 	if (showType == 0)
-		shader = aShaders[!color->isClear ? SSFShaderIndex_ColorWater : SSFShaderIndex_ClearWater];
+		shader = !color->isClear ? colorWaterShader : clearWaterShader;
 	else
-		shader = aShaders[SSFShaderIndex_Debug];
+		shader = debugWaterShader;
 	shader->enable();
-	shader->uniform1i(shader->getUniformLocation("depthTex"), 0);
-	shader->uniform1i(shader->getUniformLocation("thicknessTex"), 1);
-	shader->uniform1i(shader->getUniformLocation("sceneTex"), 2);
-	shader->uniform1i(shader->getUniformLocation("skyboxCubemap"), 3);
-	shader->uniform1f(shader->getUniformLocation("xFactor"), 1.0f/((float)iFBOWidth));
-	shader->uniform1f(shader->getUniformLocation("yFactor"), 1.0f/((float)iFBOHeight));
-	shader->uniform1f(shader->getUniformLocation("zFar"), cam.GetFarClip());
-	shader->uniform1f(shader->getUniformLocation("zNear"), cam.GetNearClip());
-	shader->uniform1f(shader->getUniformLocation("minDepth"), MIN_DEPTH);
-	shader->uniform4f(shader->getUniformLocation("colorFalloff"), (GLfloat*)&color->falloff[0]);
-	shader->uniform4f(shader->getUniformLocation("fluidColor"), (GLfloat*)&color->color[0]);
-	shader->uniform1i(shader->getUniformLocation("showType"), showType);
-	shader->uniformMatrix4(shader->getUniformLocation("mvpMat"), &mvp[0][0]);
-	shader->uniform1f(shader->getUniformLocation("falloffScale"), color->falloffScale);
+	shader->uniform1i(shader->ulocDepthTex, 0);
+	shader->uniform1i(shader->ulocThicknessTex, 1);
+	shader->uniform1i(shader->ulocSceneTex, 2);
+	shader->uniform1i(shader->ulocSkyboxCubemap, 3);
+	shader->uniform1f(shader->ulocXFactor, 1.0f/((float)iFBOWidth));
+	shader->uniform1f(shader->ulocYFactor, 1.0f/((float)iFBOHeight));
+	shader->uniform1f(shader->ulocZFar, cam.GetFarClip());
+	shader->uniform1f(shader->ulocZNear, cam.GetNearClip());
+	shader->uniform1f(shader->ulocMinDepth, MIN_DEPTH);
+	shader->uniform4f(shader->ulocColorFalloff, (GLfloat*)&color->falloff[0]);
+	shader->uniform1f(shader->ulocFalloffScale, color->falloffScale);
+
+	shader->uniform4f(shader->ulocFluidColor, (GLfloat*)&color->color[0]);
+	shader->uniform1i(shader->ulocShowType, showType);
+
+	shader->uniformMatrix4(shader->ulocMVPMat, &mvp[0][0]);
 	RenderFullscreenQuad();
 	shader->disable();
 
