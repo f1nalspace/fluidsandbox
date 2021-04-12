@@ -152,7 +152,9 @@ License:
 #include "Light.h"
 #include "GLSLManager.h"
 #include "TextureIDs.h"
+
 #include "AllShaders.h"
+#include "AllFBOs.h"
 
 // App path
 std::string appPath = "";
@@ -341,7 +343,7 @@ CScene *gActiveScene = NULL;
 CCamera gCamera;
 
 // Non fluid rendering
-CFBO *gSceneFBO = NULL;
+CSceneFBO *gSceneFBO = NULL;
 CGLSL *gSceneShader = NULL;
 CVBO *gSkyboxVBO = NULL;
 CSkyboxShader *gSkyboxShader = NULL;
@@ -2369,9 +2371,9 @@ void initResources() {
 
 	// Create scene FBO
 	printf("  Create scene FBO\n");
-	gSceneFBO = new CFBO(windowWidth, windowHeight);
-	gSceneFBO->addRenderTarget(GL_DEPTH_COMPONENT32, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, GL_DEPTH_ATTACHMENT, TEXTURE_ID_SCENE_DEPTH, GL_NEAREST);
-	gSceneFBO->addTextureTarget(GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, GL_COLOR_ATTACHMENT0, TEXTURE_ID_SCENE_SCENE, GL_LINEAR);
+	gSceneFBO = new CSceneFBO(windowWidth, windowHeight);
+	gSceneFBO->depthTexture = gSceneFBO->addRenderTarget(GL_DEPTH_COMPONENT32, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, GL_DEPTH_ATTACHMENT, GL_NEAREST);
+	gSceneFBO->sceneTexture = gSceneFBO->addTextureTarget(GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, GL_COLOR_ATTACHMENT0, GL_LINEAR);
 	gSceneFBO->update();
 
 	// Create scene shader
@@ -2386,7 +2388,7 @@ void initResources() {
 	gFluidRenderer->SetRenderer(gRenderer);
 	gFluidRenderer->SetPointSprites(gPointSprites);
 	gFluidRenderer->SetPointSpritesShader(gPointSpritesShader);
-	gFluidRenderer->SetSceneTexture(gSceneFBO->getTexture(TEXTURE_ID_SCENE_SCENE));
+	gFluidRenderer->SetSceneTexture(gSceneFBO->sceneTexture);
 	gFluidRenderer->SetSkyboxCubemap(gSkyboxCubemap);
 
 	if(gFluidRenderer->IsSupported())

@@ -66,7 +66,7 @@ public:
 	CThicknessShader(): CPointSpritesShader() {}
 };
 
-class CWa: public CGLSL {
+class CDepthBlurShader: public CGLSL {
 protected:
 	void updateUniformLocations();
 public:
@@ -77,7 +77,7 @@ public:
 	GLuint ulocMinDepth;
 	GLuint ulocMVPMat;
 
-	CWa():
+	CDepthBlurShader():
 		CGLSL(),
 		ulocDepthTex(0),
 		ulocScale(0),

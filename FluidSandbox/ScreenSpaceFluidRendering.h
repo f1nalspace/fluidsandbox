@@ -14,7 +14,9 @@
 #include "Renderer.h"
 #include "Camera.hpp"
 #include "Utils.h"
+
 #include "AllShaders.h"
+#include "AllFBOs.h"
 
 const int SSFShaderCount = 6;
 
@@ -86,15 +88,16 @@ class CScreenSpaceFluidRendering
 private:
 	CGLSL *aShaders[SSFShaderCount];
 
-	CFBO *cFrameBuffer;
-	CFBO *cFrameBufferDepth;
 	CRenderer *pRenderer;
 	CSphericalPointSprites *pPointSprites;
 	CPointSpritesShader *pPointSpritesShader;
 
+	CSSFRFullFBO *fullFrameBuffer;
+	CSSFRDepthFBO *depthFrameBuffer;
+
 	CDepthShader *depthShader;
 	CThicknessShader *thicknessShader;
-	CWa *depthBlurShader;
+	CDepthBlurShader *depthBlurShader;
 	CWaterShader *clearWaterShader;
 	CWaterShader *colorWaterShader;
 	CWaterShader *debugWaterShader;
@@ -127,7 +130,7 @@ public:
 	void SetPointSpritesShader(CPointSpritesShader* value) { pPointSpritesShader = value; }
 	void SetSceneTexture(CTexture* texture) { pSceneTexture = texture; }
 	void SetSkyboxCubemap(CTexture* cubemap) { pSkyboxCubemap = cubemap; }
-	bool IsSupported() { return cFrameBuffer != NULL; }
+	bool IsSupported() { return fullFrameBuffer != NULL; }
 	void SetFBOFactor(float factor) {
 		if (factor > 1.0f) factor = 1.0f;
 		if (factor < 0.0f) factor = 0.0f;

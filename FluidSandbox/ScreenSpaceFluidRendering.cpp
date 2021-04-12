@@ -20,23 +20,25 @@ CScreenSpaceFluidRendering::CScreenSpaceFluidRendering(int width, int height, fl
 	pPointSpritesShader = NULL;
 	pSceneTexture = NULL;
 	pSkyboxCubemap = NULL;
+	depthFrameBuffer = NULL;
+	fullFrameBuffer = NULL;
 
 	// Check if max color attachments is at least 4
 	if (CFBO::getMaxColorAttachments() >= 4)
 	{
 		// Create frame buffer object for depth
-		cFrameBufferDepth = new CFBO(iFBOWidth, iFBOHeight);
-		cFrameBufferDepth->addRenderTarget(GL_DEPTH_COMPONENT32, GL_DEPTH_COMPONENT, GL_FLOAT, GL_DEPTH_ATTACHMENT, TEXTURE_ID_SSF_DEPTH, GL_NEAREST); // Depth
-		cFrameBufferDepth->addTextureTarget(GL_RGB32F, GL_RGBA, GL_FLOAT, GL_COLOR_ATTACHMENT0, TEXTURE_ID_SSF_COLOR, GL_LINEAR); // Color
-		cFrameBufferDepth->update();
+		depthFrameBuffer = new CSSFRDepthFBO(iFBOWidth, iFBOHeight);
+		depthFrameBuffer->depthTexture = depthFrameBuffer->addRenderTarget(GL_DEPTH_COMPONENT32, GL_DEPTH_COMPONENT, GL_FLOAT, GL_DEPTH_ATTACHMENT, GL_NEAREST); // Depth
+		depthFrameBuffer->colorTexture = depthFrameBuffer->addTextureTarget(GL_RGB32F, GL_RGBA, GL_FLOAT, GL_COLOR_ATTACHMENT0, GL_LINEAR); // Color
+		depthFrameBuffer->update();
 
 		// Create frame buffer object
-		cFrameBuffer = new CFBO(iFBOWidth, iFBOHeight);
-		cFrameBuffer->addTextureTarget(GL_RGB32F, GL_RGBA, GL_FLOAT, GL_COLOR_ATTACHMENT0, TEXTURE_ID_SSF_THICKNESS, GL_NEAREST); // Thickness
-		cFrameBuffer->addTextureTarget(GL_RGB32F, GL_RGBA, GL_FLOAT, GL_COLOR_ATTACHMENT1, TEXTURE_ID_SSF_DEPTH_SMOOTH_A, GL_NEAREST); // Depth smooth A
-		cFrameBuffer->addTextureTarget(GL_RGB32F, GL_RGBA, GL_FLOAT, GL_COLOR_ATTACHMENT2, TEXTURE_ID_SSF_DEPTH_SMOOTH_B, GL_NEAREST); // Depth smooth B
-		cFrameBuffer->addTextureTarget(GL_RGB32F, GL_RGBA, GL_FLOAT, GL_COLOR_ATTACHMENT3, TEXTURE_ID_SSF_WATER, GL_LINEAR); // Water
-		cFrameBuffer->update();
+		fullFrameBuffer = new CSSFRFullFBO(iFBOWidth, iFBOHeight);
+		fullFrameBuffer->thicknessTexture = fullFrameBuffer->addTextureTarget(GL_RGB32F, GL_RGBA, GL_FLOAT, GL_COLOR_ATTACHMENT0, GL_NEAREST); // Thickness
+		fullFrameBuffer->depthSmoothATexture = fullFrameBuffer->addTextureTarget(GL_RGB32F, GL_RGBA, GL_FLOAT, GL_COLOR_ATTACHMENT1, GL_NEAREST); // Depth smooth A
+		fullFrameBuffer->depthSmoothBTexture = fullFrameBuffer->addTextureTarget(GL_RGB32F, GL_RGBA, GL_FLOAT, GL_COLOR_ATTACHMENT2, GL_NEAREST); // Depth smooth B
+		fullFrameBuffer->waterTexture = fullFrameBuffer->addTextureTarget(GL_RGB32F, GL_RGBA, GL_FLOAT, GL_COLOR_ATTACHMENT3, GL_LINEAR); // Water
+		fullFrameBuffer->update();
 
 		// Create shaders
 		{
@@ -52,8 +54,8 @@ CScreenSpaceFluidRendering::CScreenSpaceFluidRendering(int width, int height, fl
 			Utils::attachShaderFromFile(thicknessShader, GL_FRAGMENT_SHADER, (thicknessShaderPath + ".fragment").c_str(), "    ");
 		}
 		{
-			std::string depthBlurShaderPath = std::string("shaders\\" + std::string(CWa::ShaderName));
-			aShaders[SSFShaderIndex_DepthBlurFast] = depthBlurShader = new CWa();
+			std::string depthBlurShaderPath = std::string("shaders\\" + std::string(CDepthBlurShader::ShaderName));
+			aShaders[SSFShaderIndex_DepthBlurFast] = depthBlurShader = new CDepthBlurShader();
 			Utils::attachShaderFromFile(depthBlurShader, GL_VERTEX_SHADER, (depthBlurShaderPath + ".vertex").c_str(), "    ");
 			Utils::attachShaderFromFile(depthBlurShader, GL_FRAGMENT_SHADER, (depthBlurShaderPath + ".fragment").c_str(), "    ");
 		}
@@ -93,10 +95,10 @@ CScreenSpaceFluidRendering::~CScreenSpaceFluidRendering(void)
 			delete aShaders[i];
 
 	// Release framebuffer
-	if (cFrameBufferDepth)
-		delete cFrameBufferDepth;
-	if (cFrameBuffer) 
-		delete cFrameBuffer;
+	if (depthFrameBuffer)
+		delete depthFrameBuffer;
+	if (fullFrameBuffer) 
+		delete fullFrameBuffer;
 
 	// Release pointers
 	pSceneTexture = NULL;
@@ -238,8 +240,8 @@ void CScreenSpaceFluidRendering::WaterPass(const glm::mat4 &mvp, CCamera &cam, C
 
 void CScreenSpaceFluidRendering::RenderSSF(CCamera &cam, unsigned int numPointSprites, SSFDrawingOptions &dstate, int wW, int wH)
 {
-	assert(cFrameBuffer);
-	assert(pRenderer);
+	assert(fullFrameBuffer);
+	assert(depthFrameBuffer);
 
 	// Resize FBO if needed
 	if ((wW != iWindowWidth) ||
@@ -251,20 +253,21 @@ void CScreenSpaceFluidRendering::RenderSSF(CCamera &cam, unsigned int numPointSp
 		fFBOFactor = fNewFBOFactor;
 		iFBOWidth = CalcFBOSize(wW, fFBOFactor);
 		iFBOHeight = CalcFBOSize(wH, fFBOFactor);
-		cFrameBuffer->resize(iFBOWidth, iFBOHeight);
-		cFrameBufferDepth->resize(iFBOWidth, iFBOHeight);
+		fullFrameBuffer->resize(iFBOWidth, iFBOHeight);
+		depthFrameBuffer->resize(iFBOWidth, iFBOHeight);
 	}
 
 	// Retrieve texture pointers
-	CTexture2D* depthTexture = cFrameBufferDepth->getTexture(TEXTURE_ID_SSF_DEPTH);
-	CTexture2D* colorTexture = cFrameBufferDepth->getTexture(TEXTURE_ID_SSF_COLOR);
-	CTexture2D* thicknessTexture = cFrameBuffer->getTexture(TEXTURE_ID_SSF_THICKNESS);
-	CTexture2D* depthSmoothATexture = cFrameBuffer->getTexture(TEXTURE_ID_SSF_DEPTH_SMOOTH_A);
-	CTexture2D* depthSmoothBTexture = cFrameBuffer->getTexture(TEXTURE_ID_SSF_DEPTH_SMOOTH_B);
-	CTexture2D* waterTexture = cFrameBuffer->getTexture(TEXTURE_ID_SSF_WATER);
+	CTexture2D* depthTexture = depthFrameBuffer->depthTexture;
+	CTexture2D* colorTexture = depthFrameBuffer->colorTexture;
+
+	CTexture2D *thicknessTexture = fullFrameBuffer->thicknessTexture;
+	CTexture2D *depthSmoothATexture = fullFrameBuffer->depthSmoothATexture;
+	CTexture2D *depthSmoothBTexture = fullFrameBuffer->depthSmoothBTexture;
+	CTexture2D *waterTexture = fullFrameBuffer->waterTexture;
 	
 	// Save latest draw buffer
-	GLint latestDrawBuffer = cFrameBuffer->getDrawBuffer();
+	GLint latestDrawBuffer = fullFrameBuffer->getDrawBuffer();
 
 	// Get required matrices
 	glm::mat4 mvp = cam.GetModelViewProjection();
@@ -292,19 +295,19 @@ void CScreenSpaceFluidRendering::RenderSSF(CCamera &cam, unsigned int numPointSp
 	pRenderer->SetColor(1.0f,1.0f,1.0f,1.0f);
 
 	// Pass 1: Render point sprites to depth and color
-	cFrameBufferDepth->enable();
-	cFrameBufferDepth->setDrawBuffer(GL_COLOR_ATTACHMENT0);
+	depthFrameBuffer->enable();
+	depthFrameBuffer->setDrawBuffer(GL_COLOR_ATTACHMENT0);
 	pRenderer->ClearColor(-10000.0f,0.0f,0.0f,0.0f);
 	pRenderer->Clear(ClearFlags::Color | ClearFlags::Depth);
 	DepthPass(numPointSprites, mproj, mview, far_depth, near_depth, iFBOHeight);
-	cFrameBufferDepth->disable();
+	depthFrameBuffer->disable();
 
 	// Enable FBO
-	cFrameBuffer->enable();
+	fullFrameBuffer->enable();
 
 	// Pass 2: Render point sprites to thickness
 	// -------------------------------------
-	cFrameBuffer->setDrawBuffer(GL_COLOR_ATTACHMENT0); // Draw to color attachment 0: Thickness
+	fullFrameBuffer->setDrawBuffer(GL_COLOR_ATTACHMENT0); // Draw to color attachment 0: Thickness
 	ThicknessPass(numPointSprites, mproj, mview, far_depth, near_depth, iFBOHeight);
 
 	// Change to 2D mvp
@@ -313,22 +316,22 @@ void CScreenSpaceFluidRendering::RenderSSF(CCamera &cam, unsigned int numPointSp
 	if (dstate.blurEnabled) {
 		// Pass 3: Blur depth A
 		// -------------------------------------
-		cFrameBuffer->setDrawBuffer(GL_COLOR_ATTACHMENT1); // Draw to color attachment 1: Smooth depth A
+		fullFrameBuffer->setDrawBuffer(GL_COLOR_ATTACHMENT1); // Draw to color attachment 1: Smooth depth A
 		BlurDepthPass(orthoMVP, colorTexture, dstate.blurScale, 0.0f);
 
 		// Pass 4: Blur depth B
 		// -------------------------------------
-		cFrameBuffer->setDrawBuffer(GL_COLOR_ATTACHMENT2); // Draw to color attachment 2: Smooth depth B
+		fullFrameBuffer->setDrawBuffer(GL_COLOR_ATTACHMENT2); // Draw to color attachment 2: Smooth depth B
 		BlurDepthPass(orthoMVP, depthSmoothATexture, 0.0f, dstate.blurScale);
 	} else {
 		depthSmoothBTexture = colorTexture;
 	}
 
 	// Disable FBO
-	cFrameBuffer->disable();
+	fullFrameBuffer->disable();
 
 	// Restore latest draw buffer
-	cFrameBuffer->setDrawBuffer(latestDrawBuffer);
+	fullFrameBuffer->setDrawBuffer(latestDrawBuffer);
 
 	// Set view and scissor
 	pRenderer->SetViewport(0,0,iWindowWidth,iWindowHeight);

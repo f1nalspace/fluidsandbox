@@ -17,7 +17,7 @@ void CPointSpritesShader::updateUniformLocations() {
 	ulocViewMat = getUniformLocation("viewMat");
 	ulocProjMat = getUniformLocation("projMat");
 }
-void CWa::updateUniformLocations() {
+void CDepthBlurShader::updateUniformLocations() {
 	ulocDepthTex = getUniformLocation("depthTex");
 	ulocScale = getUniformLocation("scale");
 	ulocRadius = getUniformLocation("radius");
