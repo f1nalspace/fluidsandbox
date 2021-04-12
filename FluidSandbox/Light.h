@@ -3,23 +3,24 @@
 
 #include <PxPhysicsAPI.h>
 
-struct Light {
-	enum class Type {
-		Point,
-		Directional
-	};
+enum class LightType {
+	Point,
+	Directional
+};
 
-	Type type;
-	physx::PxVec3 pos;
-	float radius;
+struct Light {
 	physx::PxVec4 color;
+	physx::PxVec3 pos;
+	physx::PxVec3 dir;
+	float radius;
 	float falloff;
 	float shininess;
-	physx::PxVec3 dir;
 	float accel;
 	float curAngle;
+	LightType type;
+
 	inline Light() {
-		type = Type::Point;
+		type = LightType::Point;
 		pos = physx::PxVec3(0.0);
 		radius = 0.0f;
 		color = physx::PxVec4(0.0f);
@@ -29,7 +30,8 @@ struct Light {
 		accel = 0.0f;
 		curAngle = 0.0f;
 	};
-	inline Light(const Type &type, const physx::PxVec3 &pos, const float &radius, const physx::PxVec4 &color, const float &falloff, const float &shininess) {
+
+	inline Light(const LightType &type, const physx::PxVec3 &pos, const float &radius, const physx::PxVec4 &color, const float &falloff, const float &shininess) {
 		this->type = type;
 		this->pos = pos;
 		this->radius = radius;

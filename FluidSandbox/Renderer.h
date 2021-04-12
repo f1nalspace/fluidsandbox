@@ -31,22 +31,48 @@ static const char *glErrorToString(GLuint code) {
 	}
 }
 
-namespace ClearFlags
-{
-	enum {
-		Color = 1,
-		Depth = 2
-	};
+enum class ClearFlags: int {
+	None = 0,
+	Color = 1 << 0,
+	Depth = 1 << 1
 };
+
+inline ClearFlags operator | (ClearFlags a, ClearFlags b) {
+
+	return static_cast<ClearFlags>(static_cast<int>(a) | static_cast<int>(b));
+}
+inline ClearFlags &operator |= (ClearFlags &a, ClearFlags b) {
+
+	return a = a | b;
+}
+inline ClearFlags operator & (ClearFlags a, ClearFlags b) {
+
+	return static_cast<ClearFlags>(static_cast<int>(a) & static_cast<int>(b));
+}
+inline ClearFlags &operator &= (ClearFlags &a, ClearFlags b) {
+
+	return a = a & b;
+}
+inline ClearFlags operator ~ (ClearFlags a) {
+
+	return static_cast<ClearFlags>(~static_cast<int>(a));
+}
+inline ClearFlags operator ^ (ClearFlags a, ClearFlags b) {
+
+	return static_cast<ClearFlags>(static_cast<int>(a) ^ static_cast<int>(b));
+}
+inline ClearFlags &operator ^= (ClearFlags &a, ClearFlags b) {
+
+	return a = a ^ b;
+}
 
 const short MAX_TEXTURES = 16;
 struct TextureState {
 	bool active;
-	CTexture* texture;
+	CTexture *texture;
 };
 
-class CRenderer
-{
+class CRenderer {
 private:
 	bool depthTestEnabled;
 	bool depthMaskEnabled;
@@ -58,27 +84,27 @@ private:
 public:
 	CRenderer(void);
 	~CRenderer(void);
-	void Clear(unsigned int flags);
-	void ClearColor(float r, float g, float b, float a);
-	
-	void SetViewport(int left, int top, int width, int height);
-	void SetScissor(int left, int top, int width, int height);
+	void Clear(const ClearFlags flags);
+	void ClearColor(const float r, const float g, const float b, const float a);
+
+	void SetViewport(const int left, const int top, const int width, const int height);
+	void SetScissor(const int left, const int top, const int width, const int height);
 	void LoadMatrix(const glm::mat4 &m);
 
-	void SetColor(float r, float g, float b, float a);
-	void SetColor(float* color);
-	void SetDepthTest(bool enabled);
-	void SetDepthMask(bool enabled);
-	void SetCullFace(bool enabled);
-	void SetBlending(bool enabled);
-	void SetBlendFunc(GLenum sfactor, GLenum dfactor);
-	void SetWireframe(bool enabled);
-	void EnableTexture(int index, CTexture* texture);
-	void DisableTexture(int index, CTexture* texture);
+	void SetColor(const float r, const float g, const float b, const float a);
+	void SetColor(const float *color);
+	void SetDepthTest(const bool enabled);
+	void SetDepthMask(const bool enabled);
+	void SetCullFace(const bool enabled);
+	void SetBlending(const bool enabled);
+	void SetBlendFunc(const GLenum sfactor, const GLenum dfactor);
+	void SetWireframe(const bool enabled);
+	void EnableTexture(const int index, CTexture *texture);
+	void DisableTexture(const int index, CTexture *texture);
 
-	void DrawTexturedQuad(float posX, float posY, float scaleW, float scaleH);
-	void DrawTexturedRect(float left, float top, float right, float bottom);
-	void DrawVBO(CVBO* vbo, const GLenum mode);
+	void DrawTexturedQuad(const float posX, const float posY, const float scaleW, const float scaleH);
+	void DrawTexturedRect(const float left, const float top, const float right, const float bottom);
+	void DrawVBO(CVBO *vbo, const GLenum mode);
 
 	void Flip();
 

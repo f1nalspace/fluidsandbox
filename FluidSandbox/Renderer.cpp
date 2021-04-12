@@ -43,27 +43,27 @@ CRenderer::~CRenderer(void)
 {
 }
 
-void CRenderer::Clear(unsigned int flags)
+void CRenderer::Clear(const ClearFlags flags)
 {
 	GLbitfield f = 0;
-	if (flags & ClearFlags::Color) 
+	if ((flags & ClearFlags::Color) == ClearFlags::Color) 
 		f |= GL_COLOR_BUFFER_BIT;
-	if (flags & ClearFlags::Depth) 
+	if ((flags & ClearFlags::Depth) == ClearFlags::Depth) 
 		f |= GL_DEPTH_BUFFER_BIT;
 	glClear(f);
 }
 
-void CRenderer::ClearColor(float r, float g, float b, float a)
+void CRenderer::ClearColor(const float r, const float g, const float b, const float a)
 {
 	glClearColor(r, g, b, a);
 }
 
-void CRenderer::SetViewport(int left, int top, int width, int height)
+void CRenderer::SetViewport(const int left, const int top, const int width, const int height)
 {
 	glViewport(left, top, width, height);
 }
 
-void CRenderer::SetScissor(int left, int top, int width, int height)
+void CRenderer::SetScissor(const int left, const int top, const int width, const int height)
 {
 	glScissor(left, top, width, height);
 }
@@ -74,17 +74,17 @@ void CRenderer::LoadMatrix(const glm::mat4 &m)
 	glLoadMatrixf(&m[0][0]);
 }
 
-void CRenderer::SetColor(float r, float g, float b, float a)
+void CRenderer::SetColor(const float r, const float g, const float b, const float a)
 {
 	glColor4f(r, g, b, a);
 }
 
-void CRenderer::SetColor(float* color)
+void CRenderer::SetColor(const float* color)
 {
 	glColor4fv(color);
 }
 
-void CRenderer::SetDepthTest(bool enabled)
+void CRenderer::SetDepthTest(const bool enabled)
 {
 	assert(depthTestEnabled != enabled);
 	depthTestEnabled = enabled;
@@ -94,7 +94,7 @@ void CRenderer::SetDepthTest(bool enabled)
 		glDisable(GL_DEPTH_TEST);
 }
 
-void CRenderer::SetDepthMask(bool enabled)
+void CRenderer::SetDepthMask(const bool enabled)
 {
 	assert(depthMaskEnabled != enabled);
 	depthMaskEnabled = enabled;
@@ -104,7 +104,7 @@ void CRenderer::SetDepthMask(bool enabled)
 		glDepthMask(GL_FALSE);
 }
 
-void CRenderer::SetCullFace(bool enabled)
+void CRenderer::SetCullFace(const bool enabled)
 {
 	assert(cullFaceEnabled != enabled);
 	cullFaceEnabled = enabled;
@@ -114,7 +114,7 @@ void CRenderer::SetCullFace(bool enabled)
 		glDisable(GL_CULL_FACE);
 }
 
-void CRenderer::SetBlending(bool enabled)
+void CRenderer::SetBlending(const bool enabled)
 {
 	assert(blendingEnabled != enabled);
 	blendingEnabled = enabled;
@@ -124,7 +124,7 @@ void CRenderer::SetBlending(bool enabled)
 		glDisable(GL_BLEND);
 }
 
-void CRenderer::SetBlendFunc(GLenum sfactor, GLenum dfactor)
+void CRenderer::SetBlendFunc(const GLenum sfactor, const GLenum dfactor)
 {
 	assert(blendFunc[0] != sfactor || blendFunc[1] != dfactor);
 	blendFunc[0] = sfactor;
@@ -132,7 +132,7 @@ void CRenderer::SetBlendFunc(GLenum sfactor, GLenum dfactor)
 	glBlendFunc(blendFunc[0], blendFunc[1]);
 }
 
-void CRenderer::SetWireframe(bool enabled)
+void CRenderer::SetWireframe(const bool enabled)
 {
 	assert(wireframeEnabled != enabled);
 	wireframeEnabled = enabled;
@@ -142,7 +142,7 @@ void CRenderer::SetWireframe(bool enabled)
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
-void CRenderer::DrawTexturedQuad(float posX, float posY, float scaleW, float scaleH)
+void CRenderer::DrawTexturedQuad(const float posX, const float posY, const float scaleW, const float scaleH)
 {
 	glBegin(GL_QUADS);
 	glTexCoord2f(0.0f, 1.0f); glVertex2f(posX + 0.0f, posY + 0.0f);
@@ -152,7 +152,7 @@ void CRenderer::DrawTexturedQuad(float posX, float posY, float scaleW, float sca
 	glEnd();
 }
 
-void CRenderer::DrawTexturedRect(float left, float top, float right, float bottom)
+void CRenderer::DrawTexturedRect(const float left, const float top, const float right, const float bottom)
 {
 	glBegin(GL_QUADS);
 	glTexCoord2f(0.0f, 0.0f); glVertex2f(left, top);
@@ -173,7 +173,7 @@ void CRenderer::Flip()
 	glutSwapBuffers();
 }
 
-void CRenderer::EnableTexture(int index, CTexture* texture)
+void CRenderer::EnableTexture(const int index, CTexture* texture)
 {
 	assert(texture != NULL);
 	assert(!textureStates[index].active);
@@ -185,7 +185,7 @@ void CRenderer::EnableTexture(int index, CTexture* texture)
 	textureStates[index].texture = texture;
 }
 
-void CRenderer::DisableTexture(int index, CTexture* texture)
+void CRenderer::DisableTexture(const int index, CTexture* texture)
 {
 	assert(textureStates[index].active);
 	assert(textureStates[index].texture == texture);
