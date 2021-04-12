@@ -43,7 +43,7 @@ Todo:
 
 	- Do not use std::vector, simple static or growable arrays will do (We never remove from a array - only clear)
 
-	- Move away from classes and use more structs, too much useless OOP
+	- Move away from classes and use more structs, too much useless OOP, useless getters and setters
 
 	- More cameras (Free, Rotate around point, Fixed)
 
