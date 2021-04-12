@@ -23,7 +23,7 @@ CTexture2D::~CTexture2D(void)
 {
 }
 
-void CTexture2D::upload(char* pixels)
+void CTexture2D::upload(const char* pixels)
 {
 	GLuint newid = create();
 	bind();
@@ -31,7 +31,7 @@ void CTexture2D::upload(char* pixels)
 	glTexParameteri(getTarget(), GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameteri(getTarget(), GL_TEXTURE_MAG_FILTER, texMagFilter);
 	glTexParameteri(getTarget(), GL_TEXTURE_MIN_FILTER, texMinFilter);
-	glTexImage2D(getTarget(), 0, getInternalFormat(), width, height, 0, getFormat(), getType(), (GLvoid*)pixels);
+	glTexImage2D(getTarget(), 0, getInternalFormat(), width, height, 0, getFormat(), getType(), (const GLvoid*)pixels);
 	unbind();
 }
 

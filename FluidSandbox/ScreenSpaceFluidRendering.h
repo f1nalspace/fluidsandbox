@@ -113,18 +113,18 @@ private:
 	float fNewFBOFactor;
 	float particleRadius;
 
-	void DepthPass(unsigned int numPointSprites, const glm::mat4 &proj, const glm::mat4 &view, float zfar, float znear, int wH);
-	void ThicknessPass(unsigned int numPointSprites, const glm::mat4 &proj, const glm::mat4 &view, float zfar, float znear, int wH);
-	void RenderSSF(CCamera &cam, unsigned int numPointSprites, SSFDrawingOptions &dstate, int wW, int wH);
-	void RenderPointSprites(unsigned int numPointSprites, glm::mat4 &proj, glm::mat4 &view, float zfar, float znear, CPointSpritesShader* shader, int wH);
+	void DepthPass(const unsigned int numPointSprites, const glm::mat4 &proj, const glm::mat4 &view, const float zfar, const float znear, const int wH);
+	void ThicknessPass(const unsigned int numPointSprites, const glm::mat4 &proj, const glm::mat4 &view, const float zfar, const float znear, const int wH);
+	void RenderSSF(CCamera &cam, const unsigned int numPointSprites, const SSFDrawingOptions &dstate, const int wW, const int wH);
+	void RenderPointSprites(const unsigned int numPointSprites, const glm::mat4 &proj, const glm::mat4 &view, const float zfar, const float znear, CPointSpritesShader* shader, const int wH);
 	void RenderFullscreenQuad();
-	void BlurDepthPass(const glm::mat4 &mvp, CTexture2D* depthTexture, float dirX, float dirY);
-	void WaterPass(const glm::mat4 &mvp, CCamera &cam, CTexture2D* depthTexture, CTexture2D* thicknessTexture, FluidColor *color, const int showType);
+	void BlurDepthPass(const glm::mat4 &mvp, CTexture2D* depthTexture, const float dirX, const float dirY);
+	void WaterPass(const glm::mat4 &mvp, CCamera &cam, CTexture2D* depthTexture, CTexture2D* thicknessTexture, const FluidColor *color, const int showType);
 	int CalcFBOSize(int size, float factor) { return (int)(size * factor); }
 public:
-	CScreenSpaceFluidRendering(int width, int height, float particleRadius);
+	CScreenSpaceFluidRendering(const int width, const int height, const float particleRadius);
 	~CScreenSpaceFluidRendering(void);
-	void Render(CCamera &cam, unsigned int numPointSprites, SSFDrawingOptions &dstate, int wW, int wH);
+	void Render(CCamera &cam, const unsigned int numPointSprites, const SSFDrawingOptions &dstate, const int wW, const int wH);
 	void SetRenderer(CRenderer* value) { pRenderer = value; }
 	void SetPointSprites(CSphericalPointSprites* value) { pPointSprites = value; }
 	void SetPointSpritesShader(CPointSpritesShader* value) { pPointSpritesShader = value; }

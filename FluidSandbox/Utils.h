@@ -15,7 +15,7 @@ namespace Utils {
 	std::vector<std::string> split(const std::string &source, const char *delimiter);
 	void replaceString(std::string &value, const std::string &search, const std::string &replace);
 
-	void attachShaderFromFile(CGLSL *shader, GLuint what, const std::string &filename, const char *indent);
+	void attachShaderFromFile(CGLSL *shader, const GLuint what, const std::string &filename, const char *indent);
 	
 	std::vector<char> toCharVector(const std::string &source);
 	float toFloat(const std::string &str);

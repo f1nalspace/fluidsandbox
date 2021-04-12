@@ -68,6 +68,7 @@ License:
 #include <time.h>
 #include <malloc.h>
 #include <string.h>
+#include <stdint.h>
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include <typeinfo>
@@ -148,7 +149,6 @@ License:
 #include "FluidDescription.h"
 #include "Light.h"
 #include "GLSLManager.h"
-#include "TextureIDs.h"
 
 #include "AllShaders.h"
 #include "AllFBOs.h"
@@ -223,8 +223,8 @@ int gHideRigidBodies = HideRigidBody_None;
 bool showOSD = false;
 
 // Drawing statistics
-int gTotalActors = 0;
-int gDrawedActors = 0;
+size_t gTotalActors = 0;
+size_t gDrawedActors = 0;
 unsigned int gTotalFluidParticles = 0;
 
 // For fluid simulation
@@ -894,7 +894,7 @@ void InitializePhysX() {
 	sceneDesc.filterShader = gDefaultFilterShader;
 
 	// CPU Dispatcher based on number of cpu cores
-	int numThreads = gActiveScene->getNumCPUThreads();
+	uint32_t numThreads = gActiveScene->getNumCPUThreads();
 
 	if(numThreads > COSLowLevel::getInstance()->getNumCPUCores())
 		numThreads = COSLowLevel::getInstance()->getNumCPUCores();
@@ -1598,9 +1598,9 @@ void RenderOSD() {
 	RenderOSDLine(osdPos, buffer);
 
 	if(showOSD) {
-		sprintf_s(buffer, "Drawed actors: %d of %d", gDrawedActors, gTotalActors);
+		sprintf_s(buffer, "Drawed actors: %zu of %zu", gDrawedActors, gTotalActors);
 		RenderOSDLine(osdPos, buffer);
-		sprintf_s(buffer, "Total fluid particles: %d", gTotalFluidParticles);
+		sprintf_s(buffer, "Total fluid particles: %lu", gTotalFluidParticles);
 		RenderOSDLine(osdPos, buffer);
 		sprintf_s(buffer, "Draw error: %s", drawingError.c_str());
 		RenderOSDLine(osdPos, buffer);
@@ -1624,7 +1624,7 @@ void RenderOSD() {
 		RenderOSDLine(osdPos, buffer);
 		sprintf_s(buffer, "Fluid Rendering Mode (S): %s", GetFluidRenderMode(gSSFRenderMode));
 		RenderOSDLine(osdPos, buffer);
-		sprintf_s(buffer, "Fluid color (C): %d / %d - %s", gSSFCurrentFluidIndex + 1, gActiveScene->getFluidColors(), activeFluidColor->name.c_str());
+		sprintf_s(buffer, "Fluid color (C): %d / %zu - %s", gSSFCurrentFluidIndex + 1, gActiveScene->getFluidColors(), activeFluidColor->name.c_str());
 		RenderOSDLine(osdPos, buffer);
 		sprintf_s(buffer, "Fluid detail level (P): %3.2f %s", gSSFDetailFactor * 100.0f, "%");
 		RenderOSDLine(osdPos, buffer);
@@ -1660,7 +1660,7 @@ void RenderOSD() {
 		RenderOSDLine(osdPos, buffer);
 		sprintf_s(buffer, "    Fluid color falloff alpha: %f", activeFluidColor->falloff.w);
 		RenderOSDLine(osdPos, buffer);
-		sprintf_s(buffer, "Fluid scenario (L): %d / %d - %s", gActiveFluidScenarioIdx + 1, gFluidScenarios.size(), gActiveFluidScenario ? gActiveFluidScenario->getName() : "No scenario loaded!");
+		sprintf_s(buffer, "Fluid scenario (L): %d / %zu - %s", gActiveFluidScenarioIdx + 1, gFluidScenarios.size(), gActiveFluidScenario ? gActiveFluidScenario->getName() : "No scenario loaded!");
 		RenderOSDLine(osdPos, buffer);
 		sprintf_s(buffer, "New actor (Space)");
 		RenderOSDLine(osdPos, buffer);

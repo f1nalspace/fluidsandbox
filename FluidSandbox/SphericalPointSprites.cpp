@@ -12,7 +12,7 @@ CSphericalPointSprites::~CSphericalPointSprites(void)
 		glDeleteBuffersARB(1, &iVBO);
 }
 
-void CSphericalPointSprites::Allocate(unsigned int total)
+void CSphericalPointSprites::Allocate(const unsigned int total)
 {
 	iTotalSprites = total;
 	glGenBuffersARB(1, &iVBO);
@@ -21,7 +21,7 @@ void CSphericalPointSprites::Allocate(unsigned int total)
 	glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
 }
 
-void CSphericalPointSprites::Draw(unsigned int count)
+void CSphericalPointSprites::Draw(const unsigned int count)
 {
 	glEnable(GL_POINT_SPRITE_ARB);
 	glTexEnvi(GL_POINT_SPRITE_ARB, GL_COORD_REPLACE_ARB, GL_TRUE);

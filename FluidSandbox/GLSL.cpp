@@ -25,7 +25,7 @@ void CGLSL::disable()
 	glUseProgram(0);
 }
 
-void CGLSL::attachShader(GLuint shaderType, const char* source)
+void CGLSL::attachShader(const GLuint shaderType, const char* source)
 {
 	GLint r = GL_FALSE;
 
@@ -97,47 +97,47 @@ GLint CGLSL::getAttribLocation(const char* name)
 		return 0;
 }
 
-void CGLSL::uniform1i(GLint location, GLint value)
+void CGLSL::uniform1i(const GLint location, const GLint value)
 {
 	glUniform1i(location, value);
 }
 
-void CGLSL::uniform1f(GLint location, GLfloat value)
+void CGLSL::uniform1f(const GLint location, const GLfloat value)
 {
 	glUniform1f(location, value);
 }
 
-void CGLSL::uniform2f(GLint location, GLfloat x, GLfloat y)
+void CGLSL::uniform2f(const GLint location, const GLfloat x, const GLfloat y)
 {
 	glUniform2f(location, x, y);
 }
 
-void CGLSL::uniform3f(GLint location, const GLfloat* value)
+void CGLSL::uniform3f(const GLint location, const GLfloat* value)
 {
 	glUniform3fv(location, 1, value);
 }
 
-void CGLSL::uniform4f(GLint location, const GLfloat* value)
+void CGLSL::uniform4f(const GLint location, const GLfloat* value)
 {
 	glUniform4fv(location, 1, value);
 }
 
-void CGLSL::uniformMatrix4(GLint location, const GLfloat* value)
+void CGLSL::uniformMatrix4(const GLint location, const GLfloat* value)
 {
 	glUniformMatrix4fv(location, 1, GL_FALSE, value);
 }
 
-void CGLSL::enableVertexAttribArray(GLint location)
+void CGLSL::enableVertexAttribArray(const GLint location)
 {
 	glEnableVertexAttribArray(location);
 }
 
-void CGLSL::disableVertexAttribArray(GLint location)
+void CGLSL::disableVertexAttribArray(const GLint location)
 {
 	glDisableVertexAttribArray(location);
 }
 
-void CGLSL::vertexAttribPointer(GLint location, GLint size, GLenum type, GLboolean normalized, GLsizei stride, GLvoid* pointer)
+void CGLSL::vertexAttribPointer(const GLint location, const GLint size, const GLenum type, const GLboolean normalized, const GLsizei stride, const GLvoid* pointer)
 {
 	glVertexAttribPointer(location, size, type, normalized, stride, pointer);
 }

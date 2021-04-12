@@ -26,7 +26,7 @@ void CVBO::clear()
     indexCount = 0;
 }
 
-void CVBO::bufferVertices(GLfloat* vertices, GLuint vertexSize, GLenum usage)
+void CVBO::bufferVertices(const GLfloat* vertices, GLuint vertexSize, GLenum usage)
 {
     if(vbo == 0)
     {
@@ -38,7 +38,7 @@ void CVBO::bufferVertices(GLfloat* vertices, GLuint vertexSize, GLenum usage)
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-void CVBO::bufferIndices(GLuint* indices, GLuint indexCount, GLenum usage)
+void CVBO::bufferIndices(const GLuint* indices, GLuint indexCount, GLenum usage)
 {
     if(ibo == 0)
     {
@@ -66,7 +66,7 @@ void CVBO::bind()
     */
 }
 
-void CVBO::drawElements(GLenum mode)
+void CVBO::drawElements(const GLenum mode)
 {
     glDrawElements(mode, indexCount, GL_UNSIGNED_INT, NULL);
 }

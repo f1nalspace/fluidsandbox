@@ -13,10 +13,10 @@ public:
 	CVBO(void);
 	~CVBO(void);
 	void clear();
-	void bufferVertices(GLfloat* vertices, GLuint vertexSize, GLenum usage);
-	void bufferIndices(GLuint* indices, GLuint indexCount, GLenum usage);
+	void bufferVertices(const GLfloat* vertices, GLuint vertexSize, GLenum usage);
+	void bufferIndices(const GLuint* indices, GLuint indexCount, GLenum usage);
 	void bind();
 	void unbind();
-	void drawElements(GLenum mode);
+	void drawElements(const GLenum mode);
 };
 

@@ -1,10 +1,6 @@
 #include "ScreenSpaceFluidRendering.h"
 
-#include "TextureIDs.h"
-
-//#define BETTERBLUR
-
-CScreenSpaceFluidRendering::CScreenSpaceFluidRendering(int width, int height, float particleRadius)
+CScreenSpaceFluidRendering::CScreenSpaceFluidRendering(const int width, const int height, const float particleRadius)
 {
 	this->particleRadius = particleRadius;
 	iWindowWidth = width;
@@ -107,7 +103,7 @@ CScreenSpaceFluidRendering::~CScreenSpaceFluidRendering(void)
 	pRenderer = NULL;
 }
 
-void CScreenSpaceFluidRendering::DepthPass(unsigned int numPointSprites, const glm::mat4 &proj, const glm::mat4 &view, float zfar, float znear, int wH)
+void CScreenSpaceFluidRendering::DepthPass(const unsigned int numPointSprites, const glm::mat4 &proj, const glm::mat4 &view, const float zfar, const float znear, const int wH)
 {
 	depthShader->enable();
 	depthShader->uniform1f(depthShader->ulocPointScale, CSphericalPointSprites::GetPointScale(wH, 50.0f));
@@ -120,7 +116,7 @@ void CScreenSpaceFluidRendering::DepthPass(unsigned int numPointSprites, const g
 	depthShader->disable();
 }
 
-void CScreenSpaceFluidRendering::ThicknessPass(unsigned int numPointSprites, const glm::mat4 &proj, const glm::mat4 &view, float zfar, float znear, int wH)
+void CScreenSpaceFluidRendering::ThicknessPass(const unsigned int numPointSprites, const glm::mat4 &proj, const glm::mat4 &view, const float zfar, const float znear, const int wH)
 {
 	pRenderer->ClearColor(0,0,0,0);
 	pRenderer->Clear(ClearFlags::Color);
@@ -145,7 +141,7 @@ void CScreenSpaceFluidRendering::ThicknessPass(unsigned int numPointSprites, con
 	pRenderer->SetBlending(false);
 }
 
-void CScreenSpaceFluidRendering::RenderPointSprites(unsigned int numPointSprites, glm::mat4 &proj, glm::mat4 &view, float zfar, float znear, CPointSpritesShader* shader, int wH)
+void CScreenSpaceFluidRendering::RenderPointSprites(const unsigned int numPointSprites, const glm::mat4 &proj, const glm::mat4 &view, const float zfar, const float znear, CPointSpritesShader* shader, const int wH)
 {
 	if (shader != NULL){
 		shader->enable();
@@ -167,7 +163,7 @@ void CScreenSpaceFluidRendering::RenderFullscreenQuad()
 	pRenderer->DrawTexturedQuad(0.0f,0.0f,1.0f,1.0f);
 }
 
-void CScreenSpaceFluidRendering::BlurDepthPass(const glm::mat4 &mvp, CTexture2D* depthTexture, float dirX, float dirY)
+void CScreenSpaceFluidRendering::BlurDepthPass(const glm::mat4 &mvp, CTexture2D* depthTexture, const float dirX, const float dirY)
 {
 	pRenderer->SetDepthTest(false);
 	pRenderer->SetDepthMask(false);
@@ -195,7 +191,7 @@ void CScreenSpaceFluidRendering::BlurDepthPass(const glm::mat4 &mvp, CTexture2D*
 	pRenderer->SetDepthMask(true);
 }
 
-void CScreenSpaceFluidRendering::WaterPass(const glm::mat4 &mvp, CCamera &cam, CTexture2D* depthTexture, CTexture2D* thicknessTexture, FluidColor *color, const int showType)
+void CScreenSpaceFluidRendering::WaterPass(const glm::mat4 &mvp, CCamera &cam, CTexture2D* depthTexture, CTexture2D* thicknessTexture, const FluidColor *color, const int showType)
 {
 	// Bind 3 textures (Depth, Thickness, Scene)
 	pRenderer->SetBlending(true);
@@ -238,7 +234,7 @@ void CScreenSpaceFluidRendering::WaterPass(const glm::mat4 &mvp, CCamera &cam, C
 	pRenderer->SetBlending(false);
 }
 
-void CScreenSpaceFluidRendering::RenderSSF(CCamera &cam, unsigned int numPointSprites, SSFDrawingOptions &dstate, int wW, int wH)
+void CScreenSpaceFluidRendering::RenderSSF(CCamera &cam, const unsigned int numPointSprites, const SSFDrawingOptions &dstate, const int wW, const int wH)
 {
 	assert(fullFrameBuffer);
 	assert(depthFrameBuffer);
@@ -341,7 +337,7 @@ void CScreenSpaceFluidRendering::RenderSSF(CCamera &cam, unsigned int numPointSp
 	WaterPass(orthoMVP, cam, depthSmoothBTexture, thicknessTexture, dstate.fluidColor, dstate.debugType);
 }
 
-void CScreenSpaceFluidRendering::Render(CCamera &cam, unsigned int numPointSprites, SSFDrawingOptions &dstate, int wW, int wH)
+void CScreenSpaceFluidRendering::Render(CCamera &cam, const unsigned int numPointSprites, const SSFDrawingOptions &dstate, const int wW, const int wH)
 {
 	assert(pPointSpritesShader);
 	assert(pPointSprites);

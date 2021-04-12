@@ -16,7 +16,7 @@ private:
 	LONGLONG qpcFrequency;
 public:
 	COSLowLevel(void);
-	size_t getNumCPUCores();
+	uint32_t getNumCPUCores();
 	const std::string getTextFileContent(const std::string &filename);
 	bool fileExists(const char* filename);
 	std::vector<std::string> getFilesInDirectory(const std::string &str);

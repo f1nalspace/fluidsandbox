@@ -55,7 +55,6 @@
     <ClInclude Include="Utils.h" />
     <ClInclude Include="VBO.h" />
     <ClInclude Include="XMLUtils.h" />
-    <ClInclude Include="TextureIDs.h" />
     <ClInclude Include="AllShaders.h" />
     <ClInclude Include="AllFBOs.h" />
   </ItemGroup>

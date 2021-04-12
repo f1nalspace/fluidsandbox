@@ -8,11 +8,11 @@ COSLowLevel::COSLowLevel(void)
 	qpcFrequency = 0;
 }
 
-size_t COSLowLevel::getNumCPUCores() 
+uint32_t COSLowLevel::getNumCPUCores() 
 { 
 	SYSTEM_INFO sysinfo;
 	GetSystemInfo( &sysinfo );
-	size_t result = sysinfo.dwNumberOfProcessors;
+	uint32_t result = sysinfo.dwNumberOfProcessors;
 	return result;
 }
 

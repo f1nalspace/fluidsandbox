@@ -37,7 +37,7 @@ public:
 	CScene(const float fluidViscosity, const float fluidStiffness, const float fluidParticleDistanceFactor, const float fluidParticleRenderFactor, const float fluidParticleRadius, const float fluidParticleMinDensity, const float defaultActorDensity);
 	~CScene(void);
 
-	inline int getFluidColors() { return fluidColors.size(); };
+	inline size_t getFluidColors() { return fluidColors.size(); };
 	inline FluidColor* getFluidColor(int index) { return fluidColors[index]; };
 	inline void addFluidColor(FluidColor* color) { fluidColors.push_back(color); };
 	void resetFluidColors();

@@ -6,6 +6,6 @@ protected:
 public:
 	CTextureCubemap(const int width, const int height);
 	~CTextureCubemap(void);
-	virtual void Upload(char* pixels);
+	virtual void Upload(const char* pixels);
 };
 

@@ -14,8 +14,8 @@ private:
 public:
 	CSphericalPointSprites();
 	~CSphericalPointSprites(void);
-	void Allocate(unsigned int total);
-	void Draw(unsigned int count);
+	void Allocate(const unsigned int total);
+	void Draw(const unsigned int count);
 	float* Map();
 	void UnMap();
 	static float GetPointScale(int windowHeight, float fov) {

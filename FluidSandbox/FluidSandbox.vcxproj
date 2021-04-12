@@ -281,7 +281,6 @@ Copy "$(SolutionDir)Libraries\glew\bin\$(Platform)\glew32.dll" "$(OutDir)"</Comm
     <ClInclude Include="SphericalPointSprites.h" />
     <ClInclude Include="Texture.h" />
     <ClInclude Include="Texture2D.h" />
-    <ClInclude Include="TextureIDs.h" />
     <ClInclude Include="TextureCubemap.h" />
     <ClInclude Include="TextureManager.h" />
     <ClInclude Include="Utils.h" />

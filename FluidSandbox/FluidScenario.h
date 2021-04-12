@@ -38,9 +38,9 @@ public:
 	const char* getName() { return name.c_str(); }
 	void addActor(CActor* actor) { actors.push_back(actor); }
 	void addFluidContainer(FluidContainer* fluidContainer) { fluidContainers.push_back(fluidContainer); }
-	int getActors() { return actors.size(); }
+	size_t getActors() { return actors.size(); }
 	CActor* getActor(const int index) { return actors[index]; }
-	int getFluidContainers() { return fluidContainers.size(); }
+	size_t getFluidContainers() { return fluidContainers.size(); }
 	FluidContainer* getFluidContainer(int index) { return fluidContainers[index]; }
 	static CFluidScenario* load(const char* filename, CScene* scene);
 	float getViscosity() { return viscosity; }

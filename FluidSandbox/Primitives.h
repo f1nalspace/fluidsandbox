@@ -5,5 +5,5 @@
 
 namespace Primitives
 {
-	CVBO* createCube(float sizeX, float sizeY, float sizeZ, bool normalPositive);
+	CVBO* createCube(const float sizeX, const float sizeY, const float sizeZ, const bool normalPositive);
 };
