@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-CFBO::CFBO(int width, int height):
+CFBO::CFBO(const int width, const int height):
 	width(width),
 	height(height),
 	bufferId(0),
@@ -73,12 +73,11 @@ bool StatusFBO() {
 	}
 }
 
-CTexture2D *CFBO::addTextureTarget(GLint internalFormat, GLenum format, GLenum type, GLenum fbotype, GLuint texfilter) {
+CTexture2D *CFBO::addTextureTarget(const GLint internalFormat, const GLenum format, const GLenum type, const GLenum fbotype, const GLuint texfilter) {
 	assert(textureCount < MaxTextureCount);
 
 	// Create new texture
-	GLuint texFilters[2] = { texfilter, texfilter };
-	CTexture2D *newtex = new CTexture2D(GL_TEXTURE_2D, internalFormat, format, type, width, height, &texFilters[0]);
+	CTexture2D *newtex = new CTexture2D(GL_TEXTURE_2D, internalFormat, format, type, width, height, texfilter, texfilter);
 	newtex->setUserData(fbotype);
 	newtex->upload(NULL);
 
@@ -87,12 +86,11 @@ CTexture2D *CFBO::addTextureTarget(GLint internalFormat, GLenum format, GLenum t
 	return(newtex);
 }
 
-CTexture2D *CFBO::addRenderTarget(GLint internalFormat, GLenum format, GLenum type, GLenum fbotype, GLuint texfilter) {
+CTexture2D *CFBO::addRenderTarget(const GLint internalFormat, const GLenum format, const GLenum type, const GLenum fbotype, const GLuint texfilter) {
 	assert(textureCount < MaxTextureCount);
 
 	// Create new texture
-	GLuint texFilters[2] = { texfilter, texfilter };
-	CTexture2D *newtex = new CTexture2D(GL_TEXTURE_2D, internalFormat, format, type, width, height, &texFilters[0]);
+	CTexture2D *newtex = new CTexture2D(GL_TEXTURE_2D, internalFormat, format, type, width, height, texfilter, texfilter);
 	newtex->setUserData(fbotype);
 	newtex->upload(NULL);
 
@@ -110,7 +108,7 @@ void CFBO::disable() {
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 }
 
-void CFBO::resize(int width, int height) {
+void CFBO::resize(const int width, const int height) {
 	this->width = width;
 	this->height = height;
 
@@ -152,11 +150,11 @@ GLint CFBO::getDrawBuffer() {
 	return savedDrawBuffer;
 }
 
-void CFBO::setDrawBuffer(GLenum buffer) {
+void CFBO::setDrawBuffer(const GLenum buffer) {
 	glDrawBuffer(buffer);
 }
 
-void CFBO::setDrawBuffers(GLenum *buffers, int count) {
+void CFBO::setDrawBuffers(const GLenum *buffers, const int count) {
 	glDrawBuffers(count, buffers);
 }
 

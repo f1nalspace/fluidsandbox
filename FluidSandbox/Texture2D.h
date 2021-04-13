@@ -12,8 +12,7 @@ private:
 	GLuint texMagFilter;
 	GLuint texMinFilter;
 public:
-	CTexture2D(GLuint target, GLint internalFormat, GLenum format, GLenum type, int width, int height);
-	CTexture2D(GLuint target, GLint internalFormat, GLenum format, GLenum type, int width, int height, GLuint* texFilters);
+	CTexture2D(const GLuint target, const GLint internalFormat, const GLenum format, const GLenum type, const int width, const int height, const GLuint magFilter = GL_LINEAR, const GLuint minFilter = GL_LINEAR);
 	~CTexture2D(void);
 	virtual void upload(const char* pixels);
 	void resize(int width, int height);

@@ -6,8 +6,8 @@
 class CVBO
 {
 private:
-	GLuint vbo;
-	GLuint ibo;
+	GLuint vboId;
+	GLuint iboId;
 	GLuint indexCount;
 public:
 	CVBO(void);

@@ -19,10 +19,10 @@
     <ClCompile Include="TextureCubemap.cpp" />
     <ClCompile Include="TextureManager.cpp" />
     <ClCompile Include="Utils.cpp" />
-    <ClCompile Include="VBO.cpp" />
     <ClCompile Include="XMLUtils.cpp" />
     <ClCompile Include="AllShaders.cpp" />
     <ClCompile Include="AllFBOs.cpp" />
+    <ClCompile Include="VBO.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.hpp" />
@@ -47,13 +47,13 @@
     <ClInclude Include="TextureCubemap.h" />
     <ClInclude Include="TextureManager.h" />
     <ClInclude Include="Utils.h" />
-    <ClInclude Include="VBO.h" />
     <ClInclude Include="XMLUtils.h" />
     <ClInclude Include="AllShaders.h" />
     <ClInclude Include="AllFBOs.h" />
     <ClInclude Include="CubeActor.hpp" />
     <ClInclude Include="Actor.hpp" />
     <ClInclude Include="SphereActor.hpp" />
+    <ClInclude Include="VBO.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="LICENSE.txt" />

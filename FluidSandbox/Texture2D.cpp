@@ -1,22 +1,12 @@
 #include "Texture2D.h"
 
 
-CTexture2D::CTexture2D(GLuint target, GLint internalFormat, GLenum format, GLenum type, int width, int height)
-	:CTexture(target, internalFormat, format, type)
-{
+CTexture2D::CTexture2D(const GLuint target, const GLint internalFormat, const GLenum format, const GLenum type, const int width, const int height, const GLuint magFilter, const GLuint minFilter)
+	:CTexture(target, internalFormat, format, type) {
 	this->width = width;
 	this->height = height;
-	this->texMagFilter = GL_LINEAR;
-	this->texMinFilter = GL_LINEAR;
-}
-
-CTexture2D::CTexture2D(GLuint target, GLint internalFormat, GLenum format, GLenum type, int width, int height, GLuint* texFilters)
-	:CTexture(target, internalFormat, format, type)
-{
-	this->width = width;
-	this->height = height;
-	this->texMagFilter = texFilters[0];
-	this->texMinFilter = texFilters[1];
+	this->texMagFilter = magFilter;
+	this->texMinFilter = minFilter;
 }
 
 CTexture2D::~CTexture2D(void)

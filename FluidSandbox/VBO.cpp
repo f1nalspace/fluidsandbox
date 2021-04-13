@@ -2,8 +2,8 @@
 
 CVBO::CVBO(void)
 {
-    ibo = 0;
-    vbo = 0;
+    iboId = 0;
+    vboId = 0;
     indexCount = 0;
 }
 
@@ -14,38 +14,38 @@ CVBO::~CVBO(void)
 
 void CVBO::clear()
 {
-    if(ibo)
-        glDeleteBuffers(1, &ibo);
+    if(iboId)
+        glDeleteBuffers(1, &iboId);
 
-    ibo = 0;
+    iboId = 0;
 
-    if(vbo)
-        glDeleteBuffers(1, &vbo);
+    if(vboId)
+        glDeleteBuffers(1, &vboId);
 
-    vbo = 0;
+    vboId = 0;
     indexCount = 0;
 }
 
 void CVBO::bufferVertices(const GLfloat* vertices, GLuint vertexSize, GLenum usage)
 {
-    if(vbo == 0)
+    if(vboId == 0)
     {
-        glGenBuffers(1, &vbo);
+        glGenBuffers(1, &vboId);
     }
 
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, vboId);
     glBufferData(GL_ARRAY_BUFFER, vertexSize, vertices, usage);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 void CVBO::bufferIndices(const GLuint* indices, GLuint indexCount, GLenum usage)
 {
-    if(ibo == 0)
+    if(iboId == 0)
     {
-        glGenBuffers(1, &ibo);
+        glGenBuffers(1, &iboId);
     }
 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, iboId);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexCount * sizeof(GLuint), indices, usage);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     this->indexCount = indexCount;
@@ -54,8 +54,8 @@ void CVBO::bufferIndices(const GLuint* indices, GLuint indexCount, GLenum usage)
 
 void CVBO::bind()
 {
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+    glBindBuffer(GL_ARRAY_BUFFER, vboId);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, iboId);
 
     /*
     glEnableClientState(GL_NORMAL_ARRAY);

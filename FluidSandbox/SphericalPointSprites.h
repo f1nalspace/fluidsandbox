@@ -10,7 +10,7 @@ class CSphericalPointSprites
 {
 private:
 	unsigned int totalSpriteCount;
-    GLuint vbo;
+    GLuint vboId;
 public:
 	CSphericalPointSprites();
 	~CSphericalPointSprites(void);

@@ -21,19 +21,19 @@ private:
 protected:
 	virtual void updateIndices() {}
 public:
-	CFBO(int width, int height);
+	CFBO(const int width, const int height);
 	~CFBO(void);
-	CTexture2D *addTextureTarget(GLint internalFormat, GLenum format, GLenum type, GLenum fbotype, GLuint texfilter);
-	CTexture2D *addRenderTarget(GLint internalFormat, GLenum format, GLenum type, GLenum fbotype, GLuint texfilter);
+	CTexture2D *addTextureTarget(const GLint internalFormat, const GLenum format, const GLenum type, const GLenum fbotype, const GLuint texfilter);
+	CTexture2D *addRenderTarget(const GLint internalFormat, const GLenum format, const GLenum type, const GLenum fbotype, const GLuint texfilter);
 	void enable();
 	void disable();
-	void resize(int width, int height);
+	void resize(const int width, const int height);
 	void update();
 	int getWidth() { return width; }
 	int getHeight() { return height; }
 	GLint getDrawBuffer();
-	void setDrawBuffer(GLenum buffer);
-	void setDrawBuffers(GLenum* buffers, int count);
+	void setDrawBuffer(const GLenum buffer);
+	void setDrawBuffers(const GLenum* buffers, const int count);
 	static uint32_t getMaxColorAttachments();
 };
 

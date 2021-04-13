@@ -1,4 +1,5 @@
 #pragma once
+
 #include "VBO.h"
 
 #define QUAD_TO_TRIANGLE(a, b, c, d) a, b, c, c, d, a

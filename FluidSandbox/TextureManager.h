@@ -12,7 +12,7 @@
 class CTextureManager
 {
 private:
-	std::map<std::string, CTexture*> list;
+	std::map<std::string, CTexture*> nameToTextureMap;
 	CTexture* load2D(const char* filename);
 	CTexture* loadCubemap(const char* filename);
 public:

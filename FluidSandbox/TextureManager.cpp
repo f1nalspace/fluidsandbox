@@ -6,8 +6,8 @@ CTextureManager::CTextureManager(void) {
 }
 
 CTextureManager::~CTextureManager(void) {
-	for(std::map<std::string, CTexture *>::const_iterator iter = list.begin();
-		iter != list.end(); ++iter) {
+	for(std::map<std::string, CTexture *>::const_iterator iter = nameToTextureMap.begin();
+		iter != nameToTextureMap.end(); ++iter) {
 		CTexture *tex = (*iter).second;
 		delete tex;
 		std::cout << "    Released texture '" << (*iter).first << "' successfully" << std::endl;
@@ -114,8 +114,6 @@ CTexture *CTextureManager::loadCubemap(const char *filename) {
 }
 
 CTexture *CTextureManager::load2D(const char *filename) {
-	const GLuint DEFAULT_TEXTURE_FILTERS[2] = { GL_LINEAR, GL_LINEAR };
-
 	CTexture2D *result = NULL;
 
 	FREE_IMAGE_FORMAT imageFormat = FreeImage_GetFileType(filename);
@@ -149,7 +147,7 @@ CTexture *CTextureManager::load2D(const char *filename) {
 		}
 		FreeImage_Unload(bitmap);
 
-		result = new CTexture2D(GL_TEXTURE_2D, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, w, h, (GLuint *)&DEFAULT_TEXTURE_FILTERS[0]);
+		result = new CTexture2D(GL_TEXTURE_2D, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, w, h, GL_LINEAR, GL_LINEAR);
 		result->upload(textureData);
 		std::cout << "    Uploaded cubemap texture -> " << result->getID() << std::endl;
 
@@ -164,18 +162,18 @@ CTexture *CTextureManager::load2D(const char *filename) {
 
 CTexture *CTextureManager::add2D(const std::string &name, const std::string &filename) {
 	CTexture *newTexture = load2D(filename.c_str());
-	list.insert(std::make_pair(name, newTexture));
+	nameToTextureMap.insert(std::make_pair(name, newTexture));
 	return newTexture;
 }
 
 CTexture *CTextureManager::addCubemap(const std::string &name, const std::string &filename) {
 	CTexture *newTexture = loadCubemap(filename.c_str());
-	list.insert(std::make_pair(name, newTexture));
+	nameToTextureMap.insert(std::make_pair(name, newTexture));
 	return newTexture;
 }
 
 CTexture *CTextureManager::get(const std::string &name) {
-	if(list.count(name) > 0)
-		return (*list.find(name)).second;
+	if(nameToTextureMap.count(name) > 0)
+		return (*nameToTextureMap.find(name)).second;
 	return NULL;
 }
