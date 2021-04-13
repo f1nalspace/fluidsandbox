@@ -2,45 +2,48 @@
 
 #include <glm/glm.hpp>
 
-enum class ActorType
-{
-	ActorTypeStatic = 0,
-	ActorTypeDynamic
+enum class ActorMovementType {
+	Static = 0,
+	Dynamic
 };
 
-enum class ActorPrimitiveKind
-{
-	Cube = 0,
-	Sphere
+enum class ActorPrimitiveType {
+	None = 0,
+	Plane,
+	Cube,
+	Sphere,
+	Capsule,
+	Fluid
 };
 
-struct Actor
-{
+struct Actor {
 	glm::vec4 color;
 	glm::vec3 pos;
 	glm::vec3 velocity;
 	glm::vec3 rotate;
+	void *physicsData;
 	float timeElapsed;
 	float density;
-	ActorType type;
-	ActorPrimitiveKind primitive;
+	ActorPrimitiveType primitiveType;
+	ActorMovementType movementType;
 	int time;
 	bool visible;
 	bool blending;
 	bool particleDrain;
 
-	Actor(const ActorType type, const ActorPrimitiveKind prim) {
-		this->type = type;
-		this->time = 0;
-		this->timeElapsed = 0.0f;
-		this->pos = glm::vec3(0);
-		this->color = glm::vec4(1.0f);
-		this->primitive = prim;
-		this->density = 1.0f;
-		this->velocity = glm::vec3(0.0f);
-		this->visible = true;
-		this->blending = false;
-		this->rotate = glm::vec3(0.0f);
-		this->particleDrain = false;
+	Actor(const ActorPrimitiveType primitiveType, const ActorMovementType movementType):
+		color(glm::vec4(1.0f)),
+		pos(glm::vec3(0)),
+		velocity(glm::vec3(0.0f)),
+		rotate(glm::vec3(0.0f)),
+		physicsData(nullptr),
+		timeElapsed(0.0f),
+		density(1.0f),
+		primitiveType(primitiveType),
+		movementType(movementType),
+		time(0),
+		visible(true),
+		blending(false),
+		particleDrain(false) {
 	}
 };

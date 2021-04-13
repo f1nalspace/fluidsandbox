@@ -443,7 +443,7 @@ std::string vecToString(const physx::PxVec3 &p) {
 	return str;
 }
 
-void AddBox(const glm::vec3 &pos, const glm::quat &rotation, const glm::vec3 &vel, const float density, const glm::vec3 &size, const bool isParticleDrain, const ActorType type, CCubeActor *sourceActor) {
+void AddBox(const glm::vec3 &pos, const glm::quat &rotation, const glm::vec3 &vel, const float density, const glm::vec3 &size, const bool isParticleDrain, const ActorMovementType movementType, CubeActor *sourceActor) {
 	// NOTE(final): Actor can be null
 
 	// Create static box
@@ -455,7 +455,7 @@ void AddBox(const glm::vec3 &pos, const glm::quat &rotation, const glm::vec3 &ve
 
 	physx::PxBoxGeometry geometry(nsize);
 	physx::PxActor *actor;
-	if(type == ActorType::ActorTypeStatic)
+	if(movementType == ActorMovementType::Static)
 		actor = PxCreateStatic(*gPhysicsSDK, transform, geometry, *gDefaultMaterial);
 	else {
 		physx::PxRigidDynamic *rigidbody = PxCreateDynamic(*gPhysicsSDK, transform, geometry, *gDefaultMaterial, density);
@@ -475,7 +475,7 @@ void AddBox(const glm::vec3 &pos, const glm::quat &rotation, const glm::vec3 &ve
 	setActorDrain(actor, isParticleDrain);
 }
 
-void AddSphere(const glm::vec3 &pos, const glm::quat &rotation, const glm::vec3 &vel, const float density, const float radius, const ActorType type, CSphereActor *sphereActor) {
+void AddSphere(const glm::vec3 &pos, const glm::quat &rotation, const glm::vec3 &vel, const float density, const float radius, const ActorMovementType movementType, SphereActor *sphereActor) {
 	// NOTE(final): Actor can be null
 
 	// Create static sphere
@@ -486,7 +486,7 @@ void AddSphere(const glm::vec3 &pos, const glm::quat &rotation, const glm::vec3 
 
 	physx::PxSphereGeometry geometry(radius);
 	physx::PxActor *actor;
-	if(type == ActorType::ActorTypeStatic)
+	if(movementType == ActorMovementType::Static)
 		actor = PxCreateStatic(*gPhysicsSDK, transform, geometry, *gDefaultMaterial);
 	else {
 		physx::PxRigidDynamic *rigidbody = PxCreateDynamic(*gPhysicsSDK, transform, geometry, *gDefaultMaterial, density);
@@ -504,7 +504,7 @@ void AddSphere(const glm::vec3 &pos, const glm::quat &rotation, const glm::vec3 
 	gActors.push_back(actor);
 }
 
-void AddCapsule(const glm::vec3 &pos, const glm::quat &rotation, const glm::vec3 &vel, const float density, const glm::vec2 ext, const ActorType type) {
+void AddCapsule(const glm::vec3 &pos, const glm::quat &rotation, const glm::vec3 &vel, const float density, const glm::vec2 ext, const ActorMovementType movementType) {
 	// TODO(final): Capsule Actor!
 
 	// Create capsule
@@ -516,7 +516,7 @@ void AddCapsule(const glm::vec3 &pos, const glm::quat &rotation, const glm::vec3
 	physx::PxCapsuleGeometry geometry(ext.x, ext.y);
 
 	physx::PxActor *nactor;
-	if(type == ActorType::ActorTypeStatic)
+	if(movementType == ActorMovementType::Static)
 		nactor = PxCreateStatic(*gPhysicsSDK, transform, geometry, *gDefaultMaterial);
 	else {
 		physx::PxRigidDynamic *rigidbody = PxCreateDynamic(*gPhysicsSDK, transform, geometry, *gDefaultMaterial, density);
@@ -697,8 +697,8 @@ void ClearScene() {
 		delete gFluidSystem;
 
 	// Remove actors
-	for(long index = 0; index < (long)gActors.size(); ++index) {
-		physx::PxActor *act = gActors.at(index);
+	for(size_t index = 0; index < gActors.size(); ++index) {
+		physx::PxActor *act = gActors[index];
 		gScene->removeActor(*act);
 		act->release();
 	}
@@ -710,13 +710,12 @@ void ClearScene() {
 }
 
 void AddScenarioActor(Actor *actor) {
-	bool isStatic = actor->type == ActorType::ActorTypeStatic;
-	if(actor->primitive == ActorPrimitiveKind::Cube) {
-		CCubeActor *cube = (CCubeActor *)actor;
-		AddBox(cube->pos, cube->rotate, cube->velocity, cube->density, cube->size, cube->particleDrain, cube->type, cube);
-	} else if(actor->primitive == ActorPrimitiveKind::Sphere) {
-		CSphereActor *sphere = (CSphereActor *)actor;
-		AddSphere(sphere->pos, sphere->rotate, sphere->velocity, sphere->density, sphere->radius, sphere->type, sphere);
+	if(actor->primitiveType == ActorPrimitiveType::Cube) {
+		CubeActor *cube = (CubeActor *)actor;
+		AddBox(cube->pos, cube->rotate, cube->velocity, cube->density, cube->size, cube->particleDrain, cube->movementType, cube);
+	} else if(actor->primitiveType == ActorPrimitiveType::Sphere) {
+		SphereActor *sphere = (SphereActor *)actor;
+		AddSphere(sphere->pos, sphere->rotate, sphere->velocity, sphere->density, sphere->radius, sphere->movementType, sphere);
 	}
 }
 
@@ -1911,15 +1910,15 @@ void AddActor(const ActorCreationKind kind) {
 	glm::quat rotation = toGLMQuat(physx::PxQuat(Deg2Rad(RandomRadius()), physx::PxVec3(0, 1, 0)));
 	switch(kind) {
 		case ActorCreationKind::RigidBox:
-			AddBox(pos, rotation, vel, density, glm::vec3(0.5, 0.5, 0.5), false, ActorType::ActorTypeDynamic, nullptr);
+			AddBox(pos, rotation, vel, density, glm::vec3(0.5, 0.5, 0.5), false, ActorMovementType::Dynamic, nullptr);
 			break;
 
 		case ActorCreationKind::RigidSphere:
-			AddSphere(pos, rotation, vel, density, 0.5f, ActorType::ActorTypeDynamic, nullptr);
+			AddSphere(pos, rotation, vel, density, 0.5f, ActorMovementType::Dynamic, nullptr);
 			break;
 
 		case ActorCreationKind::RigidCapsule:
-			AddCapsule(pos, rotation, vel, density, glm::vec2(0.5f, 1.0f), ActorType::ActorTypeDynamic);
+			AddCapsule(pos, rotation, vel, density, glm::vec2(0.5f, 1.0f), ActorMovementType::Dynamic);
 			break;
 
 		case ActorCreationKind::FluidDrop:

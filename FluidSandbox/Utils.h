@@ -25,6 +25,6 @@ namespace Utils {
 	glm::vec3 toVec3(const std::string &str, const glm::vec3 &def = glm::vec3(0));
 	glm::vec4 toVec4(const std::string &str, const glm::vec4 &def = glm::vec4(0));
 	FluidType toFluidType(const char *str);
-	ActorType toActorType(const char *str);
+	ActorMovementType toActorMovementType(const char *str);
 	const std::string toString(const float value);
 };

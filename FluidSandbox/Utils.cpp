@@ -152,12 +152,12 @@ namespace Utils {
 			return FluidType::Box;
 	}
 
-	ActorType toActorType(const char *str) {
+	ActorMovementType toActorMovementType(const char *str) {
 		if(strcmp(str, "static") == 0)
-			return ActorType::ActorTypeStatic;
+			return ActorMovementType::Static;
 		else if(strcmp(str, "dynamic") == 0)
-			return ActorType::ActorTypeDynamic;
+			return ActorMovementType::Dynamic;
 		else
-			return ActorType::ActorTypeStatic;
+			return ActorMovementType::Static;
 	}
 }

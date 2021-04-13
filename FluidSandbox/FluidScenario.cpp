@@ -135,7 +135,7 @@ CFluidScenario *CFluidScenario::load(const char *filename, CScene *scene) {
 					rapidxml::xml_node<> *actorNode = *p;
 
 					std::string type = XMLUtils::getAttribute(actorNode, "type", "");
-					ActorType atype = Utils::toActorType(type.c_str());
+					ActorMovementType atype = Utils::toActorMovementType(type.c_str());
 
 					std::string primitive = XMLUtils::getAttribute(actorNode, "primitive", "");
 
@@ -148,20 +148,22 @@ CFluidScenario *CFluidScenario::load(const char *filename, CScene *scene) {
 
 					std::string defaultDensity = Utils::toString(scene->defaultActorDensity);
 
+					std::string defaultBlending = (atype == ActorMovementType::Static) ? "true" : "false";
+
 					int actorTime = Utils::toInt(XMLUtils::getAttribute(actorNode, "time", "0"));
 					float density = Utils::toFloat(XMLUtils::getAttribute(actorNode, "density", defaultDensity.c_str()));
 					float radius = Utils::toFloat(XMLUtils::getAttribute(actorNode, "radius", "0.5"));
 					bool visible = Utils::toBool(XMLUtils::getAttribute(actorNode, "visible", "true"));
-					bool blending = Utils::toBool(XMLUtils::getAttribute(actorNode, "blending", atype == ActorType::ActorTypeStatic ? "true" : "false"));
+					bool blending = Utils::toBool(XMLUtils::getAttribute(actorNode, "blending", defaultBlending.c_str()));
 					bool particleDrain = Utils::toBool(XMLUtils::getAttribute(actorNode, "particleDrain", "false"));
 
 					Actor *newactor = NULL;
 					if(strcmp(primitive.c_str(), "cube") == 0) {
-						CCubeActor *typedActor = new CCubeActor(atype);
+						CubeActor *typedActor = new CubeActor(atype);
 						typedActor->size = size;
 						newactor = typedActor;
 					} else if(strcmp(primitive.c_str(), "sphere") == 0) {
-						CSphereActor *typedActor = new CSphereActor(atype);
+						SphereActor *typedActor = new SphereActor(atype);
 						typedActor->radius = radius;
 						newactor = typedActor;
 					} else {

@@ -4,24 +4,37 @@
 
 #include <glm/glm.hpp>
 
-struct FluidActor : Actor {
+struct FluidActor: Actor {
+	FluidActor():
+		Actor(ActorPrimitiveType::Fluid, ActorMovementType::Dynamic) {
+	}
 };
 
-struct CCubeActor: public Actor {
+struct CubeActor: public Actor {
 	glm::vec3 size;
 
-	CCubeActor(const ActorType type):
-		Actor(type, ActorPrimitiveKind::Cube),
+	CubeActor(const ActorMovementType movementType):
+		Actor(ActorPrimitiveType::Cube, movementType),
 		size(glm::vec3(0)) {
 	}
 };
 
-struct CSphereActor: public Actor {
+struct SphereActor: public Actor {
 	float radius;
 
-	CSphereActor(const ActorType type):
-		Actor(type, ActorPrimitiveKind::Sphere),
+	SphereActor(const ActorMovementType movementType):
+		Actor(ActorPrimitiveType::Sphere, movementType),
 		radius(0.5f) {
+
+	}
+};
+
+struct CapsuleActor: public Actor {
+	glm::vec2 ext;
+
+	CapsuleActor(const ActorMovementType movementType):
+		Actor(ActorPrimitiveType::Capsule, movementType),
+		ext(glm::vec2(0.5f, 1.0f)) {
 
 	}
 };
