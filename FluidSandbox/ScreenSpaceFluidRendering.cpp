@@ -39,43 +39,40 @@ CScreenSpaceFluidRendering::CScreenSpaceFluidRendering(const int width, const in
 		// Create shaders
 		{
 			std::string depthShaderPath = std::string("shaders\\" + std::string(CDepthShader::ShaderName));
-			aShaders[SSFShaderIndex_DepthPass] = depthShader = new CDepthShader();
+			depthShader = new CDepthShader();
 			Utils::attachShaderFromFile(depthShader, GL_VERTEX_SHADER, (depthShaderPath + ".vertex").c_str(), "    ");
 			Utils::attachShaderFromFile(depthShader, GL_FRAGMENT_SHADER, (depthShaderPath + ".fragment").c_str(), "    ");
 		}
 		{
 			std::string thicknessShaderPath = std::string("shaders\\" + std::string(CThicknessShader::ShaderName));
-			aShaders[SSFShaderIndex_ThicknessPass] = thicknessShader = new CThicknessShader();
+			thicknessShader = new CThicknessShader();
 			Utils::attachShaderFromFile(thicknessShader, GL_VERTEX_SHADER, (thicknessShaderPath + ".vertex").c_str(), "    ");
 			Utils::attachShaderFromFile(thicknessShader, GL_FRAGMENT_SHADER, (thicknessShaderPath + ".fragment").c_str(), "    ");
 		}
 		{
 			std::string depthBlurShaderPath = std::string("shaders\\" + std::string(CDepthBlurShader::ShaderName));
-			aShaders[SSFShaderIndex_DepthBlurFast] = depthBlurShader = new CDepthBlurShader();
+			depthBlurShader = new CDepthBlurShader();
 			Utils::attachShaderFromFile(depthBlurShader, GL_VERTEX_SHADER, (depthBlurShaderPath + ".vertex").c_str(), "    ");
 			Utils::attachShaderFromFile(depthBlurShader, GL_FRAGMENT_SHADER, (depthBlurShaderPath + ".fragment").c_str(), "    ");
 		}
 		{
 			std::string clearWaterShaderPath = std::string("shaders\\" + std::string(CWaterShader::ClearName));
-			aShaders[SSFShaderIndex_ClearWater] = clearWaterShader = new CWaterShader();
+			clearWaterShader = new CWaterShader();
 			Utils::attachShaderFromFile(clearWaterShader, GL_VERTEX_SHADER, (clearWaterShaderPath + ".vertex").c_str(), "    ");
 			Utils::attachShaderFromFile(clearWaterShader, GL_FRAGMENT_SHADER, (clearWaterShaderPath + ".fragment").c_str(), "    ");
 		}
 		{
 			std::string colorWaterShaderPath = std::string("shaders\\" + std::string(CWaterShader::ColorName));
-			aShaders[SSFShaderIndex_ColorWater] = colorWaterShader = new CWaterShader();
+			colorWaterShader = new CWaterShader();
 			Utils::attachShaderFromFile(colorWaterShader, GL_VERTEX_SHADER, (colorWaterShaderPath + ".vertex").c_str(), "    ");
 			Utils::attachShaderFromFile(colorWaterShader, GL_FRAGMENT_SHADER, (colorWaterShaderPath + ".fragment").c_str(), "    ");
 		}
 		{
 			std::string debugWaterShaderPath = std::string("shaders\\" + std::string(CWaterShader::DebugName));
-			aShaders[SSFShaderIndex_DebugWater] = debugWaterShader = new CWaterShader();
+			debugWaterShader = new CWaterShader();
 			Utils::attachShaderFromFile(debugWaterShader, GL_VERTEX_SHADER, (debugWaterShaderPath + ".vertex").c_str(), "    ");
 			Utils::attachShaderFromFile(debugWaterShader, GL_FRAGMENT_SHADER, (debugWaterShaderPath + ".fragment").c_str(), "    ");
 		}
-
-		for (int i = 0; i < SSFShaderCount; i++)
-			assert(aShaders[i] != NULL);
 
 		printf("    Screen space fluid rendering is supported.\n");
 	}
@@ -86,9 +83,12 @@ CScreenSpaceFluidRendering::CScreenSpaceFluidRendering(const int width, const in
 CScreenSpaceFluidRendering::~CScreenSpaceFluidRendering(void)
 {
 	// Release shaders
-	for (int i = SSFShaderCount-1; i > 0; i--)
-		if (aShaders[i])
-			delete aShaders[i];
+	CGLSL *shaders[] = {depthShader, thicknessShader, depthBlurShader, clearWaterShader, colorWaterShader, debugWaterShader };
+	int shaderCount = sizeof(shaders) / sizeof(shaders[0]);
+	for(int i = shaderCount - 1; i > 0; i--) {
+		if(shaders[i])
+			delete shaders[i];
+	}
 
 	// Release framebuffer
 	if (depthFrameBuffer)
@@ -191,7 +191,7 @@ void CScreenSpaceFluidRendering::BlurDepthPass(const glm::mat4 &mvp, CTexture2D*
 	renderer->SetDepthMask(true);
 }
 
-void CScreenSpaceFluidRendering::WaterPass(const glm::mat4 &mvp, CCamera &cam, CTexture2D* depthTexture, CTexture2D* thicknessTexture, const FluidColor *color, const int showType)
+void CScreenSpaceFluidRendering::WaterPass(const glm::mat4 &mvp, CCamera &cam, CTexture2D* depthTexture, CTexture2D* thicknessTexture, const FluidColor &color, const int showType)
 {
 	// Bind 3 textures (Depth, Thickness, Scene)
 	renderer->SetBlending(true);
@@ -203,7 +203,7 @@ void CScreenSpaceFluidRendering::WaterPass(const glm::mat4 &mvp, CCamera &cam, C
 	// Process normal and shading shader on a fullscreen quad
 	CWaterShader* shader;
 	if (showType == 0)
-		shader = !color->isClear ? colorWaterShader : clearWaterShader;
+		shader = !color.isClear ? colorWaterShader : clearWaterShader;
 	else
 		shader = debugWaterShader;
 	shader->enable();
@@ -216,10 +216,10 @@ void CScreenSpaceFluidRendering::WaterPass(const glm::mat4 &mvp, CCamera &cam, C
 	shader->uniform1f(shader->ulocZFar, cam.farClip);
 	shader->uniform1f(shader->ulocZNear, cam.nearClip);
 	shader->uniform1f(shader->ulocMinDepth, MIN_DEPTH);
-	shader->uniform4f(shader->ulocColorFalloff, (GLfloat*)&color->falloff[0]);
-	shader->uniform1f(shader->ulocFalloffScale, color->falloffScale);
+	shader->uniform4f(shader->ulocColorFalloff, (GLfloat*)&color.falloff[0]);
+	shader->uniform1f(shader->ulocFalloffScale, color.falloffScale);
 
-	shader->uniform4f(shader->ulocFluidColor, (GLfloat*)&color->color[0]);
+	shader->uniform4f(shader->ulocFluidColor, (GLfloat*)&color.color[0]);
 	shader->uniform1i(shader->ulocShowType, showType);
 
 	shader->uniformMatrix4(shader->ulocMVPMat, &mvp[0][0]);
@@ -346,34 +346,34 @@ void CScreenSpaceFluidRendering::Render(CCamera &cam, const unsigned int numPoin
 	glm::mat4 mview = cam.modelview;
 	glm::mat4 mvp = cam.mvp;
 
-	bool waterIsColored = !dstate.fluidColor->isClear;
+	bool waterIsColored = !dstate.fluidColor.isClear;
 
 	// Render SSF or not
 	switch (dstate.renderMode)
 	{
-	case SSFRenderMode_PointSprites:
+		case SSFRenderMode::PointSprites:
 		{
 			renderer->LoadMatrix(mvp);
 			if (waterIsColored)
-				renderer->SetColor(&dstate.fluidColor->color[0]);
+				renderer->SetColor(&dstate.fluidColor.color[0]);
 			else
 				renderer->SetColor(1,1,1,1);
 			RenderPointSprites(numPointSprites, mproj, mview, cam.farClip, cam.nearClip, pointSpritesShader, wH);
 			renderer->SetColor(1,1,1,1);
 			break;
 		}
-	case SSFRenderMode_Points:
+	case SSFRenderMode::Points:
 		{
 			renderer->LoadMatrix(mvp);
 			if (waterIsColored)
-				renderer->SetColor(&dstate.fluidColor->color[0]);
+				renderer->SetColor(&dstate.fluidColor.color[0]);
 			else
 				renderer->SetColor(1,1,1,1);
 			RenderPointSprites(numPointSprites, mproj, mview, cam.farClip, cam.nearClip, NULL, wH);
 			renderer->SetColor(1,1,1,1);
 			break;
 		}
-	case SSFRenderMode_Fluid:
+	case SSFRenderMode::Fluid:
 		{
 			RenderSSF(cam, numPointSprites, dstate, wW, wH);
 			break;

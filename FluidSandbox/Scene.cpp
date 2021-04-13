@@ -38,18 +38,13 @@ CScene::~CScene(void)
 
 void CScene::resetFluidColors()
 {
-	for (unsigned int i = 0; i < fluidColors.size(); i++) {
-		FluidColor* col = fluidColors[i];
-		delete col;
-	}
 	fluidColors.clear();
-
-	addFluidColor(new FluidColor(physx::PxVec4(0.0f, 0.0f, 0.0f, 0.0f), physx::PxVec4(2.0f, 1.0f, 0.5f, 0.75f), true, "Clear"));
-	addFluidColor(new FluidColor(physx::PxVec4(0.5f, 0.69f, 1.0f, 1.0f), physx::PxVec4(2.0f, 1.0f, 0.5f, 0.75f), false, "Blue"));
-	addFluidColor(new FluidColor(physx::PxVec4(1.0f, 0.1f, 0.1f, 0.89f), physx::PxVec4(0.5f, 1.0f, 1.0f, 0.75f), false, "Red"));
-	addFluidColor(new FluidColor(physx::PxVec4(0.69f, 1.0f, 0.5f, 1.0f), physx::PxVec4(1.0f, 0.25f, 1.0f, 0.75f), false, "Green"));
-	addFluidColor(new FluidColor(physx::PxVec4(1.0f, 1.0f, 0.5f, 1.0f), physx::PxVec4(0.25f, 0.25f, 1.0f, 0.75f), false, "Yellow"));
-	addFluidColor(new FluidColor(physx::PxVec4(0.0f, 1.0f, 0.5f, 1.0f), physx::PxVec4(0.25f, 0.25f, 1.0f, 0.75f), false, "Yellow 2"));
+	addFluidColor(FluidColor(physx::PxVec4(0.0f, 0.0f, 0.0f, 0.0f), physx::PxVec4(2.0f, 1.0f, 0.5f, 0.75f), true, "Clear"));
+	addFluidColor(FluidColor(physx::PxVec4(0.5f, 0.69f, 1.0f, 1.0f), physx::PxVec4(2.0f, 1.0f, 0.5f, 0.75f), false, "Blue"));
+	addFluidColor(FluidColor(physx::PxVec4(1.0f, 0.1f, 0.1f, 0.89f), physx::PxVec4(0.5f, 1.0f, 1.0f, 0.75f), false, "Red"));
+	addFluidColor(FluidColor(physx::PxVec4(0.69f, 1.0f, 0.5f, 1.0f), physx::PxVec4(1.0f, 0.25f, 1.0f, 0.75f), false, "Green"));
+	addFluidColor(FluidColor(physx::PxVec4(1.0f, 1.0f, 0.5f, 1.0f), physx::PxVec4(0.25f, 0.25f, 1.0f, 0.75f), false, "Yellow"));
+	addFluidColor(FluidColor(physx::PxVec4(0.0f, 1.0f, 0.5f, 1.0f), physx::PxVec4(0.25f, 0.25f, 1.0f, 0.75f), false, "Yellow 2"));
 	fluidColorDefaultIndex = 0;
 }
 
@@ -89,9 +84,9 @@ void CScene::load(const char* filename)
 					physx::PxVec4 falloff = Utils::toVec4(XMLUtils::getAttribute(colorNode, "falloff", "0.0, 0.0, 0.0, 0.0"));
 					std::string name = XMLUtils::getAttribute(colorNode, "name", "");
 					bool isdefault = Utils::toBool(XMLUtils::getAttribute(colorNode, "default", "false"));
-					FluidColor* ncolor = new FluidColor(baseColor, falloff, isclear, name.c_str());
-					ncolor->falloffScale = Utils::toFloat(XMLUtils::getAttribute(colorNode, "falloffScale", isclear ? "0.0" : "0.1"));
-					fluidColors.push_back(ncolor);
+					FluidColor fluidColor = FluidColor(baseColor, falloff, isclear, name.c_str());
+					fluidColor.falloffScale = Utils::toFloat(XMLUtils::getAttribute(colorNode, "falloffScale", isclear ? "0.0" : "0.1"));
+					fluidColors.push_back(fluidColor);
 					if (isdefault)
 						fluidColorDefaultIndex = index;
 					index++;

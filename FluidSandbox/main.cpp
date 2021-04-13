@@ -190,52 +190,53 @@ static physx::PxGpuDispatcher *gGPUDispatcher = NULL;
 static physx::PxCudaContextManager *gCudaContextManager = NULL;
 
 // Window vars
-bool windowFullscreen = false;
-int windowWidth = 1280;
-int windowHeight = 720;
-int lastWindowWidth = windowWidth;
-int lastWindowHeight = windowHeight;
-int lastWindowPosX = 0;
-int lastWindowPosY = 0;
-const float defaultFov = 60.0;
-const float defaultZNear = 0.1f;
-const float defaultZFar = 1000.0f;
+static bool windowFullscreen = false;
+static int windowWidth = 1280;
+static int windowHeight = 720;
+static int lastWindowWidth = windowWidth;
+static int lastWindowHeight = windowHeight;
+static int lastWindowPosX = 0;
+static int lastWindowPosY = 0;
 
+constexpr float defaultFov = 60.0;
+constexpr float defaultZNear = 0.1f;
+constexpr float defaultZFar = 1000.0f;
 // PhysX Simulation step 60 steps per second
-physx::PxReal gTimeSimulationStep = 1.0f / 60.0f;
-bool gStoppedEmitter = false;
+constexpr physx::PxReal gTimeSimulationStep = 1.0f / 60.0f;
+
+static bool gStoppedEmitter = false;
 
 // List of added actors and rigid bodies settings
-std::vector<physx::PxActor *> gActors;
-const float gDefaultRigidBodyDensity = 0.05f;
+static std::vector<physx::PxActor *> gActors;
+constexpr float gDefaultRigidBodyDensity = 0.05f;
 
 // Current geometry type
-unsigned int gGeoType = 7;
+static unsigned int gGeoType = 7;
 
-const int HideRigidBody_None = 0;
-const int HideRigidBody_Blending = 1;
-const int HideRigidBody_All = 2;
-const int HideRigidBody_MAX = HideRigidBody_All;
+constexpr int HideRigidBody_None = 0;
+constexpr int HideRigidBody_Blending = 1;
+constexpr int HideRigidBody_All = 2;
+constexpr int HideRigidBody_MAX = HideRigidBody_All;
 
 // Various drawing states
-bool gDrawWireframe = false;
-bool gDrawBoundBox = false;
-int gHideRigidBodies = HideRigidBody_None;
-bool showOSD = false;
+static bool gDrawWireframe = false;
+static bool gDrawBoundBox = false;
+static int gHideRigidBodies = HideRigidBody_None;
+static bool showOSD = false;
 
 // Drawing statistics
-size_t gTotalActors = 0;
-size_t gDrawedActors = 0;
-unsigned int gTotalFluidParticles = 0;
+static size_t gTotalActors = 0;
+static size_t gDrawedActors = 0;
+static unsigned int gTotalFluidParticles = 0;
 
 // For fluid simulation
-const int MAX_FLUID_PARTICLES = 512000;
-CFluidSystem *gFluidSystem = NULL;
-float gFluidParticleRadius = 0.05f;
-float gDefaultFluidParticleFactor = 2.0f;
-float gFluidParticleRenderFactor = 1.5f;
-float gFluidParticleDistance = gFluidParticleRadius * gDefaultFluidParticleFactor;
-physx::PxVec3 gRigidBodyFallPos(0.0f, 10.0f, 0.0f);
+constexpr int MAX_FLUID_PARTICLES = 512000;
+static CFluidSystem *gFluidSystem = NULL;
+static float gFluidParticleRadius = 0.05f;
+static float gDefaultFluidParticleFactor = 2.0f;
+static float gFluidParticleRenderFactor = 1.5f;
+static float gFluidParticleDistance = gFluidParticleRadius * gDefaultFluidParticleFactor;
+static physx::PxVec3 gRigidBodyFallPos(0.0f, 10.0f, 0.0f);
 
 // Debug types
 #define	SWOWTYPE_FINAL 0
@@ -252,6 +253,7 @@ physx::PxVec3 gRigidBodyFallPos(0.0f, 10.0f, 0.0f);
 #define	SWOWTYPE_FRESNEL_REFLECTION 11
 #define	SWOWTYPE_THICKNESS 12
 #define	SWOWTYPE_ABSORBTION 13
+
 const int MAX_DEBUGTYPE = SWOWTYPE_ABSORBTION;
 int gFluidDebugType = SWOWTYPE_FINAL;
 
@@ -259,33 +261,33 @@ static CSphericalPointSprites *gPointSprites = NULL;
 static CPointSpritesShader *gPointSpritesShader = NULL;
 static CLightingShader *gLightingShader = NULL;
 
-bool gFluidUseGPUAcceleration = false;
+static bool gFluidUseGPUAcceleration = false;
 
-const float DefaultFluidParticleDistanceFactor = 2.0f;
-const float DefaultFluidParticleRenderFactor = 1.0f;
-const float DefaultFluidParticleRadius = 0.05f;
-const float DefaultFluidParticleMinDensity = 0.01f;
-const float DefaultFluidViscosity = 10.0f;
-const float DefaultFluidStiffness = 50.0f;
+constexpr float DefaultFluidParticleDistanceFactor = 2.0f;
+constexpr float DefaultFluidParticleRenderFactor = 1.0f;
+constexpr float DefaultFluidParticleRadius = 0.05f;
+constexpr float DefaultFluidParticleMinDensity = 0.01f;
+constexpr float DefaultFluidViscosity = 10.0f;
+constexpr float DefaultFluidStiffness = 50.0f;
 
 // 45 - 60 nvidia, 80 - 40 is better for this, 20 - 35 is a good value for water
-float gFluidViscosity = DefaultFluidViscosity;
-float gFluidStiffness = DefaultFluidStiffness;
-float gFluidRestOffset = 0.0f;
-float gFluidContactOffset = 0.0f;
-float gFluidRestParticleDistance = 0.0f;
-float gFluidMaxMotionDistance = 0.0f;
-float gFluidRestitution = 0.0f;
-float gFluidDamping = 0.0f;
-float gFluidDynamicFriction = 0.0f;
-float gFluidParticleMass = 0.0f;
+static float gFluidViscosity = DefaultFluidViscosity;
+static float gFluidStiffness = DefaultFluidStiffness;
+static float gFluidRestOffset = 0.0f;
+static float gFluidContactOffset = 0.0f;
+static float gFluidRestParticleDistance = 0.0f;
+static float gFluidMaxMotionDistance = 0.0f;
+static float gFluidRestitution = 0.0f;
+static float gFluidDamping = 0.0f;
+static float gFluidDynamicFriction = 0.0f;
+static float gFluidParticleMass = 0.0f;
 
-std::vector<CFluidScenario *> gFluidScenarios;
-CFluidScenario *gActiveFluidScenario = NULL;
-int gActiveFluidScenarioIdx = -1;
+static std::vector<CFluidScenario *> gFluidScenarios;
+static CFluidScenario *gActiveFluidScenario = NULL;
+static int gActiveFluidScenarioIdx = -1;
 
 // Fluid modification
-int gFluidLatestExternalAccelerationTime = -1;
+static int gFluidLatestExternalAccelerationTime = -1;
 
 // Fluid property realtime change
 const unsigned int FLUID_PROPERTY_NONE = 0;
@@ -304,59 +306,59 @@ const unsigned int FLUID_PROPERTY_COLOR_FALLOFF_SCALE = 12;
 const unsigned int FLUID_PROPERTY_COLOR_FALLOFF_ALPHA = 13;
 const unsigned int FLUID_PROPERTY_DEBUGTYPE = 14;
 const unsigned int MAX_FLUID_PROPERTY = FLUID_PROPERTY_DEBUGTYPE;
-unsigned int gFluidCurrentProperty = FLUID_PROPERTY_NONE;
+static unsigned int gFluidCurrentProperty = FLUID_PROPERTY_NONE;
 
 // For mouse dragging
-int oldX = 0, oldY = 0;
-float rX = 15, rY = 0;
-float fps = 0;
+static int oldX = 0, oldY = 0;
+static float rX = 15, rY = 0;
+static float fps = 0;
 //int startTime=0;
-int totalFrames = 0;
-int state = 1;
-float dist = 15;
-int lastFrameTime = 0;
+static int totalFrames = 0;
+static int state = 1;
+static float dist = 15;
+static int lastFrameTime = 0;
 
 // Renderer
 static CRenderer *gRenderer = NULL;
 
 // Fluid Renderer
 static CScreenSpaceFluidRendering *gFluidRenderer = NULL;
-int gSSFRenderMode = SSFRenderMode_Points;
-float gSSFDetailFactor = 1.0f;
-float gSSFBlurDepthScale = 0.0008f;
-bool gSSFBlurActive = true;
-bool gWaterAddBySceneChange = true;
+static SSFRenderMode gSSFRenderMode = SSFRenderMode::Fluid;
+static float gSSFDetailFactor = 1.0f;
+static float gSSFBlurDepthScale = 0.0008f;
+static bool gSSFBlurActive = true;
+static bool gWaterAddBySceneChange = true;
 
 // Managers
-CTextureManager *gTexMng = NULL;
-CGLSLManager *gShaderMng = NULL;
+static CTextureManager *gTexMng = NULL;
+static CGLSLManager *gShaderMng = NULL;
 
 // Current fluid color index
-int gSSFCurrentFluidIndex = 0;
+static int gSSFCurrentFluidIndex = 0;
 
 // Current scene
-CScene *gActiveScene = NULL;
+static CScene *gActiveScene = NULL;
 
 // Current camera
-CCamera gCamera;
+static CCamera gCamera;
 
 // Non fluid rendering
-CSceneFBO *gSceneFBO = NULL;
-CGLSL *gSceneShader = NULL;
-CVBO *gSkyboxVBO = NULL;
-CSkyboxShader *gSkyboxShader = NULL;
-CTexture *gSkyboxCubemap = NULL;
-CTexture *gTestTexture = NULL;
+static CSceneFBO *gSceneFBO = NULL;
+static CGLSL *gSceneShader = NULL;
+static CVBO *gSkyboxVBO = NULL;
+static CSkyboxShader *gSkyboxShader = NULL;
+static CTexture *gSkyboxCubemap = NULL;
+static CTexture *gTestTexture = NULL;
 
 // Timing
-float gTotalTimeElapsed = 0;
-bool paused = false;
+static float gTotalTimeElapsed = 0;
+static bool paused = false;
 
 // Default colors
-physx::PxVec4 DefaultStaticRigidBodyColor(0.0f, 0.0f, 0.1f, 0.3f);
-physx::PxVec4 DefaultDynamicRigidBodyCubeColor(0.85f, 0.0f, 0.0f, 1.0f);
-physx::PxVec4 DefaultDynamicRigidBodySphereColor(0, 0.85f, 0.0f, 1.0f);
-physx::PxVec4 DefaultDynamicRigidBodyCapsuleColor(0.85f, 0.85f, 0.0f, 1.0f);
+static const physx::PxVec4 DefaultStaticRigidBodyColor(0.0f, 0.0f, 0.1f, 0.3f);
+static const physx::PxVec4 DefaultDynamicRigidBodyCubeColor(0.85f, 0.0f, 0.0f, 1.0f);
+static const physx::PxVec4 DefaultDynamicRigidBodySphereColor(0, 0.85f, 0.0f, 1.0f);
+static const physx::PxVec4 DefaultDynamicRigidBodyCapsuleColor(0.85f, 0.85f, 0.0f, 1.0f);
 
 struct OSDRenderPosition {
 	int x;
@@ -714,7 +716,8 @@ void AddScenarioActor(CActor *actor) {
 void SaveFluidPositions() {
 	float minDensity = gActiveFluidScenario != NULL ? gActiveFluidScenario->particleMinDensity : gActiveScene->fluidParticleMinDensity;
 	float *data = gPointSprites->Map();
-	gFluidSystem->writeToVBO(data, gTotalFluidParticles, gSSFRenderMode == SSFRenderMode_Points, minDensity);
+	bool noDensity = gSSFRenderMode == SSFRenderMode::Points;
+	gFluidSystem->writeToVBO(data, gTotalFluidParticles, noDensity, minDensity);
 	gPointSprites->UnMap();
 }
 
@@ -732,7 +735,7 @@ void SingleStepPhysX(const float frametime) {
 	advanceSimulation(frametime);
 
 	// Save fluid positions
-	if(gSSFRenderMode != SSFRenderMode_Disabled)
+	if(gSSFRenderMode != SSFRenderMode::Disabled)
 		SaveFluidPositions();
 }
 
@@ -1377,18 +1380,18 @@ const char *GetFluidProperty(unsigned int prop) {
 	}
 }
 
-const char *GetFluidRenderMode(unsigned int mode) {
+const char *GetFluidRenderMode(const SSFRenderMode mode) {
 	switch(mode) {
-		case SSFRenderMode_Disabled:
+		case SSFRenderMode::Disabled:
 			return "Disabled\0";
 
-		case SSFRenderMode_Fluid:
+		case SSFRenderMode::Fluid:
 			return "Fluid\0";
 
-		case SSFRenderMode_PointSprites:
+		case SSFRenderMode::PointSprites:
 			return "Point Sprites\0";
 
-		case SSFRenderMode_Points:
+		case SSFRenderMode::Points:
 			return "Points\0";
 
 		default:
@@ -1610,7 +1613,7 @@ void RenderOSD() {
 		// Empty line
 		osdPos.newLine();
 
-		FluidColor *activeFluidColor = gActiveScene->getFluidColor(gSSFCurrentFluidIndex);
+		const FluidColor &activeFluidColor = gActiveScene->getFluidColor(gSSFCurrentFluidIndex);
 
 		sprintf_s(buffer, "Controls:");
 		RenderOSDLine(osdPos, buffer);
@@ -1624,7 +1627,7 @@ void RenderOSD() {
 		RenderOSDLine(osdPos, buffer);
 		sprintf_s(buffer, "Fluid Rendering Mode (S): %s", GetFluidRenderMode(gSSFRenderMode));
 		RenderOSDLine(osdPos, buffer);
-		sprintf_s(buffer, "Fluid color (C): %d / %zu - %s", gSSFCurrentFluidIndex + 1, gActiveScene->getFluidColorCount(), activeFluidColor->name.c_str());
+		sprintf_s(buffer, "Fluid color (C): %d / %zu - %s", gSSFCurrentFluidIndex + 1, gActiveScene->getFluidColorCount(), activeFluidColor.name);
 		RenderOSDLine(osdPos, buffer);
 		sprintf_s(buffer, "Fluid detail level (P): %3.2f %s", gSSFDetailFactor * 100.0f, "%");
 		RenderOSDLine(osdPos, buffer);
@@ -1656,9 +1659,9 @@ void RenderOSD() {
 		RenderOSDLine(osdPos, buffer);
 		sprintf_s(buffer, "    Fluid debug type: %d / %d (%s)", gFluidDebugType, MAX_DEBUGTYPE, GetFluidDebugType(gFluidDebugType));
 		RenderOSDLine(osdPos, buffer);
-		sprintf_s(buffer, "    Fluid color falloff scale: %f", activeFluidColor->falloffScale);
+		sprintf_s(buffer, "    Fluid color falloff scale: %f", activeFluidColor.falloffScale);
 		RenderOSDLine(osdPos, buffer);
-		sprintf_s(buffer, "    Fluid color falloff alpha: %f", activeFluidColor->falloff.w);
+		sprintf_s(buffer, "    Fluid color falloff alpha: %f", activeFluidColor.falloff.w);
 		RenderOSDLine(osdPos, buffer);
 		sprintf_s(buffer, "Fluid scenario (L): %d / %zu - %s", gActiveFluidScenarioIdx + 1, gFluidScenarios.size(), gActiveFluidScenario ? gActiveFluidScenario->name.c_str() : "No scenario loaded!");
 		RenderOSDLine(osdPos, buffer);
@@ -1802,7 +1805,7 @@ void OnRender() {
 	gDrawedActors = 0;
 
 	// Set drawing options
-	FluidColor *activeFluidColor = gActiveScene->getFluidColor(gSSFCurrentFluidIndex);;
+	const FluidColor &activeFluidColor = gActiveScene->getFluidColor(gSSFCurrentFluidIndex);;
 	SSFDrawingOptions options = SSFDrawingOptions();
 	options.textureState = 0;
 	options.renderMode = gSSFRenderMode;
@@ -1834,7 +1837,7 @@ void OnRender() {
 	gRenderer->ClearColor(backcolor.x, backcolor.y, backcolor.z, 0.0f);
 	gRenderer->Clear(ClearFlags::Color | ClearFlags::Depth);
 
-	bool drawFluidParticles = gSSFRenderMode != SSFRenderMode_Disabled;
+	bool drawFluidParticles = gSSFRenderMode != SSFRenderMode::Disabled;
 
 	// Render scene to FBO
 	if(drawFluidParticles)
@@ -2093,12 +2096,12 @@ void KeyUp(unsigned char key, int x, int y) {
 		case 115: // s
 		{
 			gFluidDebugType = 0;
-			gSSFRenderMode++;
 
-			if(gSSFRenderMode > SSFRenderMode_Disabled) gSSFRenderMode = SSFRenderMode_Fluid;
+			int mode = (int)gSSFRenderMode;
 
-			if(gSSFRenderMode == SSFRenderMode_Fluid && !gFluidRenderer->IsSupported())
-				gSSFRenderMode = SSFRenderMode_PointSprites;
+			mode++;
+			if(mode > (int)SSFRenderMode::Disabled) mode = (int)SSFRenderMode::Fluid;
+			gSSFRenderMode = (SSFRenderMode)mode;
 
 			SingleStepPhysX(0.000001f);
 			break;
@@ -2244,15 +2247,15 @@ void ChangeFluidProperty(float value) {
 
 		case FLUID_PROPERTY_COLOR_FALLOFF_SCALE:
 		{
-			FluidColor *activeFluidColor = gActiveScene->getFluidColor(gSSFCurrentFluidIndex);
-			activeFluidColor->falloffScale += value / 100.0f;
+			FluidColor &activeFluidColor = gActiveScene->getFluidColor(gSSFCurrentFluidIndex);
+			activeFluidColor.falloffScale += value / 100.0f;
 			break;
 		}
 
 		case FLUID_PROPERTY_COLOR_FALLOFF_ALPHA:
 		{
-			FluidColor *activeFluidColor = gActiveScene->getFluidColor(gSSFCurrentFluidIndex);
-			activeFluidColor->falloff.w += value / 100.0f;
+			FluidColor &activeFluidColor = gActiveScene->getFluidColor(gSSFCurrentFluidIndex);
+			activeFluidColor.falloff.w += value / 100.0f;
 			break;
 		}
 	}
@@ -2387,11 +2390,6 @@ void initResources() {
 	gFluidRenderer->SetPointSpritesShader(gPointSpritesShader);
 	gFluidRenderer->SetSceneTexture(gSceneFBO->sceneTexture);
 	gFluidRenderer->SetSkyboxCubemap(gSkyboxCubemap);
-
-	if(gFluidRenderer->IsSupported())
-		gSSFRenderMode = SSFRenderMode_Fluid;
-	else
-		gSSFRenderMode = SSFRenderMode_PointSprites;
 
 	// Create lightung shader
 	printf("  Create lighting renderer\n");

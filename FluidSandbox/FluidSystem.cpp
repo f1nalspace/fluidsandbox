@@ -82,21 +82,21 @@ void CFluidSystem::releaseParticles(const physx::PxStrideIterator<physx::PxU32> 
 
 void CFluidSystem::addForce(const physx::PxVec3 &acc, const physx::PxForceMode::Enum &mode)
 {
+	// TODO(final): Do not use a std::vector here, use a static array instead!
 	std::vector<physx::PxU32> indices;
-	for (unsigned int i = 0; i < currentParticles; i++) {
-		indices.push_back(i);
-	}
-	physx::PxStrideIterator<const physx::PxU32> indexBuffer(&indices[0]);
 	std::vector<physx::PxVec3> forces;
 	for (unsigned int i = 0; i < currentParticles; i++) {
+		indices.push_back(i);
 		forces.push_back(physx::PxVec3(acc));
 	}
+	physx::PxStrideIterator<const physx::PxU32> indexBuffer(&indices[0]);
 	physx::PxStrideIterator<const physx::PxVec3> forceBuffer(&forces[0]);
 	this->particleFluid->addForces(this->currentParticles, indexBuffer, forceBuffer, mode);
 }
 
 void CFluidSystem::writeToVBO(float* data, unsigned int &count, const bool noDensity, const float minDensity)
 {
+	// TODO(final): Do not use a std::vector here, use a static array instead!
 	std::vector<physx::PxU32> deletedPartices;
 	count = 0;
 	physx::PxParticleFluidReadData* rd = this->particleFluid->lockParticleFluidReadData();
