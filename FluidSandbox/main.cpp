@@ -146,7 +146,7 @@ License:
 #include "FluidSystem.h"
 #include "Primitives.h"
 #include "TextureManager.h"
-#include "FluidSimulationProperties.h"
+#include "FluidProperties.h"
 #include "Light.h"
 #include "GLSLManager.h"
 
@@ -286,8 +286,8 @@ static bool gFluidUseGPUAcceleration = false;
 constexpr float DefaultFluidParticleDistanceFactor = 2.0f;
 
 // 45 - 60 nvidia, 80 - 40 is better for this, 20 - 35 is a good value for water
-static float gFluidViscosity = DefaultFluidViscosity;
-static float gFluidStiffness = DefaultFluidStiffness;
+static float gFluidViscosity = FluidSimulationProperties::DefaultViscosity;
+static float gFluidStiffness = FluidSimulationProperties::DefaultStiffness;
 static float gFluidRestOffset = 0.0f;
 static float gFluidContactOffset = 0.0f;
 static float gFluidRestParticleDistance = 0.0f;
@@ -2341,7 +2341,14 @@ void initResources() {
 
 	// Create scene
 	printf("  Load scene\n");
-	gActiveScene = new CScene(DefaultFluidViscosity, DefaultFluidStiffness, DefaultFluidParticleDistanceFactor, DefaultFluidParticleRenderFactor, DefaultFluidParticleRadius, DefaultFluidMinDensity, gDefaultRigidBodyDensity);
+	gActiveScene = new CScene(
+		FluidSimulationProperties::DefaultViscosity, 
+		FluidSimulationProperties::DefaultStiffness, 
+		DefaultFluidParticleDistanceFactor, 
+		DefaultFluidParticleRenderFactor, 
+		DefaultFluidParticleRadius, 
+		DefaultFluidMinDensity, 
+		gDefaultRigidBodyDensity);
 	gActiveScene->load("scene.xml");
 	gFluidParticleRadius = gActiveScene->fluidParticleRadius;
 	gFluidParticleRenderFactor = gActiveScene->fluidParticleRenderFactor;

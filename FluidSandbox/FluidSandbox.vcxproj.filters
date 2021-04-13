@@ -55,7 +55,7 @@
     <ClInclude Include="AllActors.hpp" />
     <ClInclude Include="AllFBOs.hpp" />
     <ClInclude Include="AllShaders.hpp" />
-    <ClInclude Include="FluidSimulationProperties.h" />
+    <ClInclude Include="FluidProperties.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="LICENSE.txt" />

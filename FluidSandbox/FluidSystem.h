@@ -7,7 +7,7 @@
 // PhysX API
 #include <PxPhysicsAPI.h>
 
-#include "FluidSimulationProperties.h"
+#include "FluidProperties.h"
 
 class CFluidSystem
 {

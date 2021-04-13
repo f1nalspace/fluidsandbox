@@ -260,7 +260,7 @@ Copy "$(SolutionDir)Libraries\glew\bin\$(Platform)\glew32.dll" "$(OutDir)"</Comm
     <ClInclude Include="Camera.hpp" />
     <ClInclude Include="FBO.h" />
     <ClInclude Include="FluidContainer.hpp" />
-    <ClInclude Include="FluidSimulationProperties.h" />
+    <ClInclude Include="FluidProperties.h" />
     <ClInclude Include="FluidScenario.h" />
     <ClInclude Include="FluidSystem.h" />
     <ClInclude Include="FontAtlas.h" />
