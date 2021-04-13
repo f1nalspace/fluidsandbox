@@ -261,20 +261,11 @@ static uint32_t gTotalFluidParticles = 0;
 
 // For simulation
 constexpr int MAX_FLUID_PARTICLES = 512000;
-constexpr float DefaultFluidParticleRadius = 0.05f;
-constexpr float DefaultFluidMinDensity = 0.01f;
-constexpr float DefaultFluidParticleRenderFactor = 1.5f;
-constexpr float DefaultFluidParticleFactor = 2.0f;
 
 static glm::vec3 gRigidBodyFallPos(0.0f, 10.0f, 0.0f);
 static CFluidSystem *gFluidSystem = NULL;
-static float gFluidParticleRadius = DefaultFluidParticleRadius;
-static float gFluidParticleRenderFactor = DefaultFluidParticleRenderFactor;
-static float gFluidParticleDistance = gFluidParticleRadius * DefaultFluidParticleFactor;
 
 // Debug types
-
-
 static FluidDebugType gFluidDebugType = FluidDebugType::Final;
 
 static CSphericalPointSprites *gPointSprites = NULL;
@@ -282,8 +273,6 @@ static CPointSpritesShader *gPointSpritesShader = NULL;
 static CLightingShader *gLightingShader = NULL;
 
 static bool gFluidUseGPUAcceleration = false;
-
-constexpr float DefaultFluidParticleDistanceFactor = 2.0f;
 
 // 45 - 60 nvidia, 80 - 40 is better for this, 20 - 35 is a good value for water
 static float gFluidViscosity = FluidSimulationProperties::DefaultViscosity;
@@ -296,6 +285,8 @@ static float gFluidRestitution = 0.0f;
 static float gFluidDamping = 0.0f;
 static float gFluidDynamicFriction = 0.0f;
 static float gFluidParticleMass = 0.0f;
+static float gFluidParticleRadius = 0.0f;
+static float gFluidParticleRenderFactor = 0.0f;
 
 static std::vector<CFluidScenario *> gFluidScenarios;
 static CFluidScenario *gActiveFluidScenario = NULL;
@@ -544,7 +535,7 @@ void AddWater(FluidContainer &container, const FluidType type) {
 	std::vector<physx::PxVec3> particlePositionBuffer;
 	std::vector<physx::PxVec3> particleVelocityBuffer;
 
-	float distance = gFluidParticleDistance;
+	float distance = gFluidRestParticleDistance;
 
 	physx::PxVec3 vel = toPxVec3(container.vel);
 
@@ -744,7 +735,6 @@ CFluidSystem *CreateParticleFluidSystem() {
 	gFluidMaxMotionDistance = gActiveScene->fluidMaxMotionDistance;
 	gFluidContactOffset = gActiveScene->fluidContactOffset;
 	gFluidRestOffset = gActiveScene->fluidRestOffset;
-	gFluidRestParticleDistance = gFluidParticleDistance;
 	gFluidRestitution = gActiveScene->fluidRestitution;
 	gFluidDamping = gActiveScene->fluidDamping;
 	gFluidDynamicFriction = gActiveScene->fluidDynamicFriction;
@@ -783,14 +773,14 @@ void ResetScene() {
 		gFluidParticleRadius = gActiveFluidScenario->particleRadius;
 		gFluidViscosity = gActiveFluidScenario->viscosity;
 		gFluidStiffness = gActiveFluidScenario->stiffness;
-		gFluidParticleDistance = gFluidParticleRadius * gActiveFluidScenario->particleDistanceFactor;
+		gFluidRestParticleDistance = gFluidParticleRadius * gActiveFluidScenario->particleDistanceFactor;
 		gRigidBodyFallPos = gActiveFluidScenario->actorCreatePosition;
 		gFluidParticleRenderFactor = gActiveFluidScenario->particleRenderFactor;
 	} else {
 		gFluidParticleRadius = gActiveScene->fluidParticleRadius;
 		gFluidViscosity = gActiveScene->fluidViscosity;
 		gFluidStiffness = gActiveScene->fluidStiffness;
-		gFluidParticleDistance = gFluidParticleRadius * gActiveScene->fluidParticleDistanceFactor;
+		gFluidRestParticleDistance = gFluidParticleRadius * gActiveScene->fluidParticleDistanceFactor;
 		gRigidBodyFallPos = glm::vec3(0.0f, 4.0f, 0.0f);
 		gFluidParticleRenderFactor = gActiveScene->fluidParticleRenderFactor;
 	}
@@ -1676,7 +1666,7 @@ void RenderOSD() {
 		// Empty line
 		osdPos.newLine();
 
-		sprintf_s(buffer, "Fluid particle radius/distance: %f / %f", gFluidParticleRadius, gFluidParticleDistance);
+		sprintf_s(buffer, "Fluid particle radius: %f", gFluidParticleRadius);
 		RenderOSDLine(osdPos, buffer);
 		sprintf_s(buffer, "Fluid rest particle distance: %f", gFluidRestParticleDistance);
 		RenderOSDLine(osdPos, buffer);
@@ -2344,10 +2334,10 @@ void initResources() {
 	gActiveScene = new CScene(
 		FluidSimulationProperties::DefaultViscosity, 
 		FluidSimulationProperties::DefaultStiffness, 
-		DefaultFluidParticleDistanceFactor, 
-		DefaultFluidParticleRenderFactor, 
-		DefaultFluidParticleRadius, 
-		DefaultFluidMinDensity, 
+		FluidSimulationProperties::DefaultParticleRestDistanceFactor, 
+		FluidRenderProperties::DefaultParticleRenderFactor, 
+		FluidRenderProperties::DefaultParticleRadius, 
+		FluidRenderProperties::DefaultMinDensity, 
 		gDefaultRigidBodyDensity);
 	gActiveScene->load("scene.xml");
 	gFluidParticleRadius = gActiveScene->fluidParticleRadius;

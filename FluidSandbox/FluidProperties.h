@@ -25,3 +25,13 @@ struct FluidSimulationProperties {
 	float particleMass;
 	float gridSize;
 };
+
+struct FluidRenderProperties {
+	constexpr static float DefaultParticleRadius = 0.05f;
+	constexpr static float DefaultParticleRenderFactor = 1.5f;
+	constexpr static float DefaultMinDensity = 0.01f;
+
+	float particleRadius;
+	float particleRenderFactor;
+	float minDensity;
+};
