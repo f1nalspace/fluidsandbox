@@ -34,7 +34,11 @@ Todo:
 
 	- No more pragma comment lib for the libraries, just configure it in the project directly
 
-	- Do not use std::vector, simple static or growable arrays will do (We never remove from a array - only clear)
+	- Update positions, rotations, etc. in source actor from PhysX actor
+
+	- Use source actor for rendering instead of PhysX actor
+
+	- Move all physics code into its own class, so we can swap physics engine any time
 
 	- More cameras (Free, Rotate around point, Fixed)
 
