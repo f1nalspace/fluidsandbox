@@ -205,14 +205,14 @@ CFluidScenario *CFluidScenario::load(const char *filename, CScene *scene) {
 					unsigned int emitterDuration = Utils::toUInt(XMLUtils::getAttribute(fluidNode, "emitterDuration", "0"));
 					unsigned int emitterCoolDown = Utils::toUInt(XMLUtils::getAttribute(fluidNode, "emitterCoolDown", "0"));
 					FluidContainer *fluidCon = new FluidContainer(pos, size, fluidType);
-					fluidCon->Vel = velocity;
-					fluidCon->Time = fluidTime;
-					fluidCon->Radius = radius;
-					fluidCon->IsEmitter = isEmitter;
-					fluidCon->EmitterRate = emitterRate;
-					fluidCon->EmitterTime = emitterTime;
-					fluidCon->EmitterDuration = emitterDuration;
-					fluidCon->EmitterCoolDown = emitterCoolDown;
+					fluidCon->vel = velocity;
+					fluidCon->time = fluidTime;
+					fluidCon->radius = radius;
+					fluidCon->isEmitter = isEmitter;
+					fluidCon->emitterRate = emitterRate;
+					fluidCon->emitterTime = emitterTime;
+					fluidCon->emitterDuration = emitterDuration;
+					fluidCon->emitterCoolDown = emitterCoolDown;
 					newScenario->addFluidContainer(fluidCon);
 				}
 			}

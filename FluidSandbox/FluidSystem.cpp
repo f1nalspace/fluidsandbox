@@ -1,6 +1,6 @@
 #include "FluidSystem.h"
 
-CFluidSystem::CFluidSystem(physx::PxPhysics* physics, const FluidDescription &desc, const unsigned int maxParticles)
+CFluidSystem::CFluidSystem(physx::PxPhysics* physics, const FluidDescription &desc, const uint32_t maxParticles)
 {
 	this->physics = physics;
 	this->maxParticles = maxParticles;
@@ -30,14 +30,14 @@ CFluidSystem::~CFluidSystem(void)
 	this->particleFluid = NULL;
 }
 
-int CFluidSystem::createParticles(const unsigned int numParticles, physx::PxVec3 *pos, physx::PxVec3 *vel)
+int CFluidSystem::createParticles(const uint32_t numParticles, physx::PxVec3 *pos, physx::PxVec3 *vel)
 {
 	std::vector<physx::PxU32> indicesList;
 	std::vector<physx::PxVec3> positions;
 	std::vector<physx::PxVec3> velocities;
 
 	int addedParticles = 0; 
-	for (unsigned int i = 0; i < numParticles; i++) {
+	for (uint32_t i = 0; i < numParticles; i++) {
 		if (this->currentParticles < this->maxParticles) {
 			positions.push_back(pos[i]);
 			velocities.push_back(vel[i]);
@@ -85,7 +85,7 @@ void CFluidSystem::addForce(const physx::PxVec3 &acc, const physx::PxForceMode::
 	// TODO(final): Do not use a std::vector here, use a static array instead!
 	std::vector<physx::PxU32> indices;
 	std::vector<physx::PxVec3> forces;
-	for (unsigned int i = 0; i < currentParticles; i++) {
+	for (uint32_t i = 0; i < currentParticles; i++) {
 		indices.push_back(i);
 		forces.push_back(physx::PxVec3(acc));
 	}
@@ -94,7 +94,7 @@ void CFluidSystem::addForce(const physx::PxVec3 &acc, const physx::PxForceMode::
 	this->particleFluid->addForces(this->currentParticles, indexBuffer, forceBuffer, mode);
 }
 
-void CFluidSystem::writeToVBO(float* data, unsigned int &count, const bool noDensity, const float minDensity)
+void CFluidSystem::writeToVBO(float* data, uint32_t &count, const bool noDensity, const float minDensity)
 {
 	// TODO(final): Do not use a std::vector here, use a static array instead!
 	std::vector<physx::PxU32> deletedPartices;

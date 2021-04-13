@@ -537,22 +537,22 @@ void AddWater(FluidContainer *container, const FluidType type) {
 
 	if(container) {
 
-		float centerX = container->Pos.x;
-		float centerY = container->Pos.y;
-		float centerZ = container->Pos.z;
+		float centerX = container->pos.x;
+		float centerY = container->pos.y;
+		float centerZ = container->pos.z;
 
-		float sizeX = container->Size.x;
-		float sizeY = container->Size.y;
-		float sizeZ = container->Size.z;
+		float sizeX = container->size.x;
+		float sizeY = container->size.y;
+		float sizeZ = container->size.z;
 
 		if(type == FluidType::Sphere) {
-			if(container->Radius < 0.00001f)
-				container->Radius = ((sizeX + sizeY + sizeZ) / 3.0f) / 2.0f;
+			if(container->radius < 0.00001f)
+				container->radius = ((sizeX + sizeY + sizeZ) / 3.0f) / 2.0f;
 		}
 
-		long numX = (int)(container->Size.x / distance);
-		long numY = (int)(container->Size.y / distance);
-		long numZ = (int)(container->Size.z / distance);
+		long numX = (int)(container->size.x / distance);
+		long numY = (int)(container->size.y / distance);
+		long numZ = (int)(container->size.z / distance);
 
 		float dX = distance * numX;
 		float dY = distance * numY;
@@ -564,7 +564,7 @@ void AddWater(FluidContainer *container, const FluidType type) {
 		{
 			numParticles++;
 			particlePositionBuffer.push_back(physx::PxVec3(centerX, centerY, centerZ));
-			particleVelocityBuffer.push_back(container->Vel);
+			particleVelocityBuffer.push_back(container->vel);
 		} else if(type == FluidType::Wall)  // Water quad
 		{
 			float zpos = centerZ - (dZ / 2.0f);
@@ -576,7 +576,7 @@ void AddWater(FluidContainer *container, const FluidType type) {
 				for(int x = 0; x < numX; x++) {
 					numParticles++;
 					particlePositionBuffer.push_back(physx::PxVec3(xpos, centerY, zpos));
-					particleVelocityBuffer.push_back(container->Vel);
+					particleVelocityBuffer.push_back(container->vel);
 					idx++;
 					xpos += distance;
 				}
@@ -597,7 +597,7 @@ void AddWater(FluidContainer *container, const FluidType type) {
 					for(int x = 0; x < numX; x++) {
 						numParticles++;
 						particlePositionBuffer.push_back(physx::PxVec3(xpos, ypos, zpos));
-						particleVelocityBuffer.push_back(container->Vel);
+						particleVelocityBuffer.push_back(container->vel);
 						idx++;
 						xpos += distance;
 					}
@@ -611,7 +611,7 @@ void AddWater(FluidContainer *container, const FluidType type) {
 		{
 			physx::PxVec3 center = physx::PxVec3(centerX, centerY, centerZ);
 
-			float radius = container->Radius;
+			float radius = container->radius;
 			float zpos = centerZ - (dZ / 2.0f);
 			idx = 0;
 
@@ -627,7 +627,7 @@ void AddWater(FluidContainer *container, const FluidType type) {
 						if(PointInSphere(center, radius, point, gFluidParticleRadius)) {
 							numParticles++;
 							particlePositionBuffer.push_back(point);
-							particleVelocityBuffer.push_back(container->Vel);
+							particleVelocityBuffer.push_back(container->vel);
 							idx++;
 						}
 
@@ -653,7 +653,7 @@ void AddWater(FluidType waterType) {
 	for(size_t i = 0; i < gActiveFluidScenario->getFluidContainerCount(); i++) {
 		FluidContainer *container = gActiveFluidScenario->getFluidContainer(i);
 
-		if(container->Time <= 0)
+		if(container->time <= 0)
 			AddWater(container, waterType);
 	}
 }
@@ -830,13 +830,13 @@ void ResetScene() {
 		// Adding waters immediately
 		for(size_t i = 0; i < gActiveFluidScenario->getFluidContainerCount(); i++) {
 			FluidContainer *container = gActiveFluidScenario->getFluidContainer(i);
-			container->TimeElapsed = 0.0f;
-			container->EmitterElapsed = 0.0f;
-			container->EmitterCoolDownElapsed = 0.0f;
-			container->EmitterCoolDownActive = false;
+			container->timeElapsed = 0.0f;
+			container->emitterElapsed = 0.0f;
+			container->emitterCoolDownElapsed = 0.0f;
+			container->emitterCoolDownActive = false;
 
-			if(container->Time == -1 && !container->IsEmitter && gWaterAddBySceneChange) {
-				AddWater(container, container->Type);
+			if(container->time == -1 && !container->isEmitter && gWaterAddBySceneChange) {
+				AddWater(container, container->type);
 			}
 		}
 	}
@@ -1470,49 +1470,49 @@ void CreateActorsBasedOnTime(const float frametime) {
 
 			float time;
 
-			if(!container->IsEmitter) {
+			if(!container->isEmitter) {
 				// Einmaliger partikel emitter
-				if(container->Time > 0) {
-					time = (float)container->Time;
+				if(container->time > 0) {
+					time = (float)container->time;
 
-					if(container->TimeElapsed < time) {
-						container->TimeElapsed += frametime;
+					if(container->timeElapsed < time) {
+						container->timeElapsed += frametime;
 
-						if(container->TimeElapsed >= time) {
-							AddWater(container, container->Type);
+						if(container->timeElapsed >= time) {
+							AddWater(container, container->type);
 						}
 					}
 				}
 			} else if(!gStoppedEmitter) {
-				time = container->EmitterTime;
-				float duration = (float)container->EmitterDuration;
+				time = container->emitterTime;
+				float duration = (float)container->emitterDuration;
 
 				if(time > 0.0f) {
-					container->EmitterElapsed += frametime;
+					container->emitterElapsed += frametime;
 
-					if((container->EmitterElapsed < duration) || (container->EmitterDuration == 0)) {
-						if(container->TimeElapsed < time) {
-							container->TimeElapsed += frametime;
+					if((container->emitterElapsed < duration) || (container->emitterDuration == 0)) {
+						if(container->timeElapsed < time) {
+							container->timeElapsed += frametime;
 
-							if(container->TimeElapsed >= time) {
-								container->TimeElapsed = 0.0f;
-								AddWater(container, container->Type);
+							if(container->timeElapsed >= time) {
+								container->timeElapsed = 0.0f;
+								AddWater(container, container->type);
 							}
 						}
-					} else if(container->EmitterCoolDown > 0.0f) {
-						if(!container->EmitterCoolDownActive) {
-							container->EmitterCoolDownActive = true;
-							container->EmitterCoolDownElapsed = 0.0f;
+					} else if(container->emitterCoolDown > 0.0f) {
+						if(!container->emitterCoolDownActive) {
+							container->emitterCoolDownActive = true;
+							container->emitterCoolDownElapsed = 0.0f;
 						}
 
-						if(container->EmitterCoolDownActive) {
-							container->EmitterCoolDownElapsed += frametime;
+						if(container->emitterCoolDownActive) {
+							container->emitterCoolDownElapsed += frametime;
 
-							if(container->EmitterCoolDownElapsed >= (float)container->EmitterCoolDown) {
+							if(container->emitterCoolDownElapsed >= (float)container->emitterCoolDown) {
 								// Cool down finished
-								container->EmitterCoolDownActive = false;
-								container->EmitterElapsed = 0.0f;
-								container->TimeElapsed = 0.0f;
+								container->emitterCoolDownActive = false;
+								container->emitterElapsed = 0.0f;
+								container->timeElapsed = 0.0f;
 							}
 						}
 					}

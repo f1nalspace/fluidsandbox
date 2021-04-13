@@ -11,37 +11,37 @@ enum class FluidType {
 
 struct FluidContainer
 {
-	physx::PxVec3 Pos;
-	physx::PxVec3 Size;
-	physx::PxVec3 Vel;
-	float Radius;
-	int Time;
-	float TimeElapsed;
-	FluidType Type;
-	bool IsEmitter;
-	unsigned int EmitterCoolDown;
-	float EmitterRate;
-	float EmitterTime;
-	unsigned int EmitterDuration;
-	float EmitterElapsed;
-	bool EmitterCoolDownActive;
-	float EmitterCoolDownElapsed;
+	physx::PxVec3 pos;
+	physx::PxVec3 size;
+	physx::PxVec3 vel;
+	float radius;
+	float timeElapsed;
+	float emitterRate;
+	float emitterTime;
+	float emitterElapsed;
+	float emitterCoolDownElapsed;
+	uint32_t emitterCoolDown;
+	uint32_t emitterDuration;
+	int time;
+	FluidType type;
+	bool isEmitter;
+	bool emitterCoolDownActive;
 
-	FluidContainer(physx::PxVec3 pos, physx::PxVec3 size, FluidType type){
-		Pos = pos;
-		Size = size;
-		Vel = physx::PxVec3(0.0f);
-		Time = 0;
-		TimeElapsed = 0.0f;
-		Type = type;
-		Radius = 0.0f;
-		IsEmitter = false;
-		EmitterCoolDown = 0;
-		EmitterRate = 0.0f;
-		EmitterTime = 0.0f;
-		EmitterDuration = 0;
-		EmitterElapsed = 0.0f;
-		EmitterCoolDownActive = false;
-		EmitterCoolDownElapsed = 0.0f;
+	FluidContainer(const physx::PxVec3 &pos, const physx::PxVec3 &size, const FluidType type){
+		this->pos = pos;
+		this->size = size;
+		this->type = type;
+		vel = physx::PxVec3(0.0f);
+		time = 0;
+		timeElapsed = 0.0f;
+		radius = 0.0f;
+		isEmitter = false;
+		emitterCoolDown = 0;
+		emitterRate = 0.0f;
+		emitterTime = 0.0f;
+		emitterDuration = 0;
+		emitterElapsed = 0.0f;
+		emitterCoolDownActive = false;
+		emitterCoolDownElapsed = 0.0f;
 	}
 };
