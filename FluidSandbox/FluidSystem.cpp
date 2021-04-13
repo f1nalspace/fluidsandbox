@@ -1,12 +1,12 @@
 #include "FluidSystem.h"
 
-CFluidSystem::CFluidSystem(physx::PxPhysics* physics, const FluidDescription &desc, const uint32_t maxParticles)
+CFluidSystem::CFluidSystem(physx::PxPhysics* physics, const FluidSimulationProperties &desc, const uint32_t maxParticles)
 {
 	this->physics = physics;
 	this->maxParticles = maxParticles;
 	this->indexPool = physx::PxParticleExt::createIndexPool(maxParticles);
 	this->currentParticles = 0;
-	this->particleFluid = physics->createParticleFluid(desc.maxParticles);
+	this->particleFluid = physics->createParticleFluid(maxParticles);
 	this->particleFluid->setParticleReadDataFlag(physx::PxParticleReadDataFlag::ePOSITION_BUFFER, true);
 	this->particleFluid->setParticleReadDataFlag(physx::PxParticleReadDataFlag::eDENSITY_BUFFER, true);
 	this->particleFluid->setParticleReadDataFlag(physx::PxParticleReadDataFlag::eVELOCITY_BUFFER, true);

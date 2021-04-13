@@ -146,7 +146,7 @@ License:
 #include "FluidSystem.h"
 #include "Primitives.h"
 #include "TextureManager.h"
-#include "FluidDescription.h"
+#include "FluidSimulationProperties.h"
 #include "Light.h"
 #include "GLSLManager.h"
 
@@ -261,12 +261,16 @@ static uint32_t gTotalFluidParticles = 0;
 
 // For simulation
 constexpr int MAX_FLUID_PARTICLES = 512000;
-static CFluidSystem *gFluidSystem = NULL;
-static float gFluidParticleRadius = 0.05f;
-static float gDefaultFluidParticleFactor = 2.0f;
-static float gFluidParticleRenderFactor = 1.5f;
-static float gFluidParticleDistance = gFluidParticleRadius * gDefaultFluidParticleFactor;
+constexpr float DefaultFluidParticleRadius = 0.05f;
+constexpr float DefaultFluidMinDensity = 0.01f;
+constexpr float DefaultFluidParticleRenderFactor = 1.5f;
+constexpr float DefaultFluidParticleFactor = 2.0f;
+
 static glm::vec3 gRigidBodyFallPos(0.0f, 10.0f, 0.0f);
+static CFluidSystem *gFluidSystem = NULL;
+static float gFluidParticleRadius = DefaultFluidParticleRadius;
+static float gFluidParticleRenderFactor = DefaultFluidParticleRenderFactor;
+static float gFluidParticleDistance = gFluidParticleRadius * DefaultFluidParticleFactor;
 
 // Debug types
 
@@ -280,11 +284,6 @@ static CLightingShader *gLightingShader = NULL;
 static bool gFluidUseGPUAcceleration = false;
 
 constexpr float DefaultFluidParticleDistanceFactor = 2.0f;
-constexpr float DefaultFluidParticleRenderFactor = 1.0f;
-constexpr float DefaultFluidParticleRadius = 0.05f;
-constexpr float DefaultFluidParticleMinDensity = 0.01f;
-constexpr float DefaultFluidViscosity = 10.0f;
-constexpr float DefaultFluidStiffness = 50.0f;
 
 // 45 - 60 nvidia, 80 - 40 is better for this, 20 - 35 is a good value for water
 static float gFluidViscosity = DefaultFluidViscosity;
@@ -751,11 +750,7 @@ CFluidSystem *CreateParticleFluidSystem() {
 	gFluidDynamicFriction = gActiveScene->fluidDynamicFriction;
 	gFluidParticleMass = gActiveScene->fluidParticleMass;
 
-	// Create fluid particle system
-	//PxParticleFluidDesc particleSystemDesc(gPhysicsSDK->getTolerancesScale());
-	FluidDescription particleSystemDesc;
-
-	particleSystemDesc.maxParticles = MAX_FLUID_PARTICLES;
+	FluidSimulationProperties particleSystemDesc;
 
 	particleSystemDesc.stiffness = gFluidStiffness;
 	particleSystemDesc.viscosity = gFluidViscosity;
@@ -2346,7 +2341,7 @@ void initResources() {
 
 	// Create scene
 	printf("  Load scene\n");
-	gActiveScene = new CScene(DefaultFluidViscosity, DefaultFluidStiffness, DefaultFluidParticleDistanceFactor, DefaultFluidParticleRenderFactor, DefaultFluidParticleRadius, DefaultFluidParticleMinDensity, gDefaultRigidBodyDensity);
+	gActiveScene = new CScene(DefaultFluidViscosity, DefaultFluidStiffness, DefaultFluidParticleDistanceFactor, DefaultFluidParticleRenderFactor, DefaultFluidParticleRadius, DefaultFluidMinDensity, gDefaultRigidBodyDensity);
 	gActiveScene->load("scene.xml");
 	gFluidParticleRadius = gActiveScene->fluidParticleRadius;
 	gFluidParticleRenderFactor = gActiveScene->fluidParticleRenderFactor;

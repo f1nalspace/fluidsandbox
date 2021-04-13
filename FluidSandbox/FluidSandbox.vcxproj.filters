@@ -28,7 +28,6 @@
     <ClInclude Include="Camera.hpp" />
     <ClInclude Include="FBO.h" />
     <ClInclude Include="FluidContainer.hpp" />
-    <ClInclude Include="FluidDescription.h" />
     <ClInclude Include="FluidScenario.h" />
     <ClInclude Include="FluidSystem.h" />
     <ClInclude Include="Frustum.h" />
@@ -56,6 +55,7 @@
     <ClInclude Include="AllActors.hpp" />
     <ClInclude Include="AllFBOs.hpp" />
     <ClInclude Include="AllShaders.hpp" />
+    <ClInclude Include="FluidSimulationProperties.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="LICENSE.txt" />

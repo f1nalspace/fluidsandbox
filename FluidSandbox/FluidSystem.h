@@ -7,7 +7,7 @@
 // PhysX API
 #include <PxPhysicsAPI.h>
 
-#include "FluidDescription.h"
+#include "FluidSimulationProperties.h"
 
 class CFluidSystem
 {
@@ -18,7 +18,7 @@ private:
 	uint32_t maxParticles;
 	uint32_t currentParticles;
 public:
-	CFluidSystem(physx::PxPhysics* physics, const FluidDescription &desc, const uint32_t maxParticles);
+	CFluidSystem(physx::PxPhysics* physics, const FluidSimulationProperties &desc, const uint32_t maxParticles);
 	~CFluidSystem(void);
 	int createParticles(const uint32_t numParticles, physx::PxVec3 *pos, physx::PxVec3 *vel);
 	void releaseParticles(const physx::PxStrideIterator<physx::PxU32> &indices, const physx::PxU32 count);
