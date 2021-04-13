@@ -35,7 +35,7 @@ struct CScene
 	float defaultFluidColorFalloffScale;
 	float defaultActorDensity;
 	int fluidColorDefaultIndex;
-	int numCPUThreads;
+	uint32_t numCPUThreads;
 
 	CScene(const float fluidViscosity, const float fluidStiffness, const float fluidParticleDistanceFactor, const float fluidParticleRenderFactor, const float fluidParticleRadius, const float fluidParticleMinDensity, const float defaultActorDensity);
 	~CScene(void);

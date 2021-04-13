@@ -540,119 +540,116 @@ bool PointInSphere(const physx::PxVec3 &spherePos, const float &sphereRadius, co
 	return length <= sumRadius;
 }
 
-void AddWater(FluidContainer *container, const FluidType type) {
+void AddWater(FluidContainer &container, const FluidType type) {
 	uint32_t numParticles = 0;
 	std::vector<physx::PxVec3> particlePositionBuffer;
 	std::vector<physx::PxVec3> particleVelocityBuffer;
 
 	float distance = gFluidParticleDistance;
 
-	if(container) {
+	physx::PxVec3 vel = toPxVec3(container.vel);
 
-		physx::PxVec3 vel = toPxVec3(container->vel);
+	float centerX = container.pos.x;
+	float centerY = container.pos.y;
+	float centerZ = container.pos.z;
 
-		float centerX = container->pos.x;
-		float centerY = container->pos.y;
-		float centerZ = container->pos.z;
+	float sizeX = container.size.x;
+	float sizeY = container.size.y;
+	float sizeZ = container.size.z;
 
-		float sizeX = container->size.x;
-		float sizeY = container->size.y;
-		float sizeZ = container->size.z;
+	if(type == FluidType::Sphere) {
+		if(container.radius < 0.00001f)
+			container.radius = ((sizeX + sizeY + sizeZ) / 3.0f) / 2.0f;
+	}
 
-		if(type == FluidType::Sphere) {
-			if(container->radius < 0.00001f)
-				container->radius = ((sizeX + sizeY + sizeZ) / 3.0f) / 2.0f;
+	long numX = (long)(container.size.x / distance);
+	long numY = (long)(container.size.y / distance);
+	long numZ = (long)(container.size.z / distance);
+
+	float dX = distance * numX;
+	float dY = distance * numY;
+	float dZ = distance * numZ;
+
+	int idx;
+
+	if(type == FluidType::Drop) {
+		// Single drop
+		numParticles++;
+		particlePositionBuffer.push_back(physx::PxVec3(centerX, centerY, centerZ));
+		particleVelocityBuffer.push_back(vel);
+	} else if(type == FluidType::Plane) {
+		// Water plane
+		float zpos = centerZ - (dZ / 2.0f);
+		idx = 0;
+
+		for(long z = 0; z < numZ; z++) {
+			float xpos = centerX - (dX / 2.0f);
+
+			for(long x = 0; x < numX; x++) {
+				numParticles++;
+				particlePositionBuffer.push_back(physx::PxVec3(xpos, centerY, zpos));
+				particleVelocityBuffer.push_back(vel);
+				idx++;
+				xpos += distance;
+			}
+
+			zpos += distance;
 		}
+	} else if(type == FluidType::Box) {
+		// Water box
+		float zpos = centerZ - (dZ / 2.0f);
+		idx = 0;
 
-		long numX = (long)(container->size.x / distance);
-		long numY = (long)(container->size.y / distance);
-		long numZ = (long)(container->size.z / distance);
+		for(long z = 0; z < numZ; z++) {
+			float ypos = centerY - (dY / 2.0f);
 
-		float dX = distance * numX;
-		float dY = distance * numY;
-		float dZ = distance * numZ;
-
-		int idx;
-
-		if(type == FluidType::Drop) {
-			// Single drop
-			numParticles++;
-			particlePositionBuffer.push_back(physx::PxVec3(centerX, centerY, centerZ));
-			particleVelocityBuffer.push_back(vel);
-		} else if(type == FluidType::Plane) {
-			// Water plane
-			float zpos = centerZ - (dZ / 2.0f);
-			idx = 0;
-
-			for(long z = 0; z < numZ; z++) {
+			for(long y = 0; y < numY; y++) {
 				float xpos = centerX - (dX / 2.0f);
 
 				for(long x = 0; x < numX; x++) {
 					numParticles++;
-					particlePositionBuffer.push_back(physx::PxVec3(xpos, centerY, zpos));
+					particlePositionBuffer.push_back(physx::PxVec3(xpos, ypos, zpos));
 					particleVelocityBuffer.push_back(vel);
 					idx++;
 					xpos += distance;
 				}
 
-				zpos += distance;
+				ypos += distance;
 			}
-		} else if(type == FluidType::Box) {
-			// Water box
-			float zpos = centerZ - (dZ / 2.0f);
-			idx = 0;
 
-			for(long z = 0; z < numZ; z++) {
-				float ypos = centerY - (dY / 2.0f);
+			zpos += distance;
+		}
+	} else if(type == FluidType::Sphere)  // Water sphere
+	{
+		physx::PxVec3 center = physx::PxVec3(centerX, centerY, centerZ);
 
-				for(long y = 0; y < numY; y++) {
-					float xpos = centerX - (dX / 2.0f);
+		float radius = container.radius;
+		float zpos = centerZ - (dZ / 2.0f);
+		idx = 0;
 
-					for(long x = 0; x < numX; x++) {
+		for(long z = 0; z < numZ; z++) {
+			float ypos = centerY - (dY / 2.0f);
+
+			for(long y = 0; y < numY; y++) {
+				float xpos = centerX - (dX / 2.0f);
+
+				for(long x = 0; x < numX; x++) {
+					physx::PxVec3 point = physx::PxVec3(xpos, ypos, zpos);
+
+					if(PointInSphere(center, radius, point, gFluidParticleRadius)) {
 						numParticles++;
-						particlePositionBuffer.push_back(physx::PxVec3(xpos, ypos, zpos));
+						particlePositionBuffer.push_back(point);
 						particleVelocityBuffer.push_back(vel);
 						idx++;
-						xpos += distance;
 					}
 
-					ypos += distance;
+					xpos += distance;
 				}
 
-				zpos += distance;
+				ypos += distance;
 			}
-		} else if(type == FluidType::Sphere)  // Water sphere
-		{
-			physx::PxVec3 center = physx::PxVec3(centerX, centerY, centerZ);
 
-			float radius = container->radius;
-			float zpos = centerZ - (dZ / 2.0f);
-			idx = 0;
-
-			for(long z = 0; z < numZ; z++) {
-				float ypos = centerY - (dY / 2.0f);
-
-				for(long y = 0; y < numY; y++) {
-					float xpos = centerX - (dX / 2.0f);
-
-					for(long x = 0; x < numX; x++) {
-						physx::PxVec3 point = physx::PxVec3(xpos, ypos, zpos);
-
-						if(PointInSphere(center, radius, point, gFluidParticleRadius)) {
-							numParticles++;
-							particlePositionBuffer.push_back(point);
-							particleVelocityBuffer.push_back(vel);
-							idx++;
-						}
-
-						xpos += distance;
-					}
-
-					ypos += distance;
-				}
-
-				zpos += distance;
-			}
+			zpos += distance;
 		}
 	}
 
@@ -668,7 +665,7 @@ void AddWater(FluidType waterType) {
 		FluidContainer *container = gActiveFluidScenario->getFluidContainer(i);
 
 		if(container->time <= 0)
-			AddWater(container, waterType);
+			AddWater(*container, waterType);
 	}
 }
 
@@ -841,7 +838,7 @@ void ResetScene() {
 			container->emitterCoolDownActive = false;
 
 			if(container->time == -1 && !container->isEmitter && gWaterAddBySceneChange) {
-				AddWater(container, container->type);
+				AddWater(*container, container->type);
 			}
 		}
 	}
@@ -901,11 +898,9 @@ void InitializePhysX() {
 	sceneDesc.filterShader = gDefaultFilterShader;
 
 	// CPU Dispatcher based on number of cpu cores
-	uint32_t numThreads = gActiveScene->numCPUThreads;
-
-	if(numThreads > COSLowLevel::getInstance()->getNumCPUCores())
-		numThreads = COSLowLevel::getInstance()->getNumCPUCores();
-
+	uint32_t coreCount = COSLowLevel::getInstance()->getNumCPUCores();
+	uint32_t numThreads = std::min(gActiveScene->numCPUThreads, coreCount);
+	printf("  CPU core count: %lu\n", coreCount);
 	printf("  CPU acceleration supported (%d threads)\n", numThreads);
 	sceneDesc.cpuDispatcher = physx::PxDefaultCpuDispatcherCreate(numThreads);
 
@@ -1486,7 +1481,7 @@ void CreateActorsBasedOnTime(const float frametime) {
 						container->timeElapsed += frametime;
 
 						if(container->timeElapsed >= time) {
-							AddWater(container, container->type);
+							AddWater(*container, container->type);
 						}
 					}
 				}
@@ -1503,7 +1498,7 @@ void CreateActorsBasedOnTime(const float frametime) {
 
 							if(container->timeElapsed >= time) {
 								container->timeElapsed = 0.0f;
-								AddWater(container, container->type);
+								AddWater(*container, container->type);
 							}
 						}
 					} else if(container->emitterCoolDown > 0.0f) {
