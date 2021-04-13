@@ -455,17 +455,17 @@ void AddBox(const glm::vec3 &pos, const glm::quat &rotation, const glm::vec3 &ve
 
 	physx::PxBoxGeometry geometry(nsize);
 	physx::PxActor *actor;
-	if(movementType == ActorMovementType::Static)
+	if(movementType == ActorMovementType::Static) {
 		actor = PxCreateStatic(*gPhysicsSDK, transform, geometry, *gDefaultMaterial);
-	else {
+		assert(actor != nullptr);
+	} else {
 		physx::PxRigidDynamic *rigidbody = PxCreateDynamic(*gPhysicsSDK, transform, geometry, *gDefaultMaterial, density);
+		assert(rigidbody != nullptr);
 		actor = rigidbody;
 		physx::PxRigidBodyExt::updateMassAndInertia(*rigidbody, density);
 		rigidbody->setAngularDamping(0.75);
 		rigidbody->setLinearVelocity(nvel);
 	}
-	if(!actor)
-		std::cerr << "create box static actor failed!" << std::endl;
 
 	actor->userData = sourceActor;
 
@@ -486,17 +486,17 @@ void AddSphere(const glm::vec3 &pos, const glm::quat &rotation, const glm::vec3 
 
 	physx::PxSphereGeometry geometry(radius);
 	physx::PxActor *actor;
-	if(movementType == ActorMovementType::Static)
+	if(movementType == ActorMovementType::Static) {
 		actor = PxCreateStatic(*gPhysicsSDK, transform, geometry, *gDefaultMaterial);
-	else {
+		assert(actor != nullptr);
+	} else {
 		physx::PxRigidDynamic *rigidbody = PxCreateDynamic(*gPhysicsSDK, transform, geometry, *gDefaultMaterial, density);
+		assert(rigidbody != nullptr);
 		actor = rigidbody;
 		physx::PxRigidBodyExt::updateMassAndInertia(*rigidbody, density);
 		rigidbody->setAngularDamping(0.75);
 		rigidbody->setLinearVelocity(nvel);
 	}
-	if(!actor)
-		std::cerr << "create sphere static actor failed!" << std::endl;
 
 	actor->userData = sphereActor;
 
@@ -515,23 +515,22 @@ void AddCapsule(const glm::vec3 &pos, const glm::quat &rotation, const glm::vec3
 
 	physx::PxCapsuleGeometry geometry(ext.x, ext.y);
 
-	physx::PxActor *nactor;
-	if(movementType == ActorMovementType::Static)
-		nactor = PxCreateStatic(*gPhysicsSDK, transform, geometry, *gDefaultMaterial);
-	else {
+	physx::PxActor *actor;
+	if(movementType == ActorMovementType::Static) {
+		actor = PxCreateStatic(*gPhysicsSDK, transform, geometry, *gDefaultMaterial);
+		assert(actor != nullptr);
+	} else {
 		physx::PxRigidDynamic *rigidbody = PxCreateDynamic(*gPhysicsSDK, transform, geometry, *gDefaultMaterial, density);
-		nactor = rigidbody;
+		assert(rigidbody != nullptr);
+		actor = rigidbody;
 		physx::PxRigidBodyExt::updateMassAndInertia(*rigidbody, density);
 		rigidbody->setAngularDamping(0.75);
 		rigidbody->setLinearVelocity(nvel);
 	}
 
-	if(!nactor)
-		std::cerr << "create capsule actor failed!" << std::endl;
+	gScene->addActor(*actor);
 
-	gScene->addActor(*nactor);
-
-	gActors.push_back(nactor);
+	gActors.push_back(actor);
 }
 
 bool PointInSphere(const physx::PxVec3 &spherePos, const float &sphereRadius, const physx::PxVec3 point, const float particleRadius) {
