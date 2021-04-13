@@ -15,7 +15,7 @@ struct CFluidScenario
 	glm::vec3 actorCreatePosition;
 	glm::vec3 gravity;
 
-	std::vector<CActor *> actors;
+	std::vector<Actor *> actors;
 	std::vector<FluidContainer *> fluidContainers;
 
 	char name[128];
@@ -31,11 +31,11 @@ struct CFluidScenario
 	CFluidScenario();
 	~CFluidScenario(void);
 
-	void addActor(CActor* actor) { actors.push_back(actor); }
+	void addActor(Actor* actor) { actors.push_back(actor); }
 	void addFluidContainer(FluidContainer* fluidContainer) { fluidContainers.push_back(fluidContainer); }
 
 	size_t getActorCount() const { return actors.size(); }
-	CActor* getActor(const size_t index) { return actors[index]; }
+	Actor* getActor(const size_t index) { return actors[index]; }
 
 	size_t getFluidContainerCount() const { return fluidContainers.size(); }
 	FluidContainer* getFluidContainer(size_t index) { return fluidContainers[index]; }

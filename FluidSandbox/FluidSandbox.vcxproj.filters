@@ -20,8 +20,6 @@
     <ClCompile Include="TextureManager.cpp" />
     <ClCompile Include="Utils.cpp" />
     <ClCompile Include="XMLUtils.cpp" />
-    <ClCompile Include="AllShaders.cpp" />
-    <ClCompile Include="AllFBOs.cpp" />
     <ClCompile Include="VBO.cpp" />
     <ClCompile Include="FontAtlas.cpp" />
     <ClCompile Include="TextureFont.cpp" />
@@ -50,15 +48,14 @@
     <ClInclude Include="TextureManager.h" />
     <ClInclude Include="Utils.h" />
     <ClInclude Include="XMLUtils.h" />
-    <ClInclude Include="AllShaders.h" />
-    <ClInclude Include="AllFBOs.h" />
-    <ClInclude Include="CubeActor.hpp" />
     <ClInclude Include="Actor.hpp" />
-    <ClInclude Include="SphereActor.hpp" />
     <ClInclude Include="VBO.h" />
     <ClInclude Include="Fonts.h" />
     <ClInclude Include="FontAtlas.h" />
     <ClInclude Include="TextureFont.h" />
+    <ClInclude Include="AllActors.hpp" />
+    <ClInclude Include="AllFBOs.hpp" />
+    <ClInclude Include="AllShaders.hpp" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="LICENSE.txt" />

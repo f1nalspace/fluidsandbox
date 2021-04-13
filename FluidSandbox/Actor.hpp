@@ -14,7 +14,7 @@ enum class ActorPrimitiveKind
 	Sphere
 };
 
-struct CActor
+struct Actor
 {
 	glm::vec4 color;
 	glm::vec3 pos;
@@ -29,7 +29,7 @@ struct CActor
 	bool blending;
 	bool particleDrain;
 
-	CActor(const ActorType type, const ActorPrimitiveKind prim) {
+	Actor(const ActorType type, const ActorPrimitiveKind prim) {
 		this->type = type;
 		this->time = 0;
 		this->timeElapsed = 0.0f;

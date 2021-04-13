@@ -15,8 +15,8 @@
 #include "Camera.hpp"
 #include "Utils.h"
 
-#include "AllShaders.h"
-#include "AllFBOs.h"
+#include "AllShaders.hpp"
+#include "AllFBOs.hpp"
 
 struct FluidColor
 {

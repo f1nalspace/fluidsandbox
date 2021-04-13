@@ -9,8 +9,8 @@
 #include "OSLowLevel.h"
 #include "XMLUtils.h"
 #include "Utils.h"
-#include "CubeActor.hpp"
-#include "SphereActor.hpp"
+
+#include "AllActors.hpp"
 
 CFluidScenario::CFluidScenario() {
 	this->name[0] = 0;
@@ -34,7 +34,7 @@ CFluidScenario::~CFluidScenario(void) {
 	fluidContainers.clear();
 
 	for(size_t i = 0; i < actors.size(); i++) {
-		CActor *actor = actors[i];
+		Actor *actor = actors[i];
 		delete actor;
 	}
 	actors.clear();
@@ -155,7 +155,7 @@ CFluidScenario *CFluidScenario::load(const char *filename, CScene *scene) {
 					bool blending = Utils::toBool(XMLUtils::getAttribute(actorNode, "blending", atype == ActorType::ActorTypeStatic ? "true" : "false"));
 					bool particleDrain = Utils::toBool(XMLUtils::getAttribute(actorNode, "particleDrain", "false"));
 
-					CActor *newactor = NULL;
+					Actor *newactor = NULL;
 					if(strcmp(primitive.c_str(), "cube") == 0) {
 						CCubeActor *typedActor = new CCubeActor(atype);
 						typedActor->size = size;

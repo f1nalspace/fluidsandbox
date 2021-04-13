@@ -142,8 +142,6 @@ License:
 #include "ScreenSpaceFluidRendering.h"
 #include "FluidScenario.h"
 #include "Actor.hpp"
-#include "CubeActor.hpp"
-#include "SphereActor.hpp"
 #include "Scene.h"
 #include "FluidSystem.h"
 #include "Primitives.h"
@@ -152,8 +150,9 @@ License:
 #include "Light.h"
 #include "GLSLManager.h"
 
-#include "AllShaders.h"
-#include "AllFBOs.h"
+#include "AllShaders.hpp"
+#include "AllFBOs.hpp"
+#include "AllActors.hpp"
 
 inline physx::PxVec3 toPxVec3(const glm::vec3 &input) {
 	return physx::PxVec3(input.x, input.y, input.z);
@@ -710,7 +709,7 @@ void ClearScene() {
 	//gTotalFluidParticles = 0;
 }
 
-void AddScenarioActor(CActor *actor) {
+void AddScenarioActor(Actor *actor) {
 	bool isStatic = actor->type == ActorType::ActorTypeStatic;
 	if(actor->primitive == ActorPrimitiveKind::Cube) {
 		CCubeActor *cube = (CCubeActor *)actor;
@@ -827,7 +826,7 @@ void ResetScene() {
 	if(gActiveFluidScenario) {
 		// Adding actors immediately
 		for(size_t i = 0, count = gActiveFluidScenario->getActorCount(); i < count; i++) {
-			CActor *actor = gActiveFluidScenario->getActor(i);
+			Actor *actor = gActiveFluidScenario->getActor(i);
 			actor->timeElapsed = 0.0f;
 
 			if(actor->time == -1) {
@@ -1095,7 +1094,7 @@ void UpdatePhysX(const float frametime) {
 
 glm::vec4 getColor(physx::PxActor *actor, const glm::vec4 &defaultColor) {
 	if(actor->userData) {
-		CActor *a = (CActor *)actor->userData;
+		Actor *a = (Actor *)actor->userData;
 		return a->color;
 	} else {
 		physx::PxType actorType = actor->getConcreteType();
@@ -1214,7 +1213,7 @@ void DrawActor(physx::PxActor *actor) {
 		bool blending = false;
 
 		if(actor->userData) {
-			CActor *a = (CActor *)actor->userData;
+			Actor *a = (Actor *)actor->userData;
 			isVisible = a->visible;
 			blending = a->blending;
 		}
@@ -1461,7 +1460,7 @@ void CreateActorsBasedOnTime(const float frametime) {
 	if(gActiveFluidScenario) {
 		// Add actors
 		for(size_t i = 0, count = gActiveFluidScenario->getActorCount(); i < count; i++) {
-			CActor *actor = gActiveFluidScenario->getActor(i);
+			Actor *actor = gActiveFluidScenario->getActor(i);
 
 			if(actor->time > 0) {
 				if(actor->timeElapsed < (float)actor->time) {
