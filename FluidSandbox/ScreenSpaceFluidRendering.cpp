@@ -191,7 +191,7 @@ void CScreenSpaceFluidRendering::BlurDepthPass(const glm::mat4 &mvp, CTexture2D*
 	renderer->SetDepthMask(true);
 }
 
-void CScreenSpaceFluidRendering::WaterPass(const glm::mat4 &mvp, CCamera &cam, CTexture2D* depthTexture, CTexture2D* thicknessTexture, const FluidColor &color, const int showType)
+void CScreenSpaceFluidRendering::WaterPass(const glm::mat4 &mvp, CCamera &cam, CTexture2D* depthTexture, CTexture2D* thicknessTexture, const FluidColor &color, const FluidDebugType showType)
 {
 	// Bind 3 textures (Depth, Thickness, Scene)
 	renderer->SetBlending(true);
@@ -202,7 +202,7 @@ void CScreenSpaceFluidRendering::WaterPass(const glm::mat4 &mvp, CCamera &cam, C
 
 	// Process normal and shading shader on a fullscreen quad
 	CWaterShader* shader;
-	if (showType == 0)
+	if (showType == FluidDebugType::Final)
 		shader = !color.isClear ? colorWaterShader : clearWaterShader;
 	else
 		shader = debugWaterShader;
@@ -220,7 +220,7 @@ void CScreenSpaceFluidRendering::WaterPass(const glm::mat4 &mvp, CCamera &cam, C
 	shader->uniform1f(shader->ulocFalloffScale, color.falloffScale);
 
 	shader->uniform4f(shader->ulocFluidColor, (GLfloat*)&color.color[0]);
-	shader->uniform1i(shader->ulocShowType, showType);
+	shader->uniform1i(shader->ulocShowType, (int)showType);
 
 	shader->uniformMatrix4(shader->ulocMVPMat, &mvp[0][0]);
 	RenderFullscreenQuad();

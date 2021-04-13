@@ -52,13 +52,31 @@ enum class SSFRenderMode : int {
 	Count
 };
 
+enum class FluidDebugType : int {
+	Final = 0,
+	Depth = 1,
+	Normal = 2,
+	Color = 3,
+	Diffuse = 4,
+	Specular = 5,
+	DiffuseSpecular = 6,
+	Scene = 7,
+	Fresnel = 8,
+	Refraction = 9,
+	Reflection = 10,
+	FresnelReflection = 11,
+	Thickness = 12,
+	Absorbtion = 13,
+	Max = Absorbtion
+};
+
 struct SSFDrawingOptions
 {
 	glm::vec3 clearColor;
 	FluidColor fluidColor;
 	float blurScale;
 	unsigned int textureState;
-	int debugType;
+	FluidDebugType debugType;
 	SSFRenderMode renderMode;
 	bool blurEnabled;
 
@@ -72,7 +90,7 @@ struct SSFDrawingOptions
 		clearColor[2] = 0.0f;
 		blurScale = 0.001f;
 		blurEnabled = true;
-		debugType = 0;
+		debugType = FluidDebugType::Final;
 	}
 };
 
@@ -114,7 +132,7 @@ private:
 	void RenderPointSprites(const unsigned int numPointSprites, const glm::mat4 &proj, const glm::mat4 &view, const float zfar, const float znear, CPointSpritesShader* shader, const int wH);
 	void RenderFullscreenQuad();
 	void BlurDepthPass(const glm::mat4 &mvp, CTexture2D* depthTexture, const float dirX, const float dirY);
-	void WaterPass(const glm::mat4 &mvp, CCamera &cam, CTexture2D* depthTexture, CTexture2D* thicknessTexture, const FluidColor &color, const int showType);
+	void WaterPass(const glm::mat4 &mvp, CCamera &cam, CTexture2D* depthTexture, CTexture2D* thicknessTexture, const FluidColor &color, const FluidDebugType showType);
 	int CalcFBOSize(int size, float factor) { return (int)(size * factor); }
 public:
 	CScreenSpaceFluidRendering(const int width, const int height, const float particleRadius);

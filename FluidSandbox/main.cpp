@@ -239,23 +239,9 @@ static float gFluidParticleDistance = gFluidParticleRadius * gDefaultFluidPartic
 static physx::PxVec3 gRigidBodyFallPos(0.0f, 10.0f, 0.0f);
 
 // Debug types
-#define	SWOWTYPE_FINAL 0
-#define	SWOWTYPE_DEPTH 1
-#define	SWOWTYPE_NORMAL 2
-#define	SWOWTYPE_COLOR 3
-#define	SWOWTYPE_DIFFUSE 4
-#define	SWOWTYPE_SPECULAR 5
-#define	SWOWTYPE_DIFFUSE_SPECULAR 6
-#define	SWOWTYPE_SCENE 7
-#define	SWOWTYPE_FRESNEL 8
-#define	SWOWTYPE_REFRACTION 9
-#define SWOWTYPE_REFLECTION 10
-#define	SWOWTYPE_FRESNEL_REFLECTION 11
-#define	SWOWTYPE_THICKNESS 12
-#define	SWOWTYPE_ABSORBTION 13
 
-const int MAX_DEBUGTYPE = SWOWTYPE_ABSORBTION;
-int gFluidDebugType = SWOWTYPE_FINAL;
+
+static FluidDebugType gFluidDebugType = FluidDebugType::Final;
 
 static CSphericalPointSprites *gPointSprites = NULL;
 static CPointSpritesShader *gPointSpritesShader = NULL;
@@ -1397,48 +1383,48 @@ const char *GetFluidRenderMode(const SSFRenderMode mode) {
 	}
 }
 
-const char *GetFluidDebugType(unsigned int type) {
+const char *GetFluidDebugType(const FluidDebugType type) {
 	switch(type) {
-		case SWOWTYPE_FINAL:
+		case FluidDebugType::Final:
 			return "Final\0";
 
-		case SWOWTYPE_DEPTH:
+		case FluidDebugType::Depth:
 			return "Depth only\0";
 
-		case SWOWTYPE_NORMAL:
+		case FluidDebugType::Normal:
 			return "Normal only\0";
 
-		case SWOWTYPE_COLOR:
+		case FluidDebugType::Color:
 			return "Color only\0";
 
-		case SWOWTYPE_DIFFUSE:
+		case FluidDebugType::Diffuse:
 			return "Diffuse only\0";
 
-		case SWOWTYPE_SPECULAR:
+		case FluidDebugType::Specular:
 			return "Specular only\0";
 
-		case SWOWTYPE_DIFFUSE_SPECULAR:
+		case FluidDebugType::DiffuseSpecular:
 			return "Diffuse + Specular\0";
 
-		case SWOWTYPE_SCENE:
+		case FluidDebugType::Scene:
 			return "Scene only\0";
 
-		case SWOWTYPE_FRESNEL:
+		case FluidDebugType::Fresnel:
 			return "Fresne onlyl\0";
 
-		case SWOWTYPE_REFRACTION:
+		case FluidDebugType::Refraction:
 			return "Refraction only\0";
 
-		case SWOWTYPE_REFLECTION:
+		case FluidDebugType::Reflection:
 			return "Reflection only\0";
 
-		case SWOWTYPE_FRESNEL_REFLECTION:
+		case FluidDebugType::FresnelReflection:
 			return "Fresnel + Reflection\0";
 
-		case SWOWTYPE_THICKNESS:
+		case FluidDebugType::Thickness:
 			return "Thickness only\0";
 
-		case SWOWTYPE_ABSORBTION:
+		case FluidDebugType::Absorbtion:
 			return "Color absorption only\0";
 
 		default:
@@ -1655,7 +1641,7 @@ void RenderOSD() {
 		RenderOSDLine(osdPos, buffer);
 		sprintf_s(buffer, "    Fluid particle render factor: %f", gFluidParticleRenderFactor);
 		RenderOSDLine(osdPos, buffer);
-		sprintf_s(buffer, "    Fluid debug type: %d / %d (%s)", gFluidDebugType, MAX_DEBUGTYPE, GetFluidDebugType(gFluidDebugType));
+		sprintf_s(buffer, "    Fluid debug type: %d / %d (%s)", (int)gFluidDebugType, FluidDebugType::Max, GetFluidDebugType(gFluidDebugType));
 		RenderOSDLine(osdPos, buffer);
 		sprintf_s(buffer, "    Fluid color falloff scale: %f", activeFluidColor.falloffScale);
 		RenderOSDLine(osdPos, buffer);
@@ -2093,7 +2079,7 @@ void KeyUp(unsigned char key, int x, int y) {
 
 		case 115: // s
 		{
-			gFluidDebugType = 0;
+			gFluidDebugType = FluidDebugType::Final;
 
 			int mode = (int)gSSFRenderMode;
 
@@ -2151,111 +2137,99 @@ void ChangeFluidProperty(float value) {
 			gFluidViscosity += value;
 			gFluidSystem->setViscosity(gFluidViscosity);
 			gActiveFluidScenario->viscosity = gFluidViscosity;
-			break;
-		}
+		} break;
 
 		case FLUID_PROPERTY_STIFFNESS:
 		{
 			gFluidStiffness += value;
 			gFluidSystem->setStiffness(gFluidStiffness);
 			gActiveFluidScenario->stiffness = gFluidStiffness;
-			break;
-		}
+		} break;
 
 		case FLUID_PROPERTY_MAXMOTIONDISTANCE:
 		{
 			gFluidMaxMotionDistance += value / 1000.0f;
 			gFluidSystem->setMaxMotionDistance(gFluidMaxMotionDistance);
 			gActiveScene->fluidMaxMotionDistance = gFluidMaxMotionDistance;
-			break;
-		}
+		} break;
 
 		case FLUID_PROPERTY_CONTACTOFFSET:
 		{
 			gFluidContactOffset += value / 1000.0f;
 			gFluidSystem->setContactOffset(gFluidContactOffset);
 			gActiveScene->fluidContactOffset = gFluidContactOffset;
-			break;
-		}
+		} break;
 
 		case FLUID_PROPERTY_RESTOFFSET:
 		{
 			gFluidRestOffset += value / 1000.0f;
 			gFluidSystem->setRestOffset(gFluidRestOffset);
 			gActiveScene->fluidRestOffset = gFluidRestOffset;
-			break;
-		}
+		} break;
 
 		case FLUID_PROPERTY_RESTITUTION:
 		{
 			gFluidRestitution += value / 1000.0f;
 			gFluidSystem->setRestitution(gFluidRestitution);
 			gActiveScene->fluidRestitution = gFluidRestitution;
-			break;
-		}
+		} break;
 
 		case FLUID_PROPERTY_DAMPING:
 		{
 			gFluidDamping += value / 1000.0f;
 			gFluidSystem->setDamping(gFluidDamping);
 			gActiveScene->fluidDamping = gFluidDamping;
-			break;
-		}
+		} break;
 
 		case FLUID_PROPERTY_DYNAMICFRICTION:
 		{
 			gFluidDynamicFriction += value / 1000.0f;
 			gFluidSystem->setDynamicFriction(gFluidDynamicFriction);
 			gActiveScene->fluidDynamicFriction = gFluidDynamicFriction;
-			break;
-		}
+		} break;
 
 		case FLUID_PROPERTY_PARTICLEMASS:
 		{
 			gFluidParticleMass += value / 1000.0f;
 			gFluidSystem->setParticleMass(gFluidParticleMass);
 			gActiveScene->fluidParticleMass = gFluidParticleMass;
-			break;
-		}
+		} break;
 
 		case FLUID_PROPERTY_DEPTH_BLUR_SCALE:
 		{
 			gSSFBlurDepthScale += value / 10000.0f;
-			break;
-		}
+		} break;
 
 		case FLUID_PROPERTY_PARTICLE_RENDER_FACTOR:
 		{
 			gFluidParticleRenderFactor += value / 10.0f;
 			gFluidParticleRenderFactor = roundFloat(gFluidParticleRenderFactor);
-			break;
-		}
+		} break;
 
 		case FLUID_PROPERTY_DEBUGTYPE:
 		{
 			int inc = (int)value;
-			gFluidDebugType += inc;
 
-			if(gFluidDebugType < 0) gFluidDebugType = MAX_DEBUGTYPE;
+			int debugType = (int)gFluidDebugType;
+			debugType += inc;
 
-			if(gFluidDebugType > MAX_DEBUGTYPE) gFluidDebugType = SWOWTYPE_FINAL;
+			if(debugType < 0) debugType = (int)FluidDebugType::Max;
+			if(debugType > (int)FluidDebugType::Max) debugType = (int)FluidDebugType::Final;
 
-			break;
-		}
+			gFluidDebugType = (FluidDebugType)debugType;
+		} break;
 
 		case FLUID_PROPERTY_COLOR_FALLOFF_SCALE:
 		{
 			FluidColor &activeFluidColor = gActiveScene->getFluidColor(gSSFCurrentFluidIndex);
 			activeFluidColor.falloffScale += value / 100.0f;
-			break;
-		}
+		} break;
 
 		case FLUID_PROPERTY_COLOR_FALLOFF_ALPHA:
 		{
 			FluidColor &activeFluidColor = gActiveScene->getFluidColor(gSSFCurrentFluidIndex);
 			activeFluidColor.falloff.w += value / 100.0f;
-			break;
-		}
+		} break;
 	}
 }
 
