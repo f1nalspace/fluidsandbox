@@ -27,13 +27,13 @@ CFluidScenario::CFluidScenario() {
 
 
 CFluidScenario::~CFluidScenario(void) {
-	for(unsigned int i = 0; i < fluidContainers.size(); i++) {
+	for(size_t i = 0; i < fluidContainers.size(); i++) {
 		FluidContainer *container = fluidContainers[i];
 		delete container;
 	}
 	fluidContainers.clear();
 
-	for(unsigned int i = 0; i < actors.size(); i++) {
+	for(size_t i = 0; i < actors.size(); i++) {
 		CActor *actor = actors[i];
 		delete actor;
 	}
@@ -202,8 +202,8 @@ CFluidScenario *CFluidScenario::load(const char *filename, CScene *scene) {
 					bool isEmitter = Utils::toBool(XMLUtils::getAttribute(fluidNode, "isEmitter", "false"));
 					float emitterRate = Utils::toFloat(XMLUtils::getAttribute(fluidNode, "emitterRate", "0.0"));
 					float emitterTime = emitterRate > 0.0f ? 1000.0f / emitterRate : 0.0f;
-					unsigned int emitterDuration = Utils::toUInt(XMLUtils::getAttribute(fluidNode, "emitterDuration", "0"));
-					unsigned int emitterCoolDown = Utils::toUInt(XMLUtils::getAttribute(fluidNode, "emitterCoolDown", "0"));
+					uint32_t emitterDuration = Utils::toUInt(XMLUtils::getAttribute(fluidNode, "emitterDuration", "0"));
+					uint32_t emitterCoolDown = Utils::toUInt(XMLUtils::getAttribute(fluidNode, "emitterCoolDown", "0"));
 					FluidContainer *fluidCon = new FluidContainer(pos, size, fluidType);
 					fluidCon->vel = velocity;
 					fluidCon->time = fluidTime;

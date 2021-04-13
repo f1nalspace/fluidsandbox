@@ -34,11 +34,7 @@ Todo:
 
 	- No more pragma comment lib for the libraries, just configure it in the project directly
 
-	- Do not use std::string classes while running the simulation!
-
 	- Do not use std::vector, simple static or growable arrays will do (We never remove from a array - only clear)
-
-	- Move away from classes and use more structs, too much useless OOP, useless getters and setters
 
 	- More cameras (Free, Rotate around point, Fixed)
 
@@ -210,8 +206,17 @@ static bool gStoppedEmitter = false;
 static std::vector<physx::PxActor *> gActors;
 constexpr float gDefaultRigidBodyDensity = 0.05f;
 
-// Current geometry type
-static unsigned int gGeoType = 7;
+enum class ActorCreationKind : int {
+	RigidBox = 0,
+	RigidSphere,
+	RigidCapsule,
+	FluidDrop,
+	FluidPlane,
+	FluidCube,
+	FluidSphere,
+	Max = FluidSphere
+};
+static ActorCreationKind gCurrentActorCreationKind = ActorCreationKind::FluidCube;
 
 constexpr int HideRigidBody_None = 0;
 constexpr int HideRigidBody_Blending = 1;
@@ -227,7 +232,7 @@ static bool showOSD = false;
 // Drawing statistics
 static size_t gTotalActors = 0;
 static size_t gDrawedActors = 0;
-static unsigned int gTotalFluidParticles = 0;
+static uint32_t gTotalFluidParticles = 0;
 
 // For fluid simulation
 constexpr int MAX_FLUID_PARTICLES = 512000;
@@ -515,7 +520,7 @@ bool PointInSphere(const physx::PxVec3 &spherePos, const float &sphereRadius, co
 }
 
 void AddWater(FluidContainer *container, const FluidType type) {
-	unsigned int numParticles = 0;
+	uint32_t numParticles = 0;
 	std::vector<physx::PxVec3> particlePositionBuffer;
 	std::vector<physx::PxVec3> particleVelocityBuffer;
 
@@ -536,9 +541,9 @@ void AddWater(FluidContainer *container, const FluidType type) {
 				container->radius = ((sizeX + sizeY + sizeZ) / 3.0f) / 2.0f;
 		}
 
-		long numX = (int)(container->size.x / distance);
-		long numY = (int)(container->size.y / distance);
-		long numZ = (int)(container->size.z / distance);
+		long numX = (long)(container->size.x / distance);
+		long numY = (long)(container->size.y / distance);
+		long numZ = (long)(container->size.z / distance);
 
 		float dX = distance * numX;
 		float dY = distance * numY;
@@ -546,20 +551,22 @@ void AddWater(FluidContainer *container, const FluidType type) {
 
 		int idx;
 
-		if(type == FluidType::Drop)  // Single drop
+		if(type == FluidType::Drop)
 		{
+			// Single drop
 			numParticles++;
 			particlePositionBuffer.push_back(physx::PxVec3(centerX, centerY, centerZ));
 			particleVelocityBuffer.push_back(container->vel);
-		} else if(type == FluidType::Wall)  // Water quad
+		} else if(type == FluidType::Plane)
 		{
+			// Water plane
 			float zpos = centerZ - (dZ / 2.0f);
 			idx = 0;
 
-			for(int z = 0; z < numZ; z++) {
+			for(long z = 0; z < numZ; z++) {
 				float xpos = centerX - (dX / 2.0f);
 
-				for(int x = 0; x < numX; x++) {
+				for(long x = 0; x < numX; x++) {
 					numParticles++;
 					particlePositionBuffer.push_back(physx::PxVec3(xpos, centerY, zpos));
 					particleVelocityBuffer.push_back(container->vel);
@@ -569,18 +576,19 @@ void AddWater(FluidContainer *container, const FluidType type) {
 
 				zpos += distance;
 			}
-		} else if(type == FluidType::Blob)  // Water blob
+		} else if(type == FluidType::Box) 
 		{
+			// Water box
 			float zpos = centerZ - (dZ / 2.0f);
 			idx = 0;
 
-			for(int z = 0; z < numZ; z++) {
+			for(long z = 0; z < numZ; z++) {
 				float ypos = centerY - (dY / 2.0f);
 
-				for(int y = 0; y < numY; y++) {
+				for(long y = 0; y < numY; y++) {
 					float xpos = centerX - (dX / 2.0f);
 
-					for(int x = 0; x < numX; x++) {
+					for(long x = 0; x < numX; x++) {
 						numParticles++;
 						particlePositionBuffer.push_back(physx::PxVec3(xpos, ypos, zpos));
 						particleVelocityBuffer.push_back(container->vel);
@@ -601,13 +609,13 @@ void AddWater(FluidContainer *container, const FluidType type) {
 			float zpos = centerZ - (dZ / 2.0f);
 			idx = 0;
 
-			for(int z = 0; z < numZ; z++) {
+			for(long z = 0; z < numZ; z++) {
 				float ypos = centerY - (dY / 2.0f);
 
-				for(int y = 0; y < numY; y++) {
+				for(long y = 0; y < numY; y++) {
 					float xpos = centerX - (dX / 2.0f);
 
-					for(int x = 0; x < numX; x++) {
+					for(long x = 0; x < numX; x++) {
 						physx::PxVec3 point = physx::PxVec3(xpos, ypos, zpos);
 
 						if(PointInSphere(center, radius, point, gFluidParticleRadius)) {
@@ -1271,28 +1279,28 @@ void OnReshape(int nw, int nh) {
 	if(windowHeight < 1) windowHeight = 1;
 }
 
-const char *GetGeometryType(unsigned int state) {
-	switch(state) {
-		case 1:
-			return "Box\0";
+const char *GetNameOfActorCreationKind(const ActorCreationKind kind) {
+	switch(kind) {
+		case ActorCreationKind::RigidBox:
+			return "Rigid/Box\0";
 
-		case 2:
-			return "Sphere\0";
+		case ActorCreationKind::RigidSphere:
+			return "Rigid/Sphere\0";
 
-		case 3:
-			return "Capsule\0";
+		case ActorCreationKind::RigidCapsule:
+			return "Rigid/Capsule\0";
 
-		case 4:
-			return "Fluid - single\0";
+		case ActorCreationKind::FluidDrop:
+			return "Fluid/Drop\0";
 
-		case 5:
-			return "Fluid - plane\0";
+		case ActorCreationKind::FluidPlane:
+			return "Fluid/Plane\0";
 
-		case 6:
-			return "Fluid - cube\0";
+		case ActorCreationKind::FluidCube:
+			return "Fluid/Cube\0";
 
-		case 7:
-			return "Fluid - sphere\0";
+		case ActorCreationKind::FluidSphere:
+			return "Fluid/Sphere\0";
 
 		default:
 			return "Unknown\0";
@@ -1601,7 +1609,7 @@ void RenderOSD() {
 
 		sprintf_s(buffer, "Controls:");
 		RenderOSDLine(osdPos, buffer);
-		sprintf_s(buffer, "Geometry type (1-7): %s", GetGeometryType(gGeoType));
+		sprintf_s(buffer, "Geometry type (1-7): %s", GetNameOfActorCreationKind(gCurrentActorCreationKind));
 		RenderOSDLine(osdPos, buffer);
 		sprintf_s(buffer, "Draw Wireframe (W): %s", gDrawWireframe ? "enabled" : "disabled");
 		RenderOSDLine(osdPos, buffer);
@@ -1881,33 +1889,33 @@ void Motion(int x, int y) {
 	glutPostRedisplay();
 }
 
-void AddActorByState(unsigned int state) {
-	switch(state) {
-		case 1:
+void AddActor(const ActorCreationKind kind) {
+	switch(kind) {
+		case ActorCreationKind::RigidBox:
 			AddBox(physx::PxVec3(0.5, 0.5, 0.5), NULL);
 			break;
 
-		case 2:
+		case ActorCreationKind::RigidSphere:
 			AddSphere(NULL);
 			break;
 
-		case 3:
+		case ActorCreationKind::RigidCapsule:
 			AddCapsule();
 			break;
 
-		case 4:
+		case ActorCreationKind::FluidDrop:
 			AddWater(FluidType::Drop);
 			break;
 
-		case 5:
-			AddWater(FluidType::Wall);
+		case ActorCreationKind::FluidPlane:
+			AddWater(FluidType::Plane);
 			break;
 
-		case 6:
-			AddWater(FluidType::Blob);
+		case ActorCreationKind::FluidCube:
+			AddWater(FluidType::Box);
 			break;
 
-		case 7:
+		case ActorCreationKind::FluidSphere:
 			AddWater(FluidType::Sphere);
 			break;
 
@@ -1978,7 +1986,9 @@ void KeyUp(unsigned char key, int x, int y) {
 		case 54:
 		case 55:
 		{
-			gGeoType = 1 + (key - 49);
+			int index = key - 49;
+			assert(index >= 0 && index <= (int)ActorCreationKind::Max);
+			gCurrentActorCreationKind = (ActorCreationKind)index;
 			break;
 		}
 		case 102: // f
@@ -2237,7 +2247,7 @@ void KeyDown(unsigned char key, int x, int y) {
 	switch(key) {
 		case 32: // Space
 		{
-			AddActorByState(gGeoType);
+			AddActor(gCurrentActorCreationKind);
 			break;
 		}
 

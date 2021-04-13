@@ -142,14 +142,14 @@ namespace Utils {
 	FluidType toFluidType(const char *str) {
 		if(strcmp(str, "sphere") == 0)
 			return FluidType::Sphere;
-		else if(strcmp(str, "blob") == 0)
-			return FluidType::Blob;
-		else if(strcmp(str, "wall") == 0)
-			return FluidType::Wall;
-		else if(strcmp(str, "drop") == 0)
+		else if(strcmp(str, "blob") == 0 || strcmp(str, "box") == 0 || strcmp(str, "cube") == 0)
+			return FluidType::Box;
+		else if(strcmp(str, "wall") == 0 || strcmp(str, "plane") == 0)
+			return FluidType::Plane;
+		else if(strcmp(str, "drop"))
 			return FluidType::Drop;
 		else
-			return FluidType::Blob;
+			return FluidType::Box;
 	}
 
 	ActorType toActorType(const char *str) {
