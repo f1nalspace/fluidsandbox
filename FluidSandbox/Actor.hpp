@@ -1,6 +1,6 @@
 #pragma once
 
-#include <PxPhysicsAPI.h> 
+#include <glm/glm.hpp>
 
 enum class ActorType
 {
@@ -16,10 +16,10 @@ enum class ActorPrimitiveKind
 
 struct CActor
 {
-	physx::PxVec4 color;
-	physx::PxVec3 pos;
-	physx::PxVec3 velocity;
-	physx::PxVec3 rotate;
+	glm::vec4 color;
+	glm::vec3 pos;
+	glm::vec3 velocity;
+	glm::vec3 rotate;
 	float timeElapsed;
 	float density;
 	ActorType type;
@@ -33,12 +33,14 @@ struct CActor
 		this->type = type;
 		this->time = 0;
 		this->timeElapsed = 0.0f;
-		this->color = physx::PxVec4(1.0f);
+		this->pos = glm::vec3(0);
+		this->color = glm::vec4(1.0f);
 		this->primitive = prim;
 		this->density = 1.0f;
-		this->velocity = physx::PxVec3(0.0f);
+		this->velocity = glm::vec3(0.0f);
 		this->visible = true;
-		this->rotate = physx::PxVec3(0.0f);
+		this->blending = false;
+		this->rotate = glm::vec3(0.0f);
 		this->particleDrain = false;
 	}
 };

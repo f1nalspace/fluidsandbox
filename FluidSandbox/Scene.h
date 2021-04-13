@@ -2,12 +2,14 @@
 
 #include <vector>
 
+#include <glm/glm.hpp>
+
 #include "ScreenSpaceFluidRendering.h"
 #include "XMLUtils.h"
 
 struct CScene
 {
-	physx::PxVec3 backgroundColor;
+	glm::vec3 backgroundColor;
 
 	std::vector<FluidColor> fluidColors;
 

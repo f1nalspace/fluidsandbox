@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-#include <PxPhysicsAPI.h> 
+#include <glm/glm.hpp>
 
 #include "GLSL.h"
 #include "OSLowLevel.h"
@@ -22,8 +22,8 @@ namespace Utils {
 	int toInt(const std::string &str);
 	unsigned int toUInt(const std::string &str);
 	bool toBool(const std::string &str);
-	physx::PxVec3 toVec3(const std::string &str, const physx::PxVec3 def);
-	physx::PxVec4 toVec4(const std::string &str);
+	glm::vec3 toVec3(const std::string &str, const glm::vec3 &def = glm::vec3(0));
+	glm::vec4 toVec4(const std::string &str, const glm::vec4 &def = glm::vec4(0));
 	FluidType toFluidType(const char *str);
 	ActorType toActorType(const char *str);
 	const std::string toString(const float value);

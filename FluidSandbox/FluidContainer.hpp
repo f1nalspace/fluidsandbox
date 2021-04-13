@@ -1,6 +1,6 @@
 #pragma once
 
-#include <PxPhysicsAPI.h> 
+#include <glm/glm.hpp> 
 
 enum class FluidType {
 	Drop = 0,
@@ -11,9 +11,9 @@ enum class FluidType {
 
 struct FluidContainer
 {
-	physx::PxVec3 pos;
-	physx::PxVec3 size;
-	physx::PxVec3 vel;
+	glm::vec3 pos;
+	glm::vec3 size;
+	glm::vec3 vel;
 	float radius;
 	float timeElapsed;
 	float emitterRate;
@@ -27,11 +27,11 @@ struct FluidContainer
 	bool isEmitter;
 	bool emitterCoolDownActive;
 
-	FluidContainer(const physx::PxVec3 &pos, const physx::PxVec3 &size, const FluidType type){
+	FluidContainer(const glm::vec3 &pos, const glm::vec3 &size, const FluidType type){
 		this->pos = pos;
 		this->size = size;
 		this->type = type;
-		vel = physx::PxVec3(0.0f);
+		vel = glm::vec3(0.0f);
 		time = 0;
 		timeElapsed = 0.0f;
 		radius = 0.0f;

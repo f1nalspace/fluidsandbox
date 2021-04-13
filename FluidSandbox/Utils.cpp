@@ -107,7 +107,7 @@ namespace Utils {
 			return (str.compare("true") == 0) || (str.compare("1") == 0);
 	}
 
-	physx::PxVec3 toVec3(const std::string &str, const physx::PxVec3 def) {
+	glm::vec3 toVec3(const std::string &str, const glm::vec3 &def) {
 		std::vector<std::string> splitted = split(str, ",");
 		if(splitted.size() == 3) {
 			std::string x = splitted[0];
@@ -116,13 +116,13 @@ namespace Utils {
 			trim(x);
 			trim(y);
 			trim(z);
-			return physx::PxVec3(toFloat(x), toFloat(y), toFloat(z));
+			return glm::vec3(toFloat(x), toFloat(y), toFloat(z));
 		} else {
 			return def;
 		}
 	}
 
-	physx::PxVec4 toVec4(const std::string &str) {
+	glm::vec4 toVec4(const std::string &str, const glm::vec4 &def) {
 		std::vector<std::string> splitted = split(str.c_str(), ",");
 		if(splitted.size() == 4) {
 			std::string x = splitted[0];
@@ -133,9 +133,9 @@ namespace Utils {
 			trim(y);
 			trim(z);
 			trim(w);
-			return physx::PxVec4(toFloat(x), toFloat(y), toFloat(z), toFloat(w));
+			return glm::vec4(toFloat(x), toFloat(y), toFloat(z), toFloat(w));
 		} else {
-			return physx::PxVec4(0.0f);
+			return def;
 		}
 	}
 

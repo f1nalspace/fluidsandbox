@@ -26,7 +26,7 @@ CScene::CScene(const float fluidViscosity, const float fluidStiffness, const flo
 	this->fluidParticleRenderFactor = fluidParticleRenderFactor;
 	this->fluidParticleRadius = fluidParticleRadius;
 	this->fluidParticleMinDensity = fluidParticleMinDensity;
-	backgroundColor = physx::PxVec3(0.0f, 0.0f, 0.0f);
+	backgroundColor = glm::vec3(0.0f, 0.0f, 0.0f);
 	numCPUThreads = 4;
 	resetFluidColors();
 }
@@ -39,12 +39,12 @@ CScene::~CScene(void)
 void CScene::resetFluidColors()
 {
 	fluidColors.clear();
-	addFluidColor(FluidColor(physx::PxVec4(0.0f, 0.0f, 0.0f, 0.0f), physx::PxVec4(2.0f, 1.0f, 0.5f, 0.75f), true, "Clear"));
-	addFluidColor(FluidColor(physx::PxVec4(0.5f, 0.69f, 1.0f, 1.0f), physx::PxVec4(2.0f, 1.0f, 0.5f, 0.75f), false, "Blue"));
-	addFluidColor(FluidColor(physx::PxVec4(1.0f, 0.1f, 0.1f, 0.89f), physx::PxVec4(0.5f, 1.0f, 1.0f, 0.75f), false, "Red"));
-	addFluidColor(FluidColor(physx::PxVec4(0.69f, 1.0f, 0.5f, 1.0f), physx::PxVec4(1.0f, 0.25f, 1.0f, 0.75f), false, "Green"));
-	addFluidColor(FluidColor(physx::PxVec4(1.0f, 1.0f, 0.5f, 1.0f), physx::PxVec4(0.25f, 0.25f, 1.0f, 0.75f), false, "Yellow"));
-	addFluidColor(FluidColor(physx::PxVec4(0.0f, 1.0f, 0.5f, 1.0f), physx::PxVec4(0.25f, 0.25f, 1.0f, 0.75f), false, "Yellow 2"));
+	addFluidColor(FluidColor(glm::vec4(0.0f, 0.0f, 0.0f, 0.0f), glm::vec4(2.0f, 1.0f, 0.5f, 0.75f), true, "Clear"));
+	addFluidColor(FluidColor(glm::vec4(0.5f, 0.69f, 1.0f, 1.0f), glm::vec4(2.0f, 1.0f, 0.5f, 0.75f), false, "Blue"));
+	addFluidColor(FluidColor(glm::vec4(1.0f, 0.1f, 0.1f, 0.89f), glm::vec4(0.5f, 1.0f, 1.0f, 0.75f), false, "Red"));
+	addFluidColor(FluidColor(glm::vec4(0.69f, 1.0f, 0.5f, 1.0f), glm::vec4(1.0f, 0.25f, 1.0f, 0.75f), false, "Green"));
+	addFluidColor(FluidColor(glm::vec4(1.0f, 1.0f, 0.5f, 1.0f), glm::vec4(0.25f, 0.25f, 1.0f, 0.75f), false, "Yellow"));
+	addFluidColor(FluidColor(glm::vec4(0.0f, 1.0f, 0.5f, 1.0f), glm::vec4(0.25f, 0.25f, 1.0f, 0.75f), false, "Yellow 2"));
 	fluidColorDefaultIndex = 0;
 }
 
@@ -80,8 +80,8 @@ void CScene::load(const char* filename)
 				for (p = colors.begin(); p!=colors.end(); ++p) {
 					rapidxml::xml_node<> *colorNode = *p;
 					bool isclear = Utils::toBool(XMLUtils::getAttribute(colorNode, "clear", "false"));
-					physx::PxVec4 baseColor = Utils::toVec4(XMLUtils::getAttribute(colorNode, "base", "0.0, 0.0, 0.0, 0.0"));
-					physx::PxVec4 falloff = Utils::toVec4(XMLUtils::getAttribute(colorNode, "falloff", "0.0, 0.0, 0.0, 0.0"));
+					glm::vec4 baseColor = Utils::toVec4(XMLUtils::getAttribute(colorNode, "base", "0.0, 0.0, 0.0, 0.0"));
+					glm::vec4 falloff = Utils::toVec4(XMLUtils::getAttribute(colorNode, "falloff", "0.0, 0.0, 0.0, 0.0"));
 					std::string name = XMLUtils::getAttribute(colorNode, "name", "");
 					bool isdefault = Utils::toBool(XMLUtils::getAttribute(colorNode, "default", "false"));
 					FluidColor fluidColor = FluidColor(baseColor, falloff, isclear, name.c_str());
@@ -120,7 +120,7 @@ void CScene::load(const char* filename)
 			// Properties
 			rapidxml::xml_node<> *propertiesNode = rootNode->first_node("Properties");
 			if (propertiesNode) {
-				backgroundColor = Utils::toVec3(XMLUtils::findNodeValue(propertiesNode, "BackgroundColor", "0.0, 0.0, 0.0"), physx::PxVec3(0.0f));
+				backgroundColor = Utils::toVec3(XMLUtils::findNodeValue(propertiesNode, "BackgroundColor", "0.0, 0.0, 0.0"), glm::vec3(0.0f));
 			}
 		}
 	}

@@ -20,21 +20,21 @@
 
 struct FluidColor
 {
-	physx::PxVec4 color;
-	physx::PxVec4 falloff;
+	glm::vec4 color;
+	glm::vec4 falloff;
 	char name[128];
 	float falloffScale;
 	bool isClear;
 
 	FluidColor(){
-		this->color = physx::PxVec4(0.5f, 0.69f, 1.0f, 1.0f);
-		this->falloff = physx::PxVec4(2.0f, 1.0f, 0.5f, 0.5f);
+		this->color = glm::vec4(0.5f, 0.69f, 1.0f, 1.0f);
+		this->falloff = glm::vec4(2.0f, 1.0f, 0.5f, 0.5f);
 		this->isClear = false;
 		this->name[0] = 0;
 		this->falloffScale = 0.1f;
 	}
 
-	FluidColor(const physx::PxVec4& color, const physx::PxVec4& falloff, const bool &isClear, const char *name){
+	FluidColor(const glm::vec4& color, const glm::vec4& falloff, const bool &isClear, const char *name){
 		this->color = color;
 		this->falloff = falloff;
 		this->isClear = isClear;

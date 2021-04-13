@@ -4,7 +4,7 @@
 #include <vector>
 #include <map>
 
-#include <PxPhysicsAPI.h> 
+#include <glm/glm.hpp> 
 
 #include "FluidContainer.hpp"
 #include "Actor.hpp"
@@ -12,8 +12,8 @@
 
 struct CFluidScenario
 {
-	physx::PxVec3 actorCreatePosition;
-	physx::PxVec3 gravity;
+	glm::vec3 actorCreatePosition;
+	glm::vec3 gravity;
 
 	std::vector<CActor *> actors;
 	std::vector<FluidContainer *> fluidContainers;

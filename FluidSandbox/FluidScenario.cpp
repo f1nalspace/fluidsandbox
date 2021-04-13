@@ -14,7 +14,7 @@
 
 CFluidScenario::CFluidScenario() {
 	this->name[0] = 0;
-	this->actorCreatePosition = physx::PxVec3(0.0f, 0.0f, 0.0f);
+	this->actorCreatePosition = glm::vec3(0.0f, 0.0f, 0.0f);
 	this->viscosity = 20.0f;
 	this->stiffness = 35.0f;
 	this->damping = 0.0f;
@@ -22,7 +22,7 @@ CFluidScenario::CFluidScenario() {
 	this->particleRenderFactor = 1.0f;
 	this->particleRadius = 0.05f;
 	this->particleMinDensity = 0.01f;
-	this->gravity = physx::PxVec3(0.0f, -9.8f, 0.0f);
+	this->gravity = glm::vec3(0.0f, -9.8f, 0.0f);
 }
 
 
@@ -97,7 +97,7 @@ CFluidScenario *CFluidScenario::load(const char *filename, CScene *scene) {
 			// Gravity
 			rapidxml::xml_node<> *gravitiyNode = rootNode->first_node("Gravity");
 			if(gravitiyNode) {
-				newScenario->gravity = Utils::toVec3(gravitiyNode->value(), physx::PxVec3(0.0f, -9.8f, 0.0f));
+				newScenario->gravity = Utils::toVec3(gravitiyNode->value(), glm::vec3(0.0f, -9.8f, 0.0f));
 			}
 
 			// Fluid properties
@@ -123,7 +123,7 @@ CFluidScenario *CFluidScenario::load(const char *filename, CScene *scene) {
 			// Actor properties
 			rapidxml::xml_node<> *apNode = rootNode->first_node("ActorProperties");
 			if(apNode) {
-				newScenario->actorCreatePosition = Utils::toVec3(XMLUtils::findNodeValue(apNode, "CreatePosition", "0, 0, 0"), physx::PxVec3(0.0f));
+				newScenario->actorCreatePosition = Utils::toVec3(XMLUtils::findNodeValue(apNode, "CreatePosition", "0, 0, 0"), glm::vec3(0.0f));
 			}
 
 			// Actors
@@ -139,12 +139,12 @@ CFluidScenario *CFluidScenario::load(const char *filename, CScene *scene) {
 
 					std::string primitive = XMLUtils::getAttribute(actorNode, "primitive", "");
 
-					physx::PxVec3 pos = Utils::toVec3(XMLUtils::getAttribute(actorNode, "pos", "0, 0, 0"), physx::PxVec3(0.0f));
-					physx::PxVec3 size = Utils::toVec3(XMLUtils::getAttribute(actorNode, "size", "0, 0, 0"), physx::PxVec3(0.0f));
+					glm::vec3 pos = Utils::toVec3(XMLUtils::getAttribute(actorNode, "pos", "0, 0, 0"), glm::vec3(0.0f));
+					glm::vec3 size = Utils::toVec3(XMLUtils::getAttribute(actorNode, "size", "0, 0, 0"), glm::vec3(0.0f));
 
-					physx::PxVec4 color = Utils::toVec4(XMLUtils::getAttribute(actorNode, "color", "1, 1, 1, 1"));
-					physx::PxVec3 velocity = Utils::toVec3(XMLUtils::getAttribute(actorNode, "vel", "0, 0, 0"), physx::PxVec3(0.0f));
-					physx::PxVec3 rotate = Utils::toVec3(XMLUtils::getAttribute(actorNode, "rotate", "0, 0, 0"), physx::PxVec3(0.0f));
+					glm::vec4 color = Utils::toVec4(XMLUtils::getAttribute(actorNode, "color", "1, 1, 1, 1"));
+					glm::vec3 velocity = Utils::toVec3(XMLUtils::getAttribute(actorNode, "vel", "0, 0, 0"), glm::vec3(0.0f));
+					glm::vec3 rotate = Utils::toVec3(XMLUtils::getAttribute(actorNode, "rotate", "0, 0, 0"), glm::vec3(0.0f));
 
 					std::string defaultDensity = Utils::toString(scene->defaultActorDensity);
 
@@ -194,9 +194,9 @@ CFluidScenario *CFluidScenario::load(const char *filename, CScene *scene) {
 					rapidxml::xml_node<> *fluidNode = *p;
 					std::string fluidTypeStr = XMLUtils::getAttribute(fluidNode, "type", "blob");
 					FluidType fluidType = Utils::toFluidType(fluidTypeStr.c_str());
-					physx::PxVec3 pos = Utils::toVec3(XMLUtils::getAttribute(fluidNode, "pos", "0, 0, 0"), physx::PxVec3(0.0f));
-					physx::PxVec3 size = Utils::toVec3(XMLUtils::getAttribute(fluidNode, "size", "0, 0, 0"), physx::PxVec3(0.0f));
-					physx::PxVec3 velocity = Utils::toVec3(XMLUtils::getAttribute(fluidNode, "vel", "0, 0, 0"), physx::PxVec3(0.0f));
+					glm::vec3 pos = Utils::toVec3(XMLUtils::getAttribute(fluidNode, "pos", "0, 0, 0"), glm::vec3(0.0f));
+					glm::vec3 size = Utils::toVec3(XMLUtils::getAttribute(fluidNode, "size", "0, 0, 0"), glm::vec3(0.0f));
+					glm::vec3 velocity = Utils::toVec3(XMLUtils::getAttribute(fluidNode, "vel", "0, 0, 0"), glm::vec3(0.0f));
 					int fluidTime = Utils::toInt(XMLUtils::getAttribute(fluidNode, "time", "0"));
 					float radius = Utils::toFloat(XMLUtils::getAttribute(fluidNode, "radius", "0.0"));
 					bool isEmitter = Utils::toBool(XMLUtils::getAttribute(fluidNode, "isEmitter", "false"));
