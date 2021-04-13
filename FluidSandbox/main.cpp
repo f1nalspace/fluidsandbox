@@ -773,9 +773,7 @@ CFluidSystem *CreateParticleFluidSystem() {
 }
 
 void ResetScene() {
-	char buffer[255];
-	sprintf_s(buffer, "Load/Reload scene: %s\n", gActiveFluidScenario ? gActiveFluidScenario->name.c_str() : "No scene found.");
-	printf(buffer);
+	printf("Load/Reload scene: %s\n", gActiveFluidScenario ? gActiveFluidScenario->name : "No scene found.");
 
 	// Set scene properties
 	if(gActiveFluidScenario)
@@ -1663,7 +1661,7 @@ void RenderOSD() {
 		RenderOSDLine(osdPos, buffer);
 		sprintf_s(buffer, "    Fluid color falloff alpha: %f", activeFluidColor.falloff.w);
 		RenderOSDLine(osdPos, buffer);
-		sprintf_s(buffer, "Fluid scenario (L): %d / %zu - %s", gActiveFluidScenarioIdx + 1, gFluidScenarios.size(), gActiveFluidScenario ? gActiveFluidScenario->name.c_str() : "No scenario loaded!");
+		sprintf_s(buffer, "Fluid scenario (L): %d / %zu - %s", gActiveFluidScenarioIdx + 1, gFluidScenarios.size(), gActiveFluidScenario ? gActiveFluidScenario->name : "No scenario loaded!");
 		RenderOSDLine(osdPos, buffer);
 		sprintf_s(buffer, "New actor (Space)");
 		RenderOSDLine(osdPos, buffer);

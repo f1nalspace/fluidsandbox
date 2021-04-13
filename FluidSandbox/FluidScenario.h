@@ -18,7 +18,7 @@ struct CFluidScenario
 	std::vector<CActor *> actors;
 	std::vector<FluidContainer *> fluidContainers;
 
-	std::string name;
+	char name[128];
 
 	float viscosity;
 	float stiffness;
@@ -30,12 +30,16 @@ struct CFluidScenario
 
 	CFluidScenario();
 	~CFluidScenario(void);
+
 	void addActor(CActor* actor) { actors.push_back(actor); }
 	void addFluidContainer(FluidContainer* fluidContainer) { fluidContainers.push_back(fluidContainer); }
-	size_t getActorCount() { return actors.size(); }
+
+	size_t getActorCount() const { return actors.size(); }
 	CActor* getActor(const size_t index) { return actors[index]; }
-	size_t getFluidContainerCount() { return fluidContainers.size(); }
+
+	size_t getFluidContainerCount() const { return fluidContainers.size(); }
 	FluidContainer* getFluidContainer(size_t index) { return fluidContainers[index]; }
+
 	static CFluidScenario* load(const char* filename, CScene* scene);
 };
 

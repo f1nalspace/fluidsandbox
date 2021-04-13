@@ -13,7 +13,7 @@
 #include "SphereActor.hpp"
 
 CFluidScenario::CFluidScenario() {
-	this->name = "";
+	this->name[0] = 0;
 	this->actorCreatePosition = physx::PxVec3(0.0f, 0.0f, 0.0f);
 	this->viscosity = 20.0f;
 	this->stiffness = 35.0f;
@@ -91,7 +91,7 @@ CFluidScenario *CFluidScenario::load(const char *filename, CScene *scene) {
 			// Name
 			rapidxml::xml_node<> *nameNode = rootNode->first_node("Name");
 			if(nameNode) {
-				newScenario->name = nameNode->value();
+				strcpy_s(newScenario->name, sizeof(newScenario->name), nameNode->value());
 			}
 
 			// Gravity

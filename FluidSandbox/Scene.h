@@ -39,6 +39,7 @@ struct CScene
 	~CScene(void);
 
 	inline size_t getFluidColorCount() const { return fluidColors.size(); };
+
 	inline FluidColor &getFluidColor(int index) { return fluidColors[index]; };
 	inline void addFluidColor(const FluidColor &color) { fluidColors.push_back(color); };
 	void resetFluidColors();
