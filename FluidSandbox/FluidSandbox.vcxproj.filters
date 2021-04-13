@@ -23,6 +23,8 @@
     <ClCompile Include="AllShaders.cpp" />
     <ClCompile Include="AllFBOs.cpp" />
     <ClCompile Include="VBO.cpp" />
+    <ClCompile Include="FontAtlas.cpp" />
+    <ClCompile Include="TextureFont.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.hpp" />
@@ -54,6 +56,9 @@
     <ClInclude Include="Actor.hpp" />
     <ClInclude Include="SphereActor.hpp" />
     <ClInclude Include="VBO.h" />
+    <ClInclude Include="Fonts.h" />
+    <ClInclude Include="FontAtlas.h" />
+    <ClInclude Include="TextureFont.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="LICENSE.txt" />

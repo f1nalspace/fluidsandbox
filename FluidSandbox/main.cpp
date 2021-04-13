@@ -64,7 +64,7 @@ License:
 #include <time.h>
 #include <malloc.h>
 #include <string.h>
-#include <stdint.h>
+#include <cstdint>
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include <typeinfo>

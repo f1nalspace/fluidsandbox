@@ -2,7 +2,7 @@
 
 #include <assert.h>
 #include <malloc.h>
-#include <stdint.h>
+#include <cstdint>
 
 #include <GL/glew.h>
 

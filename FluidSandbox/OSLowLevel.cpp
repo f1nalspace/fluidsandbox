@@ -34,6 +34,18 @@ const std::string COSLowLevel::getTextFileContent(const std::string &filename)
 	return result;
 }
 
+const uint8_t *COSLowLevel::getBinaryFileContent(const std::string &filename) {
+	std::ifstream myfile(filename, std::ios::binary | std::ios::ate);
+	if(myfile && myfile.is_open()) {
+		size_t size = myfile.tellg();
+		uint8_t *result = new uint8_t[size];
+		myfile.seekg(0, std::ios::beg);
+		myfile.read((char *)result, size);
+		myfile.close();
+	}
+	return NULL;
+}
+
 bool COSLowLevel::fileExists(const char* filename)
 {
 	std::ifstream myfile(filename);

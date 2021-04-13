@@ -8,6 +8,7 @@
 
 #include "VBO.h"
 #include "Texture.h"
+#include "TextureFont.h"
 
 #define GL_CHECKERROR() assert(glGetError() == GL_NO_ERROR)
 
@@ -105,6 +106,8 @@ public:
 	void DrawTexturedQuad(const float posX, const float posY, const float scaleW, const float scaleH);
 	void DrawTexturedRect(const float left, const float top, const float right, const float bottom);
 	void DrawVBO(CVBO *vbo, const GLenum mode);
+	glm::vec2 GetTextSize(const CTextureFont *fontTex, const char *text, const size_t textLen, const float charHeight);
+	void DrawText(const int texIndex, CTextureFont *fontTex, const float posX, const float posY, const char *text, const size_t textLen, const float charHeight);
 
 	void Flip();
 

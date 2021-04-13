@@ -17,6 +17,7 @@ void CTexture2D::upload(const char* pixels)
 {
 	GLuint newid = create();
 	bind();
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 	glTexParameteri(getTarget(), GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(getTarget(), GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameteri(getTarget(), GL_TEXTURE_MAG_FILTER, texMagFilter);

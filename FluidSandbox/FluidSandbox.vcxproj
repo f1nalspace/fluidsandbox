@@ -89,7 +89,7 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>$(SolutionDir)Libraries\PhysX\physx\include\;$(SolutionDir)Libraries\PhysX\pxshared\include\;$(SolutionDir)Libraries\glew\include\;$(SolutionDir)Libraries\glm\include\;$(SolutionDir)Libraries\freeglut\include\;$(SolutionDir)Libraries\rapidxml\include\;$(SolutionDir)Libraries\freeimage\include\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Libraries\PhysX\physx\include\;$(SolutionDir)Libraries\PhysX\pxshared\include\;$(SolutionDir)Libraries\glew\include\;$(SolutionDir)Libraries\glm\include\;$(SolutionDir)Libraries\freeglut\include\;$(SolutionDir)Libraries\rapidxml\include\;$(SolutionDir)Libraries\freeimage\include\;$(SolutionDir)Libraries\stb\include\</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -125,7 +125,7 @@ Copy "$(SolutionDir)Libraries\glew\bin\$(Platform)\glew32.dll" "$(OutDir)"</Comm
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>$(SolutionDir)Libraries\PhysX\physx\include\;$(SolutionDir)Libraries\PhysX\pxshared\include\;$(SolutionDir)Libraries\glew\include\;$(SolutionDir)Libraries\glm\include\;$(SolutionDir)Libraries\freeglut\include\;$(SolutionDir)Libraries\rapidxml\include\;$(SolutionDir)Libraries\freeimage\include\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Libraries\PhysX\physx\include\;$(SolutionDir)Libraries\PhysX\pxshared\include\;$(SolutionDir)Libraries\glew\include\;$(SolutionDir)Libraries\glm\include\;$(SolutionDir)Libraries\freeglut\include\;$(SolutionDir)Libraries\rapidxml\include\;$(SolutionDir)Libraries\freeimage\include\;$(SolutionDir)Libraries\stb\include\</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -162,7 +162,7 @@ Copy "$(SolutionDir)Libraries\glew\bin\$(Platform)\glew32.dll" "$(OutDir)"</Comm
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>$(SolutionDir)Libraries\PhysX\physx\include\;$(SolutionDir)Libraries\PhysX\pxshared\include\;$(SolutionDir)Libraries\glew\include\;$(SolutionDir)Libraries\glm\include\;$(SolutionDir)Libraries\freeglut\include\;$(SolutionDir)Libraries\rapidxml\include\;$(SolutionDir)Libraries\freeimage\include\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Libraries\PhysX\physx\include\;$(SolutionDir)Libraries\PhysX\pxshared\include\;$(SolutionDir)Libraries\glew\include\;$(SolutionDir)Libraries\glm\include\;$(SolutionDir)Libraries\freeglut\include\;$(SolutionDir)Libraries\rapidxml\include\;$(SolutionDir)Libraries\freeimage\include\;$(SolutionDir)Libraries\stb\include\</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -201,7 +201,7 @@ Copy "$(SolutionDir)Libraries\glew\bin\$(Platform)\glew32.dll" "$(OutDir)"</Comm
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>$(SolutionDir)Libraries\PhysX\physx\include\;$(SolutionDir)Libraries\PhysX\pxshared\include\;$(SolutionDir)Libraries\glew\include\;$(SolutionDir)Libraries\glm\include\;$(SolutionDir)Libraries\freeglut\include\;$(SolutionDir)Libraries\rapidxml\include\;$(SolutionDir)Libraries\freeimage\include\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Libraries\PhysX\physx\include\;$(SolutionDir)Libraries\PhysX\pxshared\include\;$(SolutionDir)Libraries\glew\include\;$(SolutionDir)Libraries\glm\include\;$(SolutionDir)Libraries\freeglut\include\;$(SolutionDir)Libraries\rapidxml\include\;$(SolutionDir)Libraries\freeimage\include\;$(SolutionDir)Libraries\stb\include\</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -234,6 +234,7 @@ Copy "$(SolutionDir)Libraries\glew\bin\$(Platform)\glew32.dll" "$(OutDir)"</Comm
     <ClCompile Include="FBO.cpp" />
     <ClCompile Include="FluidScenario.cpp" />
     <ClCompile Include="FluidSystem.cpp" />
+    <ClCompile Include="FontAtlas.cpp" />
     <ClCompile Include="Frustum.cpp" />
     <ClCompile Include="GLSL.cpp" />
     <ClCompile Include="GLSLManager.cpp" />
@@ -248,6 +249,7 @@ Copy "$(SolutionDir)Libraries\glew\bin\$(Platform)\glew32.dll" "$(OutDir)"</Comm
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="Texture2D.cpp" />
     <ClCompile Include="TextureCubemap.cpp" />
+    <ClCompile Include="TextureFont.cpp" />
     <ClCompile Include="TextureManager.cpp" />
     <ClCompile Include="Utils.cpp" />
     <ClCompile Include="VBO.cpp" />
@@ -263,6 +265,9 @@ Copy "$(SolutionDir)Libraries\glew\bin\$(Platform)\glew32.dll" "$(OutDir)"</Comm
     <ClInclude Include="FluidDescription.h" />
     <ClInclude Include="FluidScenario.h" />
     <ClInclude Include="FluidSystem.h" />
+    <ClInclude Include="FontAtlas.h" />
+    <ClInclude Include="Fonts.h" />
+    <ClInclude Include="TextureFont.h" />
     <ClInclude Include="Frustum.h" />
     <ClInclude Include="GLSL.h" />
     <ClInclude Include="GLSLManager.h" />

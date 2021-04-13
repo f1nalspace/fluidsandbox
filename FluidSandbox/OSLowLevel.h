@@ -18,6 +18,7 @@ public:
 	COSLowLevel(void);
 	uint32_t getNumCPUCores();
 	const std::string getTextFileContent(const std::string &filename);
+	const uint8_t *getBinaryFileContent(const std::string &filename);
 	bool fileExists(const char* filename);
 	std::vector<std::string> getFilesInDirectory(const std::string &str);
 	double getTimeMilliSeconds();
