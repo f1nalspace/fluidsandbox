@@ -1,6 +1,6 @@
 #pragma once
 
-#include <PxPhysicsAPI.h> 
+#include <glm/glm.hpp> 
 
 #include "Singleton.hpp"
 class CFrustum: public CSingleton<CFrustum>
@@ -12,8 +12,8 @@ public:
 	CFrustum(void);
 	~CFrustum(void);
 	void update(const float* proj, const float* modl);
-	bool containsPoint(physx::PxVec3 pos);
-	bool containsSphere(physx::PxVec3 pos, float radius);
-	bool containsBounds(physx::PxBounds3 bounds);
+	bool containsPoint(const glm::vec3 &pos);
+	bool containsSphere(const glm::vec3 &pos, const float radius);
+	bool containsBounds(const glm::vec3 &minimum, const glm::vec3 &maximum);
 };
 

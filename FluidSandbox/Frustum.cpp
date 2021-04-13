@@ -7,37 +7,37 @@ CFrustum::CFrustum(void) {
 CFrustum::~CFrustum(void) {
 }
 
-bool CFrustum::containsPoint(physx::PxVec3 pos) {
+bool CFrustum::containsPoint(const glm::vec3 &pos) {
 	for(int p = 0; p < 6; p++)
 		if(frustum[p][0] * pos.x + frustum[p][1] * pos.y + frustum[p][2] * pos.z + frustum[p][3] <= 0)
 			return false;
 	return true;
 }
 
-bool CFrustum::containsSphere(physx::PxVec3 pos, float radius) {
+bool CFrustum::containsSphere(const glm::vec3 &pos, const float radius) {
 	for(int p = 0; p < 6; p++)
 		if(frustum[p][0] * pos.x + frustum[p][1] * pos.y + frustum[p][2] * pos.z + frustum[p][3] <= -radius)
 			return false;
 	return true;
 }
 
-bool CFrustum::containsBounds(physx::PxBounds3 bounds) {
+bool CFrustum::containsBounds(const glm::vec3 &minimum, const glm::vec3 &maximum) {
 	for(int p = 0; p < 6; p++) {
-		if(frustum[p][0] * (bounds.minimum.x) + frustum[p][1] * (bounds.minimum.y) + frustum[p][2] * (bounds.minimum.z) + frustum[p][3] > 0)
+		if(frustum[p][0] * (minimum.x) + frustum[p][1] * (minimum.y) + frustum[p][2] * (minimum.z) + frustum[p][3] > 0)
 			continue;
-		if(frustum[p][0] * (bounds.maximum.x) + frustum[p][1] * (bounds.minimum.y) + frustum[p][2] * (bounds.minimum.z) + frustum[p][3] > 0)
+		if(frustum[p][0] * (maximum.x) + frustum[p][1] * (minimum.y) + frustum[p][2] * (minimum.z) + frustum[p][3] > 0)
 			continue;
-		if(frustum[p][0] * (bounds.minimum.x) + frustum[p][1] * (bounds.maximum.y) + frustum[p][2] * (bounds.minimum.z) + frustum[p][3] > 0)
+		if(frustum[p][0] * (minimum.x) + frustum[p][1] * (maximum.y) + frustum[p][2] * (minimum.z) + frustum[p][3] > 0)
 			continue;
-		if(frustum[p][0] * (bounds.maximum.x) + frustum[p][1] * (bounds.maximum.y) + frustum[p][2] * (bounds.minimum.z) + frustum[p][3] > 0)
+		if(frustum[p][0] * (maximum.x) + frustum[p][1] * (maximum.y) + frustum[p][2] * (minimum.z) + frustum[p][3] > 0)
 			continue;
-		if(frustum[p][0] * (bounds.minimum.x) + frustum[p][1] * (bounds.minimum.y) + frustum[p][2] * (bounds.maximum.z) + frustum[p][3] > 0)
+		if(frustum[p][0] * (minimum.x) + frustum[p][1] * (minimum.y) + frustum[p][2] * (maximum.z) + frustum[p][3] > 0)
 			continue;
-		if(frustum[p][0] * (bounds.maximum.x) + frustum[p][1] * (bounds.minimum.y) + frustum[p][2] * (bounds.maximum.z) + frustum[p][3] > 0)
+		if(frustum[p][0] * (maximum.x) + frustum[p][1] * (minimum.y) + frustum[p][2] * (maximum.z) + frustum[p][3] > 0)
 			continue;
-		if(frustum[p][0] * (bounds.minimum.x) + frustum[p][1] * (bounds.maximum.y) + frustum[p][2] * (bounds.maximum.z) + frustum[p][3] > 0)
+		if(frustum[p][0] * (minimum.x) + frustum[p][1] * (maximum.y) + frustum[p][2] * (maximum.z) + frustum[p][3] > 0)
 			continue;
-		if(frustum[p][0] * (bounds.maximum.x) + frustum[p][1] * (bounds.maximum.y) + frustum[p][2] * (bounds.maximum.z) + frustum[p][3] > 0)
+		if(frustum[p][0] * (maximum.x) + frustum[p][1] * (maximum.y) + frustum[p][2] * (maximum.z) + frustum[p][3] > 0)
 			continue;
 		return false;
 	}
