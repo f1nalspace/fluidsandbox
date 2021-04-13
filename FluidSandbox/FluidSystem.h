@@ -17,7 +17,7 @@ private:
 	unsigned int maxParticles;
 	unsigned int currentParticles;
 public:
-	CFluidSystem(physx::PxPhysics* physics, FluidDescription &desc, const unsigned int maxParticles);
+	CFluidSystem(physx::PxPhysics* physics, const FluidDescription &desc, const unsigned int maxParticles);
 	~CFluidSystem(void);
 	int createParticles(const unsigned int numParticles, physx::PxVec3 *pos, physx::PxVec3 *vel);
 	void releaseParticles(const physx::PxStrideIterator<physx::PxU32> &indices, const physx::PxU32 count);

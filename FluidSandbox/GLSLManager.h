@@ -11,7 +11,7 @@
 class CGLSLManager
 {
 private:
-	std::map<std::string, CGLSL*> list;
+	std::map<std::string, CGLSL*> nameShaderMap;
 	CGLSL* CGLSLManager::add(const std::string &name, const GLuint what, const std::string &filename);
 public:
 	CGLSLManager(void);

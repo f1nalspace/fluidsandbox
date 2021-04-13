@@ -3,10 +3,10 @@
 #include <PxPhysicsAPI.h> 
 
 enum class FluidType {
-	FluidTypeSphere = 3,
-	FluidTypeBlob = 2,
-	FluidTypeWall = 1,
-	FluidTypeDrop = 0
+	Sphere = 3,
+	Blob = 2,
+	Wall = 1,
+	Drop = 0
 };
 
 struct FluidContainer

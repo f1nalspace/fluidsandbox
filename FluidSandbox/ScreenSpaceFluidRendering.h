@@ -31,9 +31,10 @@ struct FluidColor
 {
 	physx::PxVec4 color;
 	physx::PxVec4 falloff;
-	bool isClear;
 	std::string name;
 	float falloffScale;
+	bool isClear;
+
 	FluidColor(){
 		this->color = physx::PxVec4(0.5f, 0.69f, 1.0f, 1.0f);
 		this->falloff = physx::PxVec4(2.0f, 1.0f, 0.5f, 0.5f);
@@ -41,6 +42,7 @@ struct FluidColor
 		this->name = "";
 		this->falloffScale = 0.1f;
 	}
+
 	FluidColor(const physx::PxVec4& color, const physx::PxVec4& falloff, const bool &isClear, const char *name){
 		this->color = color;
 		this->falloff = falloff;
@@ -52,13 +54,14 @@ struct FluidColor
 
 struct SSFDrawingOptions
 {
+	glm::vec3 clearColor;
+	FluidColor *fluidColor;
+	float blurScale;
 	unsigned int renderMode;
 	unsigned int textureState;
-	FluidColor* fluidColor;
-	glm::vec3 clearColor;
-	float blurScale;
-	bool blurEnabled;
 	int debugType;
+	bool blurEnabled;
+
 	SSFDrawingOptions()
 	{
 		textureState = 0;
@@ -88,9 +91,9 @@ class CScreenSpaceFluidRendering
 private:
 	CGLSL *aShaders[SSFShaderCount];
 
-	CRenderer *pRenderer;
-	CSphericalPointSprites *pPointSprites;
-	CPointSpritesShader *pPointSpritesShader;
+	CRenderer *renderer;
+	CSphericalPointSprites *pointSprites;
+	CPointSpritesShader *pointSpritesShader;
 
 	CSSFRFullFBO *fullFrameBuffer;
 	CSSFRDepthFBO *depthFrameBuffer;
@@ -102,16 +105,17 @@ private:
 	CWaterShader *colorWaterShader;
 	CWaterShader *debugWaterShader;
 
-	CTexture *pSceneTexture;
-	CTexture *pSkyboxCubemap;
+	CTexture *sceneTexture;
+	CTexture *skyboxCubemap;
 
-	int iFBOWidth;
-	int iFBOHeight;
-	int iWindowWidth;
-	int iWindowHeight;
-	float fFBOFactor;
-	float fNewFBOFactor;
+	float curFBOFactor;
+	float newFBOFactor;
 	float particleRadius;
+
+	int curFBOWidth;
+	int curFBOHeight;
+	int curWindowWidth;
+	int curWindowHeight;
 
 	void DepthPass(const unsigned int numPointSprites, const glm::mat4 &proj, const glm::mat4 &view, const float zfar, const float znear, const int wH);
 	void ThicknessPass(const unsigned int numPointSprites, const glm::mat4 &proj, const glm::mat4 &view, const float zfar, const float znear, const int wH);
@@ -125,16 +129,16 @@ public:
 	CScreenSpaceFluidRendering(const int width, const int height, const float particleRadius);
 	~CScreenSpaceFluidRendering(void);
 	void Render(CCamera &cam, const unsigned int numPointSprites, const SSFDrawingOptions &dstate, const int wW, const int wH);
-	void SetRenderer(CRenderer* value) { pRenderer = value; }
-	void SetPointSprites(CSphericalPointSprites* value) { pPointSprites = value; }
-	void SetPointSpritesShader(CPointSpritesShader* value) { pPointSpritesShader = value; }
-	void SetSceneTexture(CTexture* texture) { pSceneTexture = texture; }
-	void SetSkyboxCubemap(CTexture* cubemap) { pSkyboxCubemap = cubemap; }
+	void SetRenderer(CRenderer* value) { renderer = value; }
+	void SetPointSprites(CSphericalPointSprites* value) { pointSprites = value; }
+	void SetPointSpritesShader(CPointSpritesShader* value) { pointSpritesShader = value; }
+	void SetSceneTexture(CTexture* texture) { sceneTexture = texture; }
+	void SetSkyboxCubemap(CTexture* cubemap) { skyboxCubemap = cubemap; }
 	bool IsSupported() { return fullFrameBuffer != NULL; }
 	void SetFBOFactor(float factor) {
 		if (factor > 1.0f) factor = 1.0f;
 		if (factor < 0.0f) factor = 0.0f;
-		fNewFBOFactor = factor; 
+		newFBOFactor = factor;
 	}
 	void setParticleRadius(const float value) { particleRadius = value; }
 };

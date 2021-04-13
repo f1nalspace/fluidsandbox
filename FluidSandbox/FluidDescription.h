@@ -1,4 +1,5 @@
 #pragma once
+
 struct FluidDescription {
 	int maxParticles;
 	float stiffness;

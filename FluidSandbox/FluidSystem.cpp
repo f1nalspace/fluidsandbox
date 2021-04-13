@@ -1,6 +1,6 @@
 #include "FluidSystem.h"
 
-CFluidSystem::CFluidSystem(physx::PxPhysics* physics, FluidDescription &desc, const unsigned int maxParticles)
+CFluidSystem::CFluidSystem(physx::PxPhysics* physics, const FluidDescription &desc, const unsigned int maxParticles)
 {
 	this->physics = physics;
 	this->maxParticles = maxParticles;

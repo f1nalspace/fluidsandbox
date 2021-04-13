@@ -1,8 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="Actor.cpp" />
-    <ClCompile Include="CubeActor.cpp" />
     <ClCompile Include="FBO.cpp" />
     <ClCompile Include="FluidScenario.cpp" />
     <ClCompile Include="FluidSystem.cpp" />
@@ -15,7 +13,6 @@
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="Scene.cpp" />
     <ClCompile Include="ScreenSpaceFluidRendering.cpp" />
-    <ClCompile Include="SphereActor.cpp" />
     <ClCompile Include="SphericalPointSprites.cpp" />
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="Texture2D.cpp" />
@@ -28,9 +25,7 @@
     <ClCompile Include="AllFBOs.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Actor.h" />
     <ClInclude Include="Camera.hpp" />
-    <ClInclude Include="CubeActor.h" />
     <ClInclude Include="FBO.h" />
     <ClInclude Include="FluidContainer.hpp" />
     <ClInclude Include="FluidDescription.h" />
@@ -46,7 +41,6 @@
     <ClInclude Include="Scene.h" />
     <ClInclude Include="ScreenSpaceFluidRendering.h" />
     <ClInclude Include="Singleton.hpp" />
-    <ClInclude Include="SphereActor.h" />
     <ClInclude Include="SphericalPointSprites.h" />
     <ClInclude Include="Texture.h" />
     <ClInclude Include="Texture2D.h" />
@@ -57,6 +51,9 @@
     <ClInclude Include="XMLUtils.h" />
     <ClInclude Include="AllShaders.h" />
     <ClInclude Include="AllFBOs.h" />
+    <ClInclude Include="CubeActor.hpp" />
+    <ClInclude Include="Actor.hpp" />
+    <ClInclude Include="SphereActor.hpp" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="LICENSE.txt" />

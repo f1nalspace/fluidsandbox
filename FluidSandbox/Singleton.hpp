@@ -12,8 +12,8 @@ public:
     */
     static T* getInstance()
     {
-        if (m_instance == NULL) m_instance = new T;      
-        return m_instance;
+        if (_instance == NULL) _instance = new T;      
+        return _instance;
     };
 
     //! Destroys the singleton class instance.
@@ -23,8 +23,8 @@ public:
     */
     static void releaseInstance()
     {
-        delete m_instance;
-        m_instance = NULL;
+        delete _instance;
+        _instance = NULL;
     };
 
 protected:
@@ -50,8 +50,8 @@ private:
     {
     };
 
-    static T* m_instance; //!< singleton class instance
+    static T* _instance; //!< singleton class instance
 };
 
 //! static class member initialisation.
-template <typename T> T* CSingleton<T>::m_instance = NULL;
+template <typename T> T* CSingleton<T>::_instance = NULL;

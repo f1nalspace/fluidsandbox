@@ -140,8 +140,9 @@ License:
 #include "Utils.h"
 #include "ScreenSpaceFluidRendering.h"
 #include "FluidScenario.h"
-#include "Actor.h"
-#include "CubeActor.h"
+#include "Actor.hpp"
+#include "CubeActor.hpp"
+#include "SphereActor.hpp"
 #include "Scene.h"
 #include "FluidSystem.h"
 #include "Primitives.h"
@@ -542,7 +543,7 @@ void AddWater(FluidContainer *container, const FluidType type) {
 		float sizeY = container->Size.y;
 		float sizeZ = container->Size.z;
 
-		if(type == FluidType::FluidTypeSphere) {
+		if(type == FluidType::Sphere) {
 			if(container->Radius < 0.00001f)
 				container->Radius = ((sizeX + sizeY + sizeZ) / 3.0f) / 2.0f;
 		}
@@ -557,12 +558,12 @@ void AddWater(FluidContainer *container, const FluidType type) {
 
 		int idx;
 
-		if(type == FluidType::FluidTypeDrop)  // Single drop
+		if(type == FluidType::Drop)  // Single drop
 		{
 			numParticles++;
 			particlePositionBuffer.push_back(physx::PxVec3(centerX, centerY, centerZ));
 			particleVelocityBuffer.push_back(container->Vel);
-		} else if(type == FluidType::FluidTypeWall)  // Water quad
+		} else if(type == FluidType::Wall)  // Water quad
 		{
 			float zpos = centerZ - (dZ / 2.0f);
 			idx = 0;
@@ -580,7 +581,7 @@ void AddWater(FluidContainer *container, const FluidType type) {
 
 				zpos += distance;
 			}
-		} else if(type == FluidType::FluidTypeBlob)  // Water blob
+		} else if(type == FluidType::Blob)  // Water blob
 		{
 			float zpos = centerZ - (dZ / 2.0f);
 			idx = 0;
@@ -604,7 +605,7 @@ void AddWater(FluidContainer *container, const FluidType type) {
 
 				zpos += distance;
 			}
-		} else if(type == FluidType::FluidTypeSphere)  // Water sphere
+		} else if(type == FluidType::Sphere)  // Water sphere
 		{
 			physx::PxVec3 center = physx::PxVec3(centerX, centerY, centerZ);
 
@@ -692,20 +693,20 @@ void ClearScene() {
 }
 
 void AddScenarioActor(CActor *actor) {
-	if(actor->primitive == EActorPrimitive::ActorPrimitiveCube) {
+	if(actor->primitive == ActorPrimitiveKind::Cube) {
 		CCubeActor *cube = (CCubeActor *)actor;
 
-		if(actor->type == EActorType::ActorTypeStatic) {
+		if(actor->type == ActorType::ActorTypeStatic) {
 			AddBoxStatic(cube);
-		} else if(actor->type == EActorType::ActorTypeDynamic) {
+		} else if(actor->type == ActorType::ActorTypeDynamic) {
 			AddBox(cube->size, cube);
 		}
-	} else if(actor->primitive == EActorPrimitive::ActorPrimitiveSphere) {
+	} else if(actor->primitive == ActorPrimitiveKind::Sphere) {
 		CSphereActor *sphere = (CSphereActor *)actor;
 
-		if(actor->type == EActorType::ActorTypeStatic)
+		if(actor->type == ActorType::ActorTypeStatic)
 			AddSphereStatic(sphere);
-		else if(actor->type == EActorType::ActorTypeDynamic)
+		else if(actor->type == ActorType::ActorTypeDynamic)
 			AddSphere(sphere);
 	}
 }
@@ -1623,7 +1624,7 @@ void RenderOSD() {
 		RenderOSDLine(osdPos, buffer);
 		sprintf_s(buffer, "Fluid Rendering Mode (S): %s", GetFluidRenderMode(gSSFRenderMode));
 		RenderOSDLine(osdPos, buffer);
-		sprintf_s(buffer, "Fluid color (C): %d / %zu - %s", gSSFCurrentFluidIndex + 1, gActiveScene->getFluidColors(), activeFluidColor->name.c_str());
+		sprintf_s(buffer, "Fluid color (C): %d / %zu - %s", gSSFCurrentFluidIndex + 1, gActiveScene->getFluidColorCount(), activeFluidColor->name.c_str());
 		RenderOSDLine(osdPos, buffer);
 		sprintf_s(buffer, "Fluid detail level (P): %3.2f %s", gSSFDetailFactor * 100.0f, "%");
 		RenderOSDLine(osdPos, buffer);
@@ -1908,19 +1909,19 @@ void AddActorByState(unsigned int state) {
 			break;
 
 		case 4:
-			AddWater(FluidType::FluidTypeDrop);
+			AddWater(FluidType::Drop);
 			break;
 
 		case 5:
-			AddWater(FluidType::FluidTypeWall);
+			AddWater(FluidType::Wall);
 			break;
 
 		case 6:
-			AddWater(FluidType::FluidTypeBlob);
+			AddWater(FluidType::Blob);
 			break;
 
 		case 7:
-			AddWater(FluidType::FluidTypeSphere);
+			AddWater(FluidType::Sphere);
 			break;
 
 		default:
@@ -2107,7 +2108,7 @@ void KeyUp(unsigned char key, int x, int y) {
 		{
 			gSSFCurrentFluidIndex++;
 
-			if(gSSFCurrentFluidIndex > gActiveScene->getFluidColors() - 1) gSSFCurrentFluidIndex = 0;
+			if(gSSFCurrentFluidIndex > gActiveScene->getFluidColorCount() - 1) gSSFCurrentFluidIndex = 0;
 
 			break;
 		}

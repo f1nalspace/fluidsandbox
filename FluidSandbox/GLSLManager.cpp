@@ -6,8 +6,8 @@ CGLSLManager::CGLSLManager(void)
 
 CGLSLManager::~CGLSLManager(void)
 {
-	for (std::map<std::string, CGLSL*>::const_iterator iter = list.begin();
-      iter != list.end(); ++iter ) {
+	for (std::map<std::string, CGLSL*>::const_iterator iter = nameShaderMap.begin();
+      iter != nameShaderMap.end(); ++iter ) {
 		  CGLSL* glsl = (*iter).second;
 		  delete glsl;
 		  std::cout << "    Released shader '" << (*iter).first << "' successfully" << std::endl;
@@ -19,7 +19,7 @@ CGLSL* CGLSLManager::add(const std::string &name, const GLuint what, const std::
 	CGLSL* shader = get(name);
 	if (shader == NULL) {
 		shader = new CGLSL();
-		list.insert(std::make_pair(name, shader));
+		nameShaderMap.insert(std::make_pair(name, shader));
 	}
 	Utils::attachShaderFromFile(shader, what, filename.c_str(), "  ");
 	return shader;
@@ -41,7 +41,7 @@ CGLSL* CGLSLManager::addGeometry(const std::string &name, const std::string &fil
 }
 
 CGLSL* CGLSLManager::get(const std::string &name){
-	if (list.count(name) > 0)
-		return (*list.find(name)).second;
+	if (nameShaderMap.count(name) > 0)
+		return (*nameShaderMap.find(name)).second;
 	return NULL;
 }

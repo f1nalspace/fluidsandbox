@@ -230,9 +230,7 @@ Copy "$(SolutionDir)Libraries\glew\bin\$(Platform)\glew32.dll" "$(OutDir)"</Comm
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Actor.cpp" />
     <ClCompile Include="AllFBOs.cpp" />
-    <ClCompile Include="CubeActor.cpp" />
     <ClCompile Include="FBO.cpp" />
     <ClCompile Include="FluidScenario.cpp" />
     <ClCompile Include="FluidSystem.cpp" />
@@ -246,7 +244,6 @@ Copy "$(SolutionDir)Libraries\glew\bin\$(Platform)\glew32.dll" "$(OutDir)"</Comm
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="Scene.cpp" />
     <ClCompile Include="ScreenSpaceFluidRendering.cpp" />
-    <ClCompile Include="SphereActor.cpp" />
     <ClCompile Include="SphericalPointSprites.cpp" />
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="Texture2D.cpp" />
@@ -257,10 +254,10 @@ Copy "$(SolutionDir)Libraries\glew\bin\$(Platform)\glew32.dll" "$(OutDir)"</Comm
     <ClCompile Include="XMLUtils.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Actor.h" />
+    <ClInclude Include="Actor.hpp" />
     <ClInclude Include="AllFBOs.h" />
     <ClInclude Include="Camera.hpp" />
-    <ClInclude Include="CubeActor.h" />
+    <ClInclude Include="CubeActor.hpp" />
     <ClInclude Include="FBO.h" />
     <ClInclude Include="FluidContainer.hpp" />
     <ClInclude Include="FluidDescription.h" />
@@ -277,7 +274,7 @@ Copy "$(SolutionDir)Libraries\glew\bin\$(Platform)\glew32.dll" "$(OutDir)"</Comm
     <ClInclude Include="Scene.h" />
     <ClInclude Include="ScreenSpaceFluidRendering.h" />
     <ClInclude Include="Singleton.hpp" />
-    <ClInclude Include="SphereActor.h" />
+    <ClInclude Include="SphereActor.hpp" />
     <ClInclude Include="SphericalPointSprites.h" />
     <ClInclude Include="Texture.h" />
     <ClInclude Include="Texture2D.h" />

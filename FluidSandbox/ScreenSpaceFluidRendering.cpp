@@ -3,19 +3,19 @@
 CScreenSpaceFluidRendering::CScreenSpaceFluidRendering(const int width, const int height, const float particleRadius)
 {
 	this->particleRadius = particleRadius;
-	iWindowWidth = width;
-	iWindowHeight = height;
-	fFBOFactor = 1.0f;
-	fNewFBOFactor = 1.0f;
-	iFBOWidth = CalcFBOSize(width, fFBOFactor);
-	iFBOHeight = CalcFBOSize(height, fFBOFactor);
+	curWindowWidth = width;
+	curWindowHeight = height;
+	curFBOFactor = 1.0f;
+	newFBOFactor = 1.0f;
+	curFBOWidth = CalcFBOSize(width, curFBOFactor);
+	curFBOHeight = CalcFBOSize(height, curFBOFactor);
 
 	// Init pointers
-	pRenderer = NULL;
-	pPointSprites = NULL;
-	pPointSpritesShader = NULL;
-	pSceneTexture = NULL;
-	pSkyboxCubemap = NULL;
+	renderer = NULL;
+	pointSprites = NULL;
+	pointSpritesShader = NULL;
+	sceneTexture = NULL;
+	skyboxCubemap = NULL;
 	depthFrameBuffer = NULL;
 	fullFrameBuffer = NULL;
 
@@ -23,13 +23,13 @@ CScreenSpaceFluidRendering::CScreenSpaceFluidRendering(const int width, const in
 	if (CFBO::getMaxColorAttachments() >= 4)
 	{
 		// Create frame buffer object for depth
-		depthFrameBuffer = new CSSFRDepthFBO(iFBOWidth, iFBOHeight);
+		depthFrameBuffer = new CSSFRDepthFBO(curFBOWidth, curFBOHeight);
 		depthFrameBuffer->depthTexture = depthFrameBuffer->addRenderTarget(GL_DEPTH_COMPONENT32, GL_DEPTH_COMPONENT, GL_FLOAT, GL_DEPTH_ATTACHMENT, GL_NEAREST); // Depth
 		depthFrameBuffer->colorTexture = depthFrameBuffer->addTextureTarget(GL_RGB32F, GL_RGBA, GL_FLOAT, GL_COLOR_ATTACHMENT0, GL_LINEAR); // Color
 		depthFrameBuffer->update();
 
 		// Create frame buffer object
-		fullFrameBuffer = new CSSFRFullFBO(iFBOWidth, iFBOHeight);
+		fullFrameBuffer = new CSSFRFullFBO(curFBOWidth, curFBOHeight);
 		fullFrameBuffer->thicknessTexture = fullFrameBuffer->addTextureTarget(GL_RGB32F, GL_RGBA, GL_FLOAT, GL_COLOR_ATTACHMENT0, GL_NEAREST); // Thickness
 		fullFrameBuffer->depthSmoothATexture = fullFrameBuffer->addTextureTarget(GL_RGB32F, GL_RGBA, GL_FLOAT, GL_COLOR_ATTACHMENT1, GL_NEAREST); // Depth smooth A
 		fullFrameBuffer->depthSmoothBTexture = fullFrameBuffer->addTextureTarget(GL_RGB32F, GL_RGBA, GL_FLOAT, GL_COLOR_ATTACHMENT2, GL_NEAREST); // Depth smooth B
@@ -97,10 +97,10 @@ CScreenSpaceFluidRendering::~CScreenSpaceFluidRendering(void)
 		delete fullFrameBuffer;
 
 	// Release pointers
-	pSceneTexture = NULL;
-	pPointSprites = NULL;
-	pPointSpritesShader = NULL;
-	pRenderer = NULL;
+	sceneTexture = NULL;
+	pointSprites = NULL;
+	pointSpritesShader = NULL;
+	renderer = NULL;
 }
 
 void CScreenSpaceFluidRendering::DepthPass(const unsigned int numPointSprites, const glm::mat4 &proj, const glm::mat4 &view, const float zfar, const float znear, const int wH)
@@ -112,17 +112,17 @@ void CScreenSpaceFluidRendering::DepthPass(const unsigned int numPointSprites, c
 	depthShader->uniform1f(depthShader->ulocFar, zfar);
 	depthShader->uniformMatrix4(depthShader->ulocViewMat, &view[0][0]);
 	depthShader->uniformMatrix4(depthShader->ulocProjMat, &proj[0][0]);
-	pPointSprites->Draw(numPointSprites);
+	pointSprites->Draw(numPointSprites);
 	depthShader->disable();
 }
 
 void CScreenSpaceFluidRendering::ThicknessPass(const unsigned int numPointSprites, const glm::mat4 &proj, const glm::mat4 &view, const float zfar, const float znear, const int wH)
 {
-	pRenderer->ClearColor(0,0,0,0);
-	pRenderer->Clear(ClearFlags::Color);
-	pRenderer->SetBlendFunc(GL_ONE, GL_ONE);
-	pRenderer->SetBlending(true);
-	pRenderer->SetDepthMask(false);
+	renderer->ClearColor(0,0,0,0);
+	renderer->Clear(ClearFlags::Color);
+	renderer->SetBlendFunc(GL_ONE, GL_ONE);
+	renderer->SetBlending(true);
+	renderer->SetDepthMask(false);
 
 	thicknessShader->enable();
 	thicknessShader->uniform1f(thicknessShader->ulocPointScale, CSphericalPointSprites::GetPointScale(wH, 50.0f));
@@ -132,13 +132,13 @@ void CScreenSpaceFluidRendering::ThicknessPass(const unsigned int numPointSprite
 	thicknessShader->uniformMatrix4(thicknessShader->ulocViewMat, &view[0][0]);
 	thicknessShader->uniformMatrix4(thicknessShader->ulocProjMat, &proj[0][0]);
 
-	pPointSprites->Draw(numPointSprites);
+	pointSprites->Draw(numPointSprites);
 
 	thicknessShader->disable();
 
-	pRenderer->SetDepthMask(true);
-	pRenderer->SetBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	pRenderer->SetBlending(false);
+	renderer->SetDepthMask(true);
+	renderer->SetBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	renderer->SetBlending(false);
 }
 
 void CScreenSpaceFluidRendering::RenderPointSprites(const unsigned int numPointSprites, const glm::mat4 &proj, const glm::mat4 &view, const float zfar, const float znear, CPointSpritesShader* shader, const int wH)
@@ -152,7 +152,7 @@ void CScreenSpaceFluidRendering::RenderPointSprites(const unsigned int numPointS
 		shader->uniformMatrix4(shader->ulocViewMat, &view[0][0]);
 		shader->uniformMatrix4(shader->ulocProjMat, &proj[0][0]);
 	}
-	pPointSprites->Draw(numPointSprites);
+	pointSprites->Draw(numPointSprites);
 	if (shader != NULL){
 		shader->disable();
 	}
@@ -160,19 +160,19 @@ void CScreenSpaceFluidRendering::RenderPointSprites(const unsigned int numPointS
 
 void CScreenSpaceFluidRendering::RenderFullscreenQuad()
 {
-	pRenderer->DrawTexturedQuad(0.0f,0.0f,1.0f,1.0f);
+	renderer->DrawTexturedQuad(0.0f,0.0f,1.0f,1.0f);
 }
 
 void CScreenSpaceFluidRendering::BlurDepthPass(const glm::mat4 &mvp, CTexture2D* depthTexture, const float dirX, const float dirY)
 {
-	pRenderer->SetDepthTest(false);
-	pRenderer->SetDepthMask(false);
+	renderer->SetDepthTest(false);
+	renderer->SetDepthMask(false);
 
 	// Clear buffer
-	pRenderer->Clear(ClearFlags::Color);
+	renderer->Clear(ClearFlags::Color);
 
 	// Enable depth texture
-	pRenderer->EnableTexture(0, depthTexture);
+	renderer->EnableTexture(0, depthTexture);
 
 	// Process depth smooth shader on a fullscreen quad if active
 	depthBlurShader->enable();
@@ -185,20 +185,20 @@ void CScreenSpaceFluidRendering::BlurDepthPass(const glm::mat4 &mvp, CTexture2D*
 	depthBlurShader->disable();
 
 	// Unbind textures
-	pRenderer->DisableTexture(0, depthTexture);
+	renderer->DisableTexture(0, depthTexture);
 
-	pRenderer->SetDepthTest(true);
-	pRenderer->SetDepthMask(true);
+	renderer->SetDepthTest(true);
+	renderer->SetDepthMask(true);
 }
 
 void CScreenSpaceFluidRendering::WaterPass(const glm::mat4 &mvp, CCamera &cam, CTexture2D* depthTexture, CTexture2D* thicknessTexture, const FluidColor *color, const int showType)
 {
 	// Bind 3 textures (Depth, Thickness, Scene)
-	pRenderer->SetBlending(true);
-	pRenderer->EnableTexture(0, depthTexture); // Depth Texture0
-	pRenderer->EnableTexture(1, thicknessTexture); // Thickness Texture1
-	pRenderer->EnableTexture(2, pSceneTexture); // Scene Texture2
-	pRenderer->EnableTexture(3, pSkyboxCubemap); // Skybox Texture3 (Cubemap)
+	renderer->SetBlending(true);
+	renderer->EnableTexture(0, depthTexture); // Depth Texture0
+	renderer->EnableTexture(1, thicknessTexture); // Thickness Texture1
+	renderer->EnableTexture(2, sceneTexture); // Scene Texture2
+	renderer->EnableTexture(3, skyboxCubemap); // Skybox Texture3 (Cubemap)
 
 	// Process normal and shading shader on a fullscreen quad
 	CWaterShader* shader;
@@ -211,8 +211,8 @@ void CScreenSpaceFluidRendering::WaterPass(const glm::mat4 &mvp, CCamera &cam, C
 	shader->uniform1i(shader->ulocThicknessTex, 1);
 	shader->uniform1i(shader->ulocSceneTex, 2);
 	shader->uniform1i(shader->ulocSkyboxCubemap, 3);
-	shader->uniform1f(shader->ulocXFactor, 1.0f/((float)iFBOWidth));
-	shader->uniform1f(shader->ulocYFactor, 1.0f/((float)iFBOHeight));
+	shader->uniform1f(shader->ulocXFactor, 1.0f/((float)curFBOWidth));
+	shader->uniform1f(shader->ulocYFactor, 1.0f/((float)curFBOHeight));
 	shader->uniform1f(shader->ulocZFar, cam.farClip);
 	shader->uniform1f(shader->ulocZNear, cam.nearClip);
 	shader->uniform1f(shader->ulocMinDepth, MIN_DEPTH);
@@ -227,11 +227,11 @@ void CScreenSpaceFluidRendering::WaterPass(const glm::mat4 &mvp, CCamera &cam, C
 	shader->disable();
 
 	// Unbind 4 textures
-	pRenderer->DisableTexture(3, pSkyboxCubemap);
-	pRenderer->DisableTexture(2, pSceneTexture);
-	pRenderer->DisableTexture(1, thicknessTexture);
-	pRenderer->DisableTexture(0, depthTexture);
-	pRenderer->SetBlending(false);
+	renderer->DisableTexture(3, skyboxCubemap);
+	renderer->DisableTexture(2, sceneTexture);
+	renderer->DisableTexture(1, thicknessTexture);
+	renderer->DisableTexture(0, depthTexture);
+	renderer->SetBlending(false);
 }
 
 void CScreenSpaceFluidRendering::RenderSSF(CCamera &cam, const unsigned int numPointSprites, const SSFDrawingOptions &dstate, const int wW, const int wH)
@@ -240,17 +240,17 @@ void CScreenSpaceFluidRendering::RenderSSF(CCamera &cam, const unsigned int numP
 	assert(depthFrameBuffer);
 
 	// Resize FBO if needed
-	if ((wW != iWindowWidth) ||
-		(wH != iWindowHeight) ||
-		(fFBOFactor != fNewFBOFactor))
+	if ((wW != curWindowWidth) ||
+		(wH != curWindowHeight) ||
+		(curFBOFactor != newFBOFactor))
 	{
-		iWindowWidth = wW;
-		iWindowHeight = wH;
-		fFBOFactor = fNewFBOFactor;
-		iFBOWidth = CalcFBOSize(wW, fFBOFactor);
-		iFBOHeight = CalcFBOSize(wH, fFBOFactor);
-		fullFrameBuffer->resize(iFBOWidth, iFBOHeight);
-		depthFrameBuffer->resize(iFBOWidth, iFBOHeight);
+		curWindowWidth = wW;
+		curWindowHeight = wH;
+		curFBOFactor = newFBOFactor;
+		curFBOWidth = CalcFBOSize(wW, curFBOFactor);
+		curFBOHeight = CalcFBOSize(wH, curFBOFactor);
+		fullFrameBuffer->resize(curFBOWidth, curFBOHeight);
+		depthFrameBuffer->resize(curFBOWidth, curFBOHeight);
 	}
 
 	// Retrieve texture pointers
@@ -275,7 +275,7 @@ void CScreenSpaceFluidRendering::RenderSSF(CCamera &cam, const unsigned int numP
 	glm::mat4 orthoMVP = glm::mat4(1.0f) * orthoProj;
 
 	// Change to 3D mvp
-	pRenderer->LoadMatrix(mvp);
+	renderer->LoadMatrix(mvp);
 
 	// Get depth range
 	float nf[2];
@@ -284,18 +284,18 @@ void CScreenSpaceFluidRendering::RenderSSF(CCamera &cam, const unsigned int numP
 	float far_depth = nf[1];
 
 	// Set view and scissor
-	pRenderer->SetViewport(0,0,iFBOWidth,iFBOHeight);
-	pRenderer->SetScissor(0,0,iFBOWidth,iFBOHeight);
+	renderer->SetViewport(0,0,curFBOWidth,curFBOHeight);
+	renderer->SetScissor(0,0,curFBOWidth,curFBOHeight);
 
 	// From here, everything is white
-	pRenderer->SetColor(1.0f,1.0f,1.0f,1.0f);
+	renderer->SetColor(1.0f,1.0f,1.0f,1.0f);
 
 	// Pass 1: Render point sprites to depth and color
 	depthFrameBuffer->enable();
 	depthFrameBuffer->setDrawBuffer(GL_COLOR_ATTACHMENT0);
-	pRenderer->ClearColor(-10000.0f,0.0f,0.0f,0.0f);
-	pRenderer->Clear(ClearFlags::Color | ClearFlags::Depth);
-	DepthPass(numPointSprites, mproj, mview, far_depth, near_depth, iFBOHeight);
+	renderer->ClearColor(-10000.0f,0.0f,0.0f,0.0f);
+	renderer->Clear(ClearFlags::Color | ClearFlags::Depth);
+	DepthPass(numPointSprites, mproj, mview, far_depth, near_depth, curFBOHeight);
 	depthFrameBuffer->disable();
 
 	// Enable FBO
@@ -304,10 +304,10 @@ void CScreenSpaceFluidRendering::RenderSSF(CCamera &cam, const unsigned int numP
 	// Pass 2: Render point sprites to thickness
 	// -------------------------------------
 	fullFrameBuffer->setDrawBuffer(GL_COLOR_ATTACHMENT0); // Draw to color attachment 0: Thickness
-	ThicknessPass(numPointSprites, mproj, mview, far_depth, near_depth, iFBOHeight);
+	ThicknessPass(numPointSprites, mproj, mview, far_depth, near_depth, curFBOHeight);
 
 	// Change to 2D mvp
-	pRenderer->LoadMatrix(orthoMVP);
+	renderer->LoadMatrix(orthoMVP);
 
 	if (dstate.blurEnabled) {
 		// Pass 3: Blur depth A
@@ -330,8 +330,8 @@ void CScreenSpaceFluidRendering::RenderSSF(CCamera &cam, const unsigned int numP
 	fullFrameBuffer->setDrawBuffer(latestDrawBuffer);
 
 	// Set view and scissor
-	pRenderer->SetViewport(0,0,iWindowWidth,iWindowHeight);
-	pRenderer->SetScissor(0,0,iWindowWidth,iWindowHeight);
+	renderer->SetViewport(0,0,curWindowWidth,curWindowHeight);
+	renderer->SetScissor(0,0,curWindowWidth,curWindowHeight);
 
 	// Pass 5: Water rendering
 	WaterPass(orthoMVP, cam, depthSmoothBTexture, thicknessTexture, dstate.fluidColor, dstate.debugType);
@@ -339,8 +339,8 @@ void CScreenSpaceFluidRendering::RenderSSF(CCamera &cam, const unsigned int numP
 
 void CScreenSpaceFluidRendering::Render(CCamera &cam, const unsigned int numPointSprites, const SSFDrawingOptions &dstate, const int wW, const int wH)
 {
-	assert(pPointSpritesShader);
-	assert(pPointSprites);
+	assert(pointSpritesShader);
+	assert(pointSprites);
 
 	glm::mat4 mproj = cam.projection;
 	glm::mat4 mview = cam.modelview;
@@ -353,24 +353,24 @@ void CScreenSpaceFluidRendering::Render(CCamera &cam, const unsigned int numPoin
 	{
 	case SSFRenderMode_PointSprites:
 		{
-			pRenderer->LoadMatrix(mvp);
+			renderer->LoadMatrix(mvp);
 			if (waterIsColored)
-				pRenderer->SetColor(&dstate.fluidColor->color[0]);
+				renderer->SetColor(&dstate.fluidColor->color[0]);
 			else
-				pRenderer->SetColor(1,1,1,1);
-			RenderPointSprites(numPointSprites, mproj, mview, cam.farClip, cam.nearClip, pPointSpritesShader, wH);
-			pRenderer->SetColor(1,1,1,1);
+				renderer->SetColor(1,1,1,1);
+			RenderPointSprites(numPointSprites, mproj, mview, cam.farClip, cam.nearClip, pointSpritesShader, wH);
+			renderer->SetColor(1,1,1,1);
 			break;
 		}
 	case SSFRenderMode_Points:
 		{
-			pRenderer->LoadMatrix(mvp);
+			renderer->LoadMatrix(mvp);
 			if (waterIsColored)
-				pRenderer->SetColor(&dstate.fluidColor->color[0]);
+				renderer->SetColor(&dstate.fluidColor->color[0]);
 			else
-				pRenderer->SetColor(1,1,1,1);
+				renderer->SetColor(1,1,1,1);
 			RenderPointSprites(numPointSprites, mproj, mview, cam.farClip, cam.nearClip, NULL, wH);
-			pRenderer->SetColor(1,1,1,1);
+			renderer->SetColor(1,1,1,1);
 			break;
 		}
 	case SSFRenderMode_Fluid:

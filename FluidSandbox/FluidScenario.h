@@ -6,15 +6,8 @@
 
 #include <PxPhysicsAPI.h> 
 
-#include <glm/glm.hpp>
-
 #include "FluidContainer.hpp"
-#include "OSLowLevel.h"
-#include "XMLUtils.h"
-#include "Utils.h"
-#include "Actor.h"
-#include "CubeActor.h"
-#include "SphereActor.h"
+#include "Actor.hpp"
 #include "Scene.h"
 
 struct CFluidScenario

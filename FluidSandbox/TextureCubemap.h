@@ -1,5 +1,7 @@
 #pragma once
+
 #include "Texture2D.h"
+
 class CTextureCubemap: public CTexture2D
 {
 protected:

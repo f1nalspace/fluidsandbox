@@ -141,23 +141,23 @@ namespace Utils {
 
 	FluidType toFluidType(const char *str) {
 		if(strcmp(str, "sphere") == 0)
-			return FluidType::FluidTypeSphere;
+			return FluidType::Sphere;
 		else if(strcmp(str, "blob") == 0)
-			return FluidType::FluidTypeBlob;
+			return FluidType::Blob;
 		else if(strcmp(str, "wall") == 0)
-			return FluidType::FluidTypeWall;
+			return FluidType::Wall;
 		else if(strcmp(str, "drop") == 0)
-			return FluidType::FluidTypeDrop;
+			return FluidType::Drop;
 		else
-			return FluidType::FluidTypeBlob;
+			return FluidType::Blob;
 	}
 
-	EActorType toActorType(const char *str) {
+	ActorType toActorType(const char *str) {
 		if(strcmp(str, "static") == 0)
-			return EActorType::ActorTypeStatic;
+			return ActorType::ActorTypeStatic;
 		else if(strcmp(str, "dynamic") == 0)
-			return EActorType::ActorTypeDynamic;
+			return ActorType::ActorTypeDynamic;
 		else
-			return EActorType::ActorTypeStatic;
+			return ActorType::ActorTypeStatic;
 	}
 }

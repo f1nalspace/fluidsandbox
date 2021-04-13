@@ -2,21 +2,21 @@
 
 CSphericalPointSprites::CSphericalPointSprites()
 {
-	iVBO = 0;
-	iTotalSprites = 0;
+	vbo = 0;
+	totalSpriteCount = 0;
 }
 
 CSphericalPointSprites::~CSphericalPointSprites(void)
 {
-	if (iVBO)
-		glDeleteBuffersARB(1, &iVBO);
+	if (vbo)
+		glDeleteBuffersARB(1, &vbo);
 }
 
 void CSphericalPointSprites::Allocate(const unsigned int total)
 {
-	iTotalSprites = total;
-	glGenBuffersARB(1, &iVBO);
-	glBindBufferARB(GL_ARRAY_BUFFER_ARB, iVBO);
+	totalSpriteCount = total;
+	glGenBuffersARB(1, &vbo);
+	glBindBufferARB(GL_ARRAY_BUFFER_ARB, vbo);
 	glBufferDataARB(GL_ARRAY_BUFFER_ARB, total * sizeof(float) * 4, NULL, GL_STREAM_DRAW_ARB);
 	glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
 }
@@ -27,7 +27,7 @@ void CSphericalPointSprites::Draw(const unsigned int count)
 	glTexEnvi(GL_POINT_SPRITE_ARB, GL_COORD_REPLACE_ARB, GL_TRUE);
 	glEnable(GL_VERTEX_PROGRAM_POINT_SIZE_ARB);
 
-	glBindBufferARB(GL_ARRAY_BUFFER_ARB, iVBO);
+	glBindBufferARB(GL_ARRAY_BUFFER_ARB, vbo);
 	glVertexPointer(4, GL_FLOAT, 0, 0);
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glDrawArrays(GL_POINTS, 0, count);
@@ -39,8 +39,8 @@ void CSphericalPointSprites::Draw(const unsigned int count)
 
 float* CSphericalPointSprites::Map()
 {
-	glBindBufferARB(GL_ARRAY_BUFFER_ARB, iVBO);
-	glBufferDataARB(GL_ARRAY_BUFFER_ARB, iTotalSprites * sizeof(float) * 4, NULL, GL_STREAM_DRAW_ARB);
+	glBindBufferARB(GL_ARRAY_BUFFER_ARB, vbo);
+	glBufferDataARB(GL_ARRAY_BUFFER_ARB, totalSpriteCount * sizeof(float) * 4, NULL, GL_STREAM_DRAW_ARB);
 	return (float*)glMapBufferARB(GL_ARRAY_BUFFER_ARB, GL_WRITE_ONLY);
 }
 
@@ -48,4 +48,8 @@ void CSphericalPointSprites::UnMap()
 {
 	glUnmapBuffer(GL_ARRAY_BUFFER_ARB);
 	glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
+}
+
+float CSphericalPointSprites::GetPointScale(int windowHeight, float fov) {
+	return (float)(windowHeight / tan(fov * 0.5 * M_PI / 180.0));
 }

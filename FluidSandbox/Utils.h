@@ -8,7 +8,7 @@
 #include "GLSL.h"
 #include "OSLowLevel.h"
 #include "FluidContainer.hpp"
-#include "Actor.h"
+#include "Actor.hpp"
 
 namespace Utils {
 	void trim(std::string &str);
@@ -25,6 +25,6 @@ namespace Utils {
 	physx::PxVec3 toVec3(const std::string &str, const physx::PxVec3 def);
 	physx::PxVec4 toVec4(const std::string &str);
 	FluidType toFluidType(const char *str);
-	EActorType toActorType(const char *str);
+	ActorType toActorType(const char *str);
 	const std::string toString(const float value);
 };

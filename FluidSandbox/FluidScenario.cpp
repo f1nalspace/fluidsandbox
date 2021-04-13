@@ -2,7 +2,15 @@
 
 #include <iostream>
 
+#include <glm/glm.hpp>
+
 #include <rapidxml/rapidxml.hpp>
+
+#include "OSLowLevel.h"
+#include "XMLUtils.h"
+#include "Utils.h"
+#include "CubeActor.hpp"
+#include "SphereActor.hpp"
 
 CFluidScenario::CFluidScenario() {
 	this->name = "";
@@ -127,7 +135,7 @@ CFluidScenario *CFluidScenario::load(const char *filename, CScene *scene) {
 					rapidxml::xml_node<> *actorNode = *p;
 
 					std::string type = XMLUtils::getAttribute(actorNode, "type", "");
-					EActorType atype = Utils::toActorType(type.c_str());
+					ActorType atype = Utils::toActorType(type.c_str());
 
 					std::string primitive = XMLUtils::getAttribute(actorNode, "primitive", "");
 
@@ -144,7 +152,7 @@ CFluidScenario *CFluidScenario::load(const char *filename, CScene *scene) {
 					float density = Utils::toFloat(XMLUtils::getAttribute(actorNode, "density", defaultDensity.c_str()));
 					float radius = Utils::toFloat(XMLUtils::getAttribute(actorNode, "radius", "0.5"));
 					bool visible = Utils::toBool(XMLUtils::getAttribute(actorNode, "visible", "true"));
-					bool blending = Utils::toBool(XMLUtils::getAttribute(actorNode, "blending", atype == EActorType::ActorTypeStatic ? "true" : "false"));
+					bool blending = Utils::toBool(XMLUtils::getAttribute(actorNode, "blending", atype == ActorType::ActorTypeStatic ? "true" : "false"));
 					bool particleDrain = Utils::toBool(XMLUtils::getAttribute(actorNode, "particleDrain", "false"));
 
 					CActor *newactor = NULL;

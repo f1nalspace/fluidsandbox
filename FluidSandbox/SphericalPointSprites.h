@@ -9,8 +9,8 @@
 class CSphericalPointSprites
 {
 private:
-	unsigned int iTotalSprites;
-    GLuint iVBO;
+	unsigned int totalSpriteCount;
+    GLuint vbo;
 public:
 	CSphericalPointSprites();
 	~CSphericalPointSprites(void);
@@ -18,8 +18,6 @@ public:
 	void Draw(const unsigned int count);
 	float* Map();
 	void UnMap();
-	static float GetPointScale(int windowHeight, float fov) {
-		return (float)(windowHeight / tan(fov*0.5*M_PI/180.0));
-	}
+	static float GetPointScale(int windowHeight, float fov);
 };
 
