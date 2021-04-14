@@ -732,22 +732,14 @@ void SingleStepPhysX(const float frametime) {
 }
 
 CFluidSystem *CreateParticleFluidSystem() {
-	gFluidMaxMotionDistance = gActiveScene->sim.maxMotionDistance;
-	gFluidContactOffset = gActiveScene->sim.contactOffset;
-	gFluidRestOffset = gActiveScene->sim.restOffset;
-	gFluidRestitution = gActiveScene->sim.restitution;
-	gFluidDamping = gActiveScene->sim.damping;
-	gFluidDynamicFriction = gActiveScene->sim.dynamicFriction;
-	gFluidParticleMass = gActiveScene->sim.particleMass;
-
 	FluidSimulationProperties particleSystemDesc = FluidSimulationProperties();
 
 	particleSystemDesc.stiffness = gFluidStiffness;
 	particleSystemDesc.viscosity = gFluidViscosity;
 
-	particleSystemDesc.restitution = gFluidRestitution; // 0.3
-	particleSystemDesc.damping = gFluidDamping; // 0.0
-	particleSystemDesc.dynamicFriction = gFluidDynamicFriction; // 0.001
+	particleSystemDesc.restitution = gFluidRestitution;
+	particleSystemDesc.damping = gFluidDamping;
+	particleSystemDesc.dynamicFriction = gFluidDynamicFriction;
 	particleSystemDesc.particleMass = gFluidParticleMass;
 
 	particleSystemDesc.maxMotionDistance = gFluidMaxMotionDistance;
@@ -760,30 +752,30 @@ CFluidSystem *CreateParticleFluidSystem() {
 }
 
 void ResetScene() {
-	printf("Load/Reload scene: %s\n", gActiveFluidScenario ? gActiveFluidScenario->name : "No scene found.");
+	assert(gActiveFluidScenario != nullptr);
 
-	// Set scene properties
-	if(gActiveFluidScenario)
-		gScene->setGravity(toPxVec3(gActiveFluidScenario->gravity));
+	printf("Load/Reload scene: %s\n", gActiveFluidScenario->name);
 
 	// Release actors
 	ClearScene();
 
-	if(gActiveFluidScenario) {
-		gFluidParticleRadius = gActiveFluidScenario->sim.particleRadius;
-		gFluidViscosity = gActiveFluidScenario->sim.viscosity;
-		gFluidStiffness = gActiveFluidScenario->sim.stiffness;
-		gFluidRestParticleDistance = gActiveFluidScenario->sim.restParticleDistance;
-		gRigidBodyFallPos = gActiveFluidScenario->actorCreatePosition;
-		gFluidParticleRenderFactor = gActiveFluidScenario->render.particleRenderFactor;
-	} else {
-		gFluidParticleRadius = gActiveScene->sim.particleRadius;
-		gFluidViscosity = gActiveScene->sim.viscosity;
-		gFluidStiffness = gActiveScene->sim.stiffness;
-		gFluidRestParticleDistance = gActiveScene->sim.restParticleDistance;
-		gRigidBodyFallPos = glm::vec3(0.0f, 4.0f, 0.0f);
-		gFluidParticleRenderFactor = gActiveScene->render.particleRenderFactor;
-	}
+	// Set scene properties
+	gScene->setGravity(toPxVec3(gActiveFluidScenario->gravity));
+
+	gFluidMaxMotionDistance = gActiveFluidScenario->sim.maxMotionDistance;
+	gFluidContactOffset = gActiveFluidScenario->sim.contactOffset;
+	gFluidRestOffset = gActiveFluidScenario->sim.restOffset;
+	gFluidRestitution = gActiveFluidScenario->sim.restitution;
+	gFluidDamping = gActiveFluidScenario->sim.damping;
+	gFluidDynamicFriction = gActiveFluidScenario->sim.dynamicFriction;
+	gFluidParticleMass = gActiveFluidScenario->sim.particleMass;
+
+	gFluidParticleRadius = gActiveFluidScenario->sim.particleRadius;
+	gFluidViscosity = gActiveFluidScenario->sim.viscosity;
+	gFluidStiffness = gActiveFluidScenario->sim.stiffness;
+	gFluidRestParticleDistance = gActiveFluidScenario->sim.restParticleDistance;
+	gRigidBodyFallPos = gActiveFluidScenario->actorCreatePosition;
+	gFluidParticleRenderFactor = gActiveFluidScenario->render.particleRenderFactor;
 
 	// Add plane
 	AddPlane();
@@ -793,9 +785,7 @@ void ResetScene() {
 
 	// Set GPU acceleration for particle fluid if supported
 	gFluidSystem->setParticleBaseFlag(physx::PxParticleBaseFlag::eCOLLISION_TWOWAY, true);
-
-	if(gGPUDispatcher && gFluidUseGPUAcceleration)
-		gFluidSystem->setParticleBaseFlag(physx::PxParticleBaseFlag::eGPU, true);
+	gFluidSystem->setParticleBaseFlag(physx::PxParticleBaseFlag::eGPU, gGPUDispatcher && gFluidUseGPUAcceleration);
 
 	if(gFluidSystem) {
 		physx::PxActor *fluidActor = gFluidSystem->getActor();
@@ -803,28 +793,26 @@ void ResetScene() {
 		gActors.push_back(fluidActor);
 	}
 
-	if(gActiveFluidScenario) {
-		// Adding actors immediately
-		for(size_t i = 0, count = gActiveFluidScenario->getActorCount(); i < count; i++) {
-			Actor *actor = gActiveFluidScenario->getActor(i);
-			actor->timeElapsed = 0.0f;
+	// Adding actors immediately
+	for(size_t i = 0, count = gActiveFluidScenario->getActorCount(); i < count; i++) {
+		Actor *actor = gActiveFluidScenario->getActor(i);
+		actor->timeElapsed = 0.0f;
 
-			if(actor->time == -1) {
-				AddScenarioActor(actor);
-			}
+		if(actor->time == -1) {
+			AddScenarioActor(actor);
 		}
+	}
 
-		// Adding waters immediately
-		for(size_t i = 0; i < gActiveFluidScenario->getFluidContainerCount(); i++) {
-			FluidContainer *container = gActiveFluidScenario->getFluidContainer(i);
-			container->timeElapsed = 0.0f;
-			container->emitterElapsed = 0.0f;
-			container->emitterCoolDownElapsed = 0.0f;
-			container->emitterCoolDownActive = false;
+	// Adding waters immediately
+	for(size_t i = 0; i < gActiveFluidScenario->getFluidContainerCount(); i++) {
+		FluidContainer *container = gActiveFluidScenario->getFluidContainer(i);
+		container->timeElapsed = 0.0f;
+		container->emitterElapsed = 0.0f;
+		container->emitterCoolDownElapsed = 0.0f;
+		container->emitterCoolDownActive = false;
 
-			if(container->time == -1 && !container->isEmitter && gWaterAddBySceneChange) {
-				AddWater(*container, container->type);
-			}
+		if(container->time == -1 && !container->isEmitter && gWaterAddBySceneChange) {
+			AddWater(*container, container->type);
 		}
 	}
 
@@ -2333,11 +2321,11 @@ void initResources() {
 	printf("  Load scene\n");
 	gActiveScene = new CScene(
 		FluidSimulationProperties::DefaultParticleRadius,
-		FluidSimulationProperties::DefaultViscosity, 
-		FluidSimulationProperties::DefaultStiffness, 
-		FluidSimulationProperties::DefaultParticleRestDistanceFactor, 
-		FluidRenderProperties::DefaultParticleRenderFactor, 
-		FluidRenderProperties::DefaultMinDensity, 
+		FluidSimulationProperties::DefaultViscosity,
+		FluidSimulationProperties::DefaultStiffness,
+		FluidSimulationProperties::DefaultParticleRestDistanceFactor,
+		FluidRenderProperties::DefaultParticleRenderFactor,
+		FluidRenderProperties::DefaultMinDensity,
 		gDefaultRigidBodyDensity);
 	gActiveScene->load("scene.xml");
 	gFluidParticleRadius = gActiveScene->sim.particleRadius;
