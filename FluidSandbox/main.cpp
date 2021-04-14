@@ -696,12 +696,12 @@ void ClearScene() {
 }
 
 void AddScenarioActor(Actor *actor) {
-	if(actor->primitiveType == ActorPrimitiveType::Cube) {
+	if(actor->type == ActorType::Cube) {
 		CubeActor *cube = (CubeActor *)actor;
-		AddBox(cube->pos, cube->rotate, cube->velocity, cube->density, cube->size, cube->particleDrain, cube->movementType, cube);
-	} else if(actor->primitiveType == ActorPrimitiveType::Sphere) {
+		AddBox(cube->pos, cube->rotation, cube->velocity, cube->density, cube->size, cube->particleDrain, cube->movementType, cube);
+	} else if(actor->type == ActorType::Sphere) {
 		SphereActor *sphere = (SphereActor *)actor;
-		AddSphere(sphere->pos, sphere->rotate, sphere->velocity, sphere->density, sphere->radius, sphere->movementType, sphere);
+		AddSphere(sphere->pos, sphere->rotation, sphere->velocity, sphere->density, sphere->radius, sphere->movementType, sphere);
 	}
 }
 

@@ -7,7 +7,7 @@ enum class ActorMovementType {
 	Dynamic
 };
 
-enum class ActorPrimitiveType {
+enum class ActorType {
 	None = 0,
 	Plane,
 	Cube,
@@ -20,26 +20,26 @@ struct Actor {
 	glm::vec4 color;
 	glm::vec3 pos;
 	glm::vec3 velocity;
-	glm::vec3 rotate;
+	glm::vec3 rotation;
 	void *physicsData;
 	float timeElapsed;
 	float density;
-	ActorPrimitiveType primitiveType;
+	ActorType type;
 	ActorMovementType movementType;
 	int time;
 	bool visible;
 	bool blending;
 	bool particleDrain;
 
-	Actor(const ActorPrimitiveType primitiveType, const ActorMovementType movementType):
+	Actor(const ActorType type, const ActorMovementType movementType):
 		color(glm::vec4(1.0f)),
 		pos(glm::vec3(0)),
 		velocity(glm::vec3(0.0f)),
-		rotate(glm::vec3(0.0f)),
+		rotation(glm::vec3(0.0f)),
 		physicsData(nullptr),
 		timeElapsed(0.0f),
 		density(1.0f),
-		primitiveType(primitiveType),
+		type(type),
 		movementType(movementType),
 		time(0),
 		visible(true),

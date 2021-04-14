@@ -177,7 +177,7 @@ CFluidScenario *CFluidScenario::load(const char *filename, CScene *scene) {
 					newactor->velocity = velocity;
 					newactor->visible = visible;
 					newactor->blending = blending;
-					newactor->rotate = rotate;
+					newactor->rotation = rotate;
 					newactor->particleDrain = particleDrain;
 
 					if(newactor) {
