@@ -10,7 +10,7 @@
 #include "Actor.hpp"
 #include "Scene.h"
 
-struct CFluidScenario
+struct FluidScenario
 {
 	glm::vec3 actorCreatePosition;
 	glm::vec3 gravity;
@@ -28,8 +28,8 @@ struct CFluidScenario
 	float particleRadius;
 	float particleMinDensity;
 
-	CFluidScenario();
-	~CFluidScenario(void);
+	FluidScenario();
+	~FluidScenario(void);
 
 	void addActor(Actor* actor) { actors.push_back(actor); }
 	void addFluidContainer(FluidContainer* fluidContainer) { fluidContainers.push_back(fluidContainer); }
@@ -40,6 +40,6 @@ struct CFluidScenario
 	size_t getFluidContainerCount() const { return fluidContainers.size(); }
 	FluidContainer* getFluidContainer(size_t index) { return fluidContainers[index]; }
 
-	static CFluidScenario* load(const char* filename, CScene* scene);
+	static FluidScenario* load(const char* filename, CScene* scene);
 };
 

@@ -288,8 +288,8 @@ static float gFluidParticleMass = 0.0f;
 static float gFluidParticleRadius = 0.0f;
 static float gFluidParticleRenderFactor = 0.0f;
 
-static std::vector<CFluidScenario *> gFluidScenarios;
-static CFluidScenario *gActiveFluidScenario = NULL;
+static std::vector<FluidScenario *> gFluidScenarios;
+static FluidScenario *gActiveFluidScenario = NULL;
 static int gActiveFluidScenarioIdx = -1;
 
 // Fluid modification
@@ -2278,7 +2278,7 @@ void LoadFluidScenarios() {
 	for(unsigned int i = 0; i < scenFiles.size(); i++) {
 		std::string filename = "scenarios\\";
 		filename += scenFiles[i];
-		CFluidScenario *scenario = CFluidScenario::load(filename.c_str(), gActiveScene);
+		FluidScenario *scenario = FluidScenario::load(filename.c_str(), gActiveScene);
 		gFluidScenarios.push_back(scenario);
 	}
 
@@ -2459,7 +2459,7 @@ void OnShutdown() {
 	printf("Release Fluid Scenarios\n");
 
 	for(unsigned int i = 0; i < gFluidScenarios.size(); i++) {
-		CFluidScenario *scen = gFluidScenarios[i];
+		FluidScenario *scen = gFluidScenarios[i];
 		delete scen;
 	}
 

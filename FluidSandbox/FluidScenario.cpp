@@ -12,7 +12,7 @@
 
 #include "AllActors.hpp"
 
-CFluidScenario::CFluidScenario() {
+FluidScenario::FluidScenario() {
 	this->name[0] = 0;
 	this->actorCreatePosition = glm::vec3(0.0f, 0.0f, 0.0f);
 	this->viscosity = 20.0f;
@@ -26,7 +26,7 @@ CFluidScenario::CFluidScenario() {
 }
 
 
-CFluidScenario::~CFluidScenario(void) {
+FluidScenario::~FluidScenario(void) {
 	for(size_t i = 0; i < fluidContainers.size(); i++) {
 		FluidContainer *container = fluidContainers[i];
 		delete container;
@@ -40,7 +40,7 @@ CFluidScenario::~CFluidScenario(void) {
 	actors.clear();
 }
 
-CFluidScenario *CFluidScenario::load(const char *filename, CScene *scene) {
+FluidScenario *FluidScenario::load(const char *filename, CScene *scene) {
 	if(COSLowLevel::getInstance()->fileExists(filename)) {
 		std::cout << "  Load scenario from file '" << filename << "'" << std::endl;
 
@@ -84,7 +84,7 @@ CFluidScenario *CFluidScenario::load(const char *filename, CScene *scene) {
 		xml_copy = Utils::toCharVector(xml);
 		doc.parse<0>(&xml_copy[0]);
 
-		CFluidScenario *newScenario = new CFluidScenario();
+		FluidScenario *newScenario = new FluidScenario();
 
 		rootNode = doc.first_node("Scenario");
 		if(rootNode) {
