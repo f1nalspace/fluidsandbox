@@ -2,18 +2,13 @@
 
 #include <string>
 #include <vector>
-
-#ifdef WIN32
-	#include <Windows.h>
-#endif
+#include <cstdint>
 
 #include "Singleton.hpp"
 
 class COSLowLevel : public CSingleton<COSLowLevel>
 {
-friend CSingleton<COSLowLevel>;   
-private:
-	LONGLONG qpcFrequency;
+friend CSingleton<COSLowLevel>;
 public:
 	COSLowLevel(void);
 	uint32_t getNumCPUCores();

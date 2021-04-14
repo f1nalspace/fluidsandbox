@@ -3,9 +3,13 @@
 #include <fstream>
 #include <iostream>
 
+#ifdef WIN32
+#define NOMINMAX
+#include <Windows.h>
+#endif
+
 COSLowLevel::COSLowLevel(void)
 {
-	qpcFrequency = 0;
 }
 
 uint32_t COSLowLevel::getNumCPUCores() 
@@ -72,12 +76,10 @@ std::vector<std::string> COSLowLevel::getFilesInDirectory(const std::string &str
 }
 
 double COSLowLevel::getTimeMilliSeconds() {
-	if (qpcFrequency == 0) {
-		QueryPerformanceFrequency((LARGE_INTEGER*)&qpcFrequency);
-	}
-	LONGLONG cur = 0;
+	LARGE_INTEGER freq, cur;
+	QueryPerformanceFrequency((LARGE_INTEGER*)&freq);
 	QueryPerformanceCounter((LARGE_INTEGER*)&cur);
-	return (double)(cur * 1000.0 / qpcFrequency);
+	return (double)(cur.QuadPart * 1000.0 / freq.QuadPart);
 }
 
 const std::string COSLowLevel::getAppPath(const int argc, char** argv) {
