@@ -12,6 +12,18 @@
 #include "OSLowLevel.h"
 
 namespace PhysicsUtils {
+	inline physx::PxForceMode::Enum toPxForceMode(const PhysicsForceMode mode) {
+		switch(mode) {
+			case PhysicsForceMode::Acceleration:
+				return physx::PxForceMode::eACCELERATION;
+			case PhysicsForceMode::VelocityChange:
+				return physx::PxForceMode::eVELOCITY_CHANGE;
+			case PhysicsForceMode::Impulse:
+				return physx::PxForceMode::eIMPULSE;
+		}
+		return physx::PxForceMode::eFORCE;
+	}
+
 	inline physx::PxVec3 toPxVec3(const glm::vec3 &input) {
 		return physx::PxVec3(input.x, input.y, input.z);
 	}
@@ -192,6 +204,28 @@ struct NativeParticleSystem: public PhysicsParticleSystem {
 
 		bool result = fluid->createParticles(particleCreationData);
 		return(result);
+	}
+
+	void AddForce(const glm::vec3 &force, const PhysicsForceMode mode) {
+		// TODO(final): Do not use a std::vector here, use a static array instead!
+		std::vector<physx::PxU32> indices;
+		std::vector<physx::PxVec3> forces;
+		physx::PxVec3 nforce = PhysicsUtils::toPxVec3(force);
+		for(uint32_t i = 0; i < activeParticleCount; i++) {
+			indices.push_back(i);
+			forces.push_back(nforce);
+		}
+		physx::PxStrideIterator<const physx::PxU32> indexBuffer(&indices[0]);
+		physx::PxStrideIterator<const physx::PxVec3> forceBuffer(&forces[0]);
+
+		physx::PxForceMode::Enum forceMode = PhysicsUtils::toPxForceMode(mode);
+
+		fluid->addForces(activeParticleCount, indexBuffer, forceBuffer, forceMode);
+	}
+
+	void SetExternalAcceleration(const glm::vec3 &accel) {
+		physx::PxVec3 nacc = PhysicsUtils::toPxVec3(accel);
+		fluid->setExternalAcceleration(nacc);
 	}
 };
 

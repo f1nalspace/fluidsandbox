@@ -9,6 +9,13 @@
 #include "Actor.hpp"
 #include "FluidProperties.h"
 
+enum class PhysicsForceMode {
+	Acceleration = 0,
+	Force,
+	Impulse,
+	VelocityChange
+};
+
 struct PhysicsActor {
 	enum class Type {
 		None = 0,
@@ -160,6 +167,15 @@ public:
 	virtual ~PhysicsParticleSystem() {
 		delete[] velocities;
 		delete[] positions;
+	}
+
+	virtual void AddForce(const glm::vec3 &force, const PhysicsForceMode mode) = 0;
+	virtual void SetExternalAcceleration(const glm::vec3 &accel) = 0;
+
+	void WriteToPositionBuffer(float *dest, const size_t count) {
+		assert(count < maxParticleCount);
+		size_t size = sizeof(float) * 4 * count;
+		memcpy_s(dest, size, &positions[0], size);
 	}
 };
 
