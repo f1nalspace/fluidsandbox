@@ -20,13 +20,8 @@ struct FluidScenario
 
 	char name[128];
 
-	float viscosity;
-	float stiffness;
-	float damping;
-	float particleDistanceFactor;
-	float particleRenderFactor;
-	float particleRadius;
-	float particleMinDensity;
+	FluidSimulationProperties sim;
+	FluidRenderProperties render;
 
 	FluidScenario();
 	~FluidScenario(void);

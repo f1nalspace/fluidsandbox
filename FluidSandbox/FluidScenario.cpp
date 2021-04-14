@@ -15,6 +15,8 @@
 FluidScenario::FluidScenario() {
 	this->name[0] = 0;
 	this->actorCreatePosition = glm::vec3(0.0f, 0.0f, 0.0f);
+	this->sim = FluidSimulationProperties();
+#if 0
 	this->viscosity = 20.0f;
 	this->stiffness = 35.0f;
 	this->damping = 0.0f;
@@ -22,6 +24,7 @@ FluidScenario::FluidScenario() {
 	this->particleRenderFactor = 1.0f;
 	this->particleRadius = 0.05f;
 	this->particleMinDensity = 0.01f;
+#endif
 	this->gravity = glm::vec3(0.0f, -9.8f, 0.0f);
 }
 
@@ -103,21 +106,21 @@ FluidScenario *FluidScenario::load(const char *filename, CScene *scene) {
 			// Fluid properties
 			rapidxml::xml_node<> *fpNode = rootNode->first_node("FluidProperties");
 			if(fpNode) {
-				newScenario->viscosity = XMLUtils::findNodeFloat(fpNode, "Viscosity", scene->fluidViscosity);
-				newScenario->stiffness = XMLUtils::findNodeFloat(fpNode, "Stiffness", scene->fluidStiffness);
-				newScenario->damping = XMLUtils::findNodeFloat(fpNode, "Damping", scene->fluidDamping);
-				newScenario->particleDistanceFactor = XMLUtils::findNodeFloat(fpNode, "ParticleDistanceFactor", scene->fluidParticleDistanceFactor);
-				newScenario->particleRenderFactor = XMLUtils::findNodeFloat(fpNode, "ParticleRenderFactor", scene->fluidParticleRenderFactor);
-				newScenario->particleRadius = XMLUtils::findNodeFloat(fpNode, "ParticleRadius", scene->fluidParticleRadius);
-				newScenario->particleMinDensity = XMLUtils::findNodeFloat(fpNode, "ParticleMinDensity", scene->fluidParticleMinDensity);
+				float particleRadius = XMLUtils::findNodeFloat(fpNode, "ParticleRadius", scene->sim.particleRadius);
+				float particleDistanceFactor = XMLUtils::findNodeFloat(fpNode, "ParticleDistanceFactor", scene->sim.particleDistanceFactor);
+
+				newScenario->sim = FluidSimulationProperties::Compute(particleRadius, particleDistanceFactor);
+				newScenario->render = scene->render;
+
+				newScenario->sim.viscosity = XMLUtils::findNodeFloat(fpNode, "Viscosity", scene->sim.viscosity);
+				newScenario->sim.stiffness = XMLUtils::findNodeFloat(fpNode, "Stiffness", scene->sim.stiffness);
+				newScenario->sim.damping = XMLUtils::findNodeFloat(fpNode, "Damping", scene->sim.damping);
+
+				newScenario->render.particleRenderFactor = XMLUtils::findNodeFloat(fpNode, "ParticleRenderFactor", scene->render.particleRenderFactor);
+				newScenario->render.minDensity = XMLUtils::findNodeFloat(fpNode, "ParticleMinDensity", scene->render.minDensity);
 			} else {
-				newScenario->viscosity = scene->fluidViscosity;
-				newScenario->stiffness = scene->fluidStiffness;
-				newScenario->damping = scene->fluidDamping;
-				newScenario->particleDistanceFactor = scene->fluidParticleDistanceFactor;
-				newScenario->particleRenderFactor = scene->fluidParticleRenderFactor;
-				newScenario->particleRadius = scene->fluidParticleRadius;
-				newScenario->particleMinDensity = scene->fluidParticleMinDensity;
+				newScenario->sim = scene->sim;
+				newScenario->render = scene->render;
 			}
 
 			// Actor properties

@@ -706,7 +706,7 @@ void AddScenarioActor(Actor *actor) {
 }
 
 void SaveFluidPositions() {
-	float minDensity = gActiveFluidScenario != NULL ? gActiveFluidScenario->particleMinDensity : gActiveScene->fluidParticleMinDensity;
+	float minDensity = gActiveFluidScenario != NULL ? gActiveFluidScenario->render.minDensity : gActiveScene->render.minDensity;
 	float *data = gPointSprites->Map();
 	bool noDensity = gSSFRenderMode == SSFRenderMode::Points;
 	gFluidSystem->writeToVBO(data, gTotalFluidParticles, noDensity, minDensity);
@@ -732,15 +732,15 @@ void SingleStepPhysX(const float frametime) {
 }
 
 CFluidSystem *CreateParticleFluidSystem() {
-	gFluidMaxMotionDistance = gActiveScene->fluidMaxMotionDistance;
-	gFluidContactOffset = gActiveScene->fluidContactOffset;
-	gFluidRestOffset = gActiveScene->fluidRestOffset;
-	gFluidRestitution = gActiveScene->fluidRestitution;
-	gFluidDamping = gActiveScene->fluidDamping;
-	gFluidDynamicFriction = gActiveScene->fluidDynamicFriction;
-	gFluidParticleMass = gActiveScene->fluidParticleMass;
+	gFluidMaxMotionDistance = gActiveScene->sim.maxMotionDistance;
+	gFluidContactOffset = gActiveScene->sim.contactOffset;
+	gFluidRestOffset = gActiveScene->sim.restOffset;
+	gFluidRestitution = gActiveScene->sim.restitution;
+	gFluidDamping = gActiveScene->sim.damping;
+	gFluidDynamicFriction = gActiveScene->sim.dynamicFriction;
+	gFluidParticleMass = gActiveScene->sim.particleMass;
 
-	FluidSimulationProperties particleSystemDesc;
+	FluidSimulationProperties particleSystemDesc = FluidSimulationProperties();
 
 	particleSystemDesc.stiffness = gFluidStiffness;
 	particleSystemDesc.viscosity = gFluidViscosity;
@@ -770,19 +770,19 @@ void ResetScene() {
 	ClearScene();
 
 	if(gActiveFluidScenario) {
-		gFluidParticleRadius = gActiveFluidScenario->particleRadius;
-		gFluidViscosity = gActiveFluidScenario->viscosity;
-		gFluidStiffness = gActiveFluidScenario->stiffness;
-		gFluidRestParticleDistance = gFluidParticleRadius * gActiveFluidScenario->particleDistanceFactor;
+		gFluidParticleRadius = gActiveFluidScenario->sim.particleRadius;
+		gFluidViscosity = gActiveFluidScenario->sim.viscosity;
+		gFluidStiffness = gActiveFluidScenario->sim.stiffness;
+		gFluidRestParticleDistance = gActiveFluidScenario->sim.restParticleDistance;
 		gRigidBodyFallPos = gActiveFluidScenario->actorCreatePosition;
-		gFluidParticleRenderFactor = gActiveFluidScenario->particleRenderFactor;
+		gFluidParticleRenderFactor = gActiveFluidScenario->render.particleRenderFactor;
 	} else {
-		gFluidParticleRadius = gActiveScene->fluidParticleRadius;
-		gFluidViscosity = gActiveScene->fluidViscosity;
-		gFluidStiffness = gActiveScene->fluidStiffness;
-		gFluidRestParticleDistance = gFluidParticleRadius * gActiveScene->fluidParticleDistanceFactor;
+		gFluidParticleRadius = gActiveScene->sim.particleRadius;
+		gFluidViscosity = gActiveScene->sim.viscosity;
+		gFluidStiffness = gActiveScene->sim.stiffness;
+		gFluidRestParticleDistance = gActiveScene->sim.restParticleDistance;
 		gRigidBodyFallPos = glm::vec3(0.0f, 4.0f, 0.0f);
-		gFluidParticleRenderFactor = gActiveScene->fluidParticleRenderFactor;
+		gFluidParticleRenderFactor = gActiveScene->render.particleRenderFactor;
 	}
 
 	// Add plane
@@ -1670,7 +1670,7 @@ void RenderOSD() {
 		RenderOSDLine(osdPos, buffer);
 		sprintf_s(buffer, "Fluid rest particle distance: %f", gFluidRestParticleDistance);
 		RenderOSDLine(osdPos, buffer);
-		sprintf_s(buffer, "Fluid min density: %f", gActiveFluidScenario ? gActiveFluidScenario->particleMinDensity : gActiveScene->fluidParticleMinDensity);
+		sprintf_s(buffer, "Fluid min density: %f", gActiveFluidScenario ? gActiveFluidScenario->render.minDensity : gActiveScene->render.minDensity);
 		RenderOSDLine(osdPos, buffer);
 	}
 
@@ -2143,63 +2143,63 @@ void ChangeFluidProperty(float value) {
 		{
 			gFluidViscosity += value;
 			gFluidSystem->setViscosity(gFluidViscosity);
-			gActiveFluidScenario->viscosity = gFluidViscosity;
+			gActiveFluidScenario->sim.viscosity = gFluidViscosity;
 		} break;
 
 		case FLUID_PROPERTY_STIFFNESS:
 		{
 			gFluidStiffness += value;
 			gFluidSystem->setStiffness(gFluidStiffness);
-			gActiveFluidScenario->stiffness = gFluidStiffness;
+			gActiveFluidScenario->sim.stiffness = gFluidStiffness;
 		} break;
 
 		case FLUID_PROPERTY_MAXMOTIONDISTANCE:
 		{
 			gFluidMaxMotionDistance += value / 1000.0f;
 			gFluidSystem->setMaxMotionDistance(gFluidMaxMotionDistance);
-			gActiveScene->fluidMaxMotionDistance = gFluidMaxMotionDistance;
+			gActiveScene->sim.maxMotionDistance = gFluidMaxMotionDistance;
 		} break;
 
 		case FLUID_PROPERTY_CONTACTOFFSET:
 		{
 			gFluidContactOffset += value / 1000.0f;
 			gFluidSystem->setContactOffset(gFluidContactOffset);
-			gActiveScene->fluidContactOffset = gFluidContactOffset;
+			gActiveScene->sim.contactOffset = gFluidContactOffset;
 		} break;
 
 		case FLUID_PROPERTY_RESTOFFSET:
 		{
 			gFluidRestOffset += value / 1000.0f;
 			gFluidSystem->setRestOffset(gFluidRestOffset);
-			gActiveScene->fluidRestOffset = gFluidRestOffset;
+			gActiveScene->sim.restOffset = gFluidRestOffset;
 		} break;
 
 		case FLUID_PROPERTY_RESTITUTION:
 		{
 			gFluidRestitution += value / 1000.0f;
 			gFluidSystem->setRestitution(gFluidRestitution);
-			gActiveScene->fluidRestitution = gFluidRestitution;
+			gActiveScene->sim.restitution = gFluidRestitution;
 		} break;
 
 		case FLUID_PROPERTY_DAMPING:
 		{
 			gFluidDamping += value / 1000.0f;
 			gFluidSystem->setDamping(gFluidDamping);
-			gActiveScene->fluidDamping = gFluidDamping;
+			gActiveScene->sim.damping = gFluidDamping;
 		} break;
 
 		case FLUID_PROPERTY_DYNAMICFRICTION:
 		{
 			gFluidDynamicFriction += value / 1000.0f;
 			gFluidSystem->setDynamicFriction(gFluidDynamicFriction);
-			gActiveScene->fluidDynamicFriction = gFluidDynamicFriction;
+			gActiveScene->sim.dynamicFriction = gFluidDynamicFriction;
 		} break;
 
 		case FLUID_PROPERTY_PARTICLEMASS:
 		{
 			gFluidParticleMass += value / 1000.0f;
 			gFluidSystem->setParticleMass(gFluidParticleMass);
-			gActiveScene->fluidParticleMass = gFluidParticleMass;
+			gActiveScene->sim.particleMass = gFluidParticleMass;
 		} break;
 
 		case FLUID_PROPERTY_DEPTH_BLUR_SCALE:
@@ -2332,16 +2332,16 @@ void initResources() {
 	// Create scene
 	printf("  Load scene\n");
 	gActiveScene = new CScene(
+		FluidSimulationProperties::DefaultParticleRadius,
 		FluidSimulationProperties::DefaultViscosity, 
 		FluidSimulationProperties::DefaultStiffness, 
 		FluidSimulationProperties::DefaultParticleRestDistanceFactor, 
 		FluidRenderProperties::DefaultParticleRenderFactor, 
-		FluidRenderProperties::DefaultParticleRadius, 
 		FluidRenderProperties::DefaultMinDensity, 
 		gDefaultRigidBodyDensity);
 	gActiveScene->load("scene.xml");
-	gFluidParticleRadius = gActiveScene->fluidParticleRadius;
-	gFluidParticleRenderFactor = gActiveScene->fluidParticleRenderFactor;
+	gFluidParticleRadius = gActiveScene->sim.particleRadius;
+	gFluidParticleRenderFactor = gActiveScene->render.particleRenderFactor;
 	gSSFCurrentFluidIndex = gActiveScene->fluidColorDefaultIndex;
 
 	// Create spherical point sprites

@@ -5,6 +5,7 @@
 #include <glm/glm.hpp>
 
 #include "ScreenSpaceFluidRendering.h"
+#include "FluidProperties.h"
 #include "XMLUtils.h"
 
 struct CScene
@@ -13,31 +14,15 @@ struct CScene
 
 	std::vector<FluidColor> fluidColors;
 
-	float fluidRestitution;
-	float fluidDamping;
-	float fluidDynamicFriction;
-	float fluidMaxMotionDistance;
-	float fluidRestOffset;
-	float fluidContactOffset;
-	float fluidParticleMass;
-	float fluidViscosity;
-	float fluidStiffness;
-	float fluidParticleRadius;
-	float fluidParticleDistanceFactor;
-	float fluidParticleRenderFactor;
-	float fluidParticleMinDensity;
-	float defaultFluidViscosity;
-	float defaultFluidStiffness;
-	float defaultFluidParticleRadius;
-	float defaultFluidParticleDistanceFactor;
-	float defaultFluidParticleRenderFactor;
-	float defaultFluidParticleMinDensity;
-	float defaultFluidColorFalloffScale;
+	FluidSimulationProperties sim;
+	FluidRenderProperties render;
+
 	float defaultActorDensity;
+
 	int fluidColorDefaultIndex;
 	uint32_t numCPUThreads;
 
-	CScene(const float fluidViscosity, const float fluidStiffness, const float fluidParticleDistanceFactor, const float fluidParticleRenderFactor, const float fluidParticleRadius, const float fluidParticleMinDensity, const float defaultActorDensity);
+	CScene(const float fluidParticleRadius, const float fluidViscosity, const float fluidStiffness, const float fluidParticleDistanceFactor, const float fluidParticleRenderFactor, const float fluidParticleMinDensity, const float defaultActorDensity);
 	~CScene(void);
 
 	inline size_t getFluidColorCount() const { return fluidColors.size(); };

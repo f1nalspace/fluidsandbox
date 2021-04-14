@@ -4,28 +4,18 @@
 
 #include <rapidxml/rapidxml.hpp>
 
-CScene::CScene(const float fluidViscosity, const float fluidStiffness, const float fluidParticleDistanceFactor, const float fluidParticleRenderFactor, const float fluidParticleRadius, const float fluidParticleMinDensity, const float defaultActorDensity)
+CScene::CScene(const float fluidParticleRadius, const float fluidViscosity, const float fluidStiffness, const float fluidParticleDistanceFactor, const float fluidParticleRenderFactor, const float fluidParticleMinDensity, const float defaultActorDensity)
 {
-	fluidRestitution = 0.3f;
-	fluidDamping = 0.0f;
-	fluidDynamicFriction = 0.001f;
-	fluidMaxMotionDistance = 0.3f;
-	fluidRestOffset = 0.12f;
-	fluidContactOffset = 0.036f;
-	fluidParticleMass = 0.005f;
-	this->defaultFluidViscosity = fluidViscosity;
-	this->defaultFluidStiffness = fluidStiffness;
-	this->defaultFluidParticleDistanceFactor = fluidParticleDistanceFactor;
-	this->defaultFluidParticleRenderFactor = fluidParticleRenderFactor;
-	this->defaultFluidParticleRadius = fluidParticleRadius;
-	this->defaultFluidParticleMinDensity = fluidParticleMinDensity;
+	sim = FluidSimulationProperties::Compute(fluidParticleRadius, fluidParticleDistanceFactor);
+	sim.viscosity = fluidViscosity;
+	sim.stiffness = fluidStiffness;
+	
+	render = FluidRenderProperties();
+	render.particleRenderFactor = fluidParticleRenderFactor;
+	render.minDensity = fluidParticleMinDensity;
+
 	this->defaultActorDensity = defaultActorDensity;
-	this->fluidViscosity = fluidViscosity;
-	this->fluidStiffness = fluidStiffness;
-	this->fluidParticleDistanceFactor = fluidParticleDistanceFactor;
-	this->fluidParticleRenderFactor = fluidParticleRenderFactor;
-	this->fluidParticleRadius = fluidParticleRadius;
-	this->fluidParticleMinDensity = fluidParticleMinDensity;
+
 	backgroundColor = glm::vec3(0.0f, 0.0f, 0.0f);
 	numCPUThreads = 4;
 	resetFluidColors();
@@ -101,20 +91,23 @@ void CScene::load(const char* filename)
 			// Fluid system
 			rapidxml::xml_node<> *fluidSystemNode = rootNode->first_node("FluidSystem");
 			if (fluidSystemNode)
-			{
-				fluidRestitution = XMLUtils::findNodeFloat(fluidSystemNode, "Restitution", 0.3f);
-				fluidDamping = XMLUtils::findNodeFloat(fluidSystemNode, "Damping", 0.0f);
-				fluidDynamicFriction = XMLUtils::findNodeFloat(fluidSystemNode, "DynamicFriction", 0.001f);
-				fluidMaxMotionDistance = XMLUtils::findNodeFloat(fluidSystemNode, "MaxMotionDistance", 0.3f);
-				fluidRestOffset = XMLUtils::findNodeFloat(fluidSystemNode, "RestOffset", 0.3f);
-				fluidContactOffset = XMLUtils::findNodeFloat(fluidSystemNode, "ContactOffset", 2.0f);
-				fluidParticleMass = XMLUtils::findNodeFloat(fluidSystemNode, "ParticleMass", 0.005f);
-				fluidViscosity = XMLUtils::findNodeFloat(fluidSystemNode, "Viscosity", defaultFluidViscosity);
-				fluidStiffness = XMLUtils::findNodeFloat(fluidSystemNode, "Stiffness", defaultFluidStiffness);
-				fluidParticleRadius = XMLUtils::findNodeFloat(fluidSystemNode, "ParticleRadius", 0.05f);
-				fluidParticleDistanceFactor = XMLUtils::findNodeFloat(fluidSystemNode, "ParticleDistanceFactor", defaultFluidParticleDistanceFactor);
-				fluidParticleRenderFactor = XMLUtils::findNodeFloat(fluidSystemNode, "ParticleRenderFactor", defaultFluidParticleRenderFactor);
-				fluidParticleMinDensity = XMLUtils::findNodeFloat(fluidSystemNode, "ParticleMinDensity", 0.01f);
+			{			
+				const float particleDistanceFactor = XMLUtils::findNodeFloat(fluidSystemNode, "ParticleDistanceFactor", FluidSimulationProperties::DefaultParticleRestDistanceFactor);
+				const float particleRadius = XMLUtils::findNodeFloat(fluidSystemNode, "ParticleRadius", FluidSimulationProperties::DefaultParticleRadius);
+
+				sim = FluidSimulationProperties::Compute(particleRadius, particleDistanceFactor);
+				sim.restitution = XMLUtils::findNodeFloat(fluidSystemNode, "Restitution", FluidSimulationProperties::DefaultRestitution);
+				sim.damping = XMLUtils::findNodeFloat(fluidSystemNode, "Damping", FluidSimulationProperties::DefaultDamping);
+				sim.dynamicFriction = XMLUtils::findNodeFloat(fluidSystemNode, "DynamicFriction", FluidSimulationProperties::DefaultDynamicFriction);
+				sim.maxMotionDistance = XMLUtils::findNodeFloat(fluidSystemNode, "MaxMotionDistance", FluidSimulationProperties::DefaultMaxMotionDistance);
+				sim.restOffset = XMLUtils::findNodeFloat(fluidSystemNode, "RestOffset", FluidSimulationProperties::DefaultRestOffset);
+				sim.contactOffset = XMLUtils::findNodeFloat(fluidSystemNode, "ContactOffset", FluidSimulationProperties::DefaultContactOffset);
+				sim.particleMass = XMLUtils::findNodeFloat(fluidSystemNode, "ParticleMass", FluidSimulationProperties::DefaultParticleMass);
+				sim.viscosity = XMLUtils::findNodeFloat(fluidSystemNode, "Viscosity", FluidSimulationProperties::DefaultViscosity);
+				sim.stiffness = XMLUtils::findNodeFloat(fluidSystemNode, "Stiffness", FluidSimulationProperties::DefaultStiffness);
+
+				render.particleRenderFactor = XMLUtils::findNodeFloat(fluidSystemNode, "ParticleRenderFactor", FluidRenderProperties::DefaultParticleRenderFactor);
+				render.minDensity = XMLUtils::findNodeFloat(fluidSystemNode, "ParticleMinDensity", FluidRenderProperties::DefaultMinDensity);
 			}
 
 			// Properties
