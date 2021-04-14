@@ -239,6 +239,7 @@ Copy "$(SolutionDir)Libraries\glew\bin\$(Platform)\glew32.dll" "$(OutDir)"</Comm
     <ClCompile Include="GLSLManager.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="OSLowLevel.cpp" />
+    <ClCompile Include="PhysicsEngine.cpp" />
     <ClCompile Include="Primitives.cpp" />
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="Scene.cpp" />
@@ -265,6 +266,7 @@ Copy "$(SolutionDir)Libraries\glew\bin\$(Platform)\glew32.dll" "$(OutDir)"</Comm
     <ClInclude Include="FluidSystem.h" />
     <ClInclude Include="FontAtlas.h" />
     <ClInclude Include="Fonts.h" />
+    <ClInclude Include="PhysicsEngine.h" />
     <ClInclude Include="TextureFont.h" />
     <ClInclude Include="Frustum.h" />
     <ClInclude Include="GLSL.h" />

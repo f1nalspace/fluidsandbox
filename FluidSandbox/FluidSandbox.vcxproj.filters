@@ -23,6 +23,7 @@
     <ClCompile Include="VBO.cpp" />
     <ClCompile Include="FontAtlas.cpp" />
     <ClCompile Include="TextureFont.cpp" />
+    <ClCompile Include="PhysicsEngine.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.hpp" />
@@ -56,6 +57,7 @@
     <ClInclude Include="AllFBOs.hpp" />
     <ClInclude Include="AllShaders.hpp" />
     <ClInclude Include="FluidProperties.h" />
+    <ClInclude Include="PhysicsEngine.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="LICENSE.txt" />
