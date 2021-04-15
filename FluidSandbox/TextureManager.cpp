@@ -24,7 +24,7 @@ CTexture *CTextureManager::loadCubemap(const char *filename) {
 		{3, 1}
 	};
 
-	CTextureCubemap *result = NULL;
+	CTextureCubemap *result = nullptr;
 
 	FREE_IMAGE_FORMAT imageFormat = FreeImage_GetFileType(filename);
 	FIBITMAP *bitmap = FreeImage_Load(imageFormat, filename);
@@ -114,7 +114,7 @@ CTexture *CTextureManager::loadCubemap(const char *filename) {
 }
 
 CTexture *CTextureManager::load2D(const char *filename) {
-	CTexture2D *result = NULL;
+	CTexture2D *result = nullptr;
 
 	FREE_IMAGE_FORMAT imageFormat = FreeImage_GetFileType(filename);
 	FIBITMAP *bitmap = FreeImage_Load(imageFormat, filename);
@@ -175,5 +175,5 @@ CTexture *CTextureManager::addCubemap(const std::string &name, const std::string
 CTexture *CTextureManager::get(const std::string &name) {
 	if(nameToTextureMap.count(name) > 0)
 		return (*nameToTextureMap.find(name)).second;
-	return NULL;
+	return nullptr;
 }

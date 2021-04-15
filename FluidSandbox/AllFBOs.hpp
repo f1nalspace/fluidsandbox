@@ -8,8 +8,8 @@ public:
 	CTexture2D *sceneTexture;
 	CSceneFBO(int width, int height):
 		CFBO(width, height),
-		depthTexture(NULL),
-		sceneTexture(NULL) {
+		depthTexture(nullptr),
+		sceneTexture(nullptr) {
 
 	}
 };
@@ -20,8 +20,8 @@ public:
 	CTexture2D *colorTexture;
 	CSSFRDepthFBO(int width, int height):
 		CFBO(width, height),
-		depthTexture(NULL),
-		colorTexture(NULL) {
+		depthTexture(nullptr),
+		colorTexture(nullptr) {
 
 	}
 };
@@ -34,10 +34,10 @@ public:
 	CTexture2D *waterTexture;
 	CSSFRFullFBO(int width, int height):
 		CFBO(width, height),
-		thicknessTexture(NULL),
-		depthSmoothATexture(NULL),
-		depthSmoothBTexture(NULL),
-		waterTexture(NULL) {
+		thicknessTexture(nullptr),
+		depthSmoothATexture(nullptr),
+		depthSmoothBTexture(nullptr),
+		waterTexture(nullptr) {
 	}
 };
 

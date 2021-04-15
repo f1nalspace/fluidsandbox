@@ -27,7 +27,7 @@ CFluidSystem::~CFluidSystem(void)
 {
 	this->indexPool->freeIndices();
 	this->indexPool->release();
-	this->particleFluid = NULL;
+	this->particleFluid = nullptr;
 }
 
 int CFluidSystem::createParticles(const uint32_t numParticles, physx::PxVec3 *pos, physx::PxVec3 *vel)

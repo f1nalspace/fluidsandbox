@@ -12,7 +12,7 @@ public:
     */
     static T* getInstance()
     {
-        if (_instance == NULL) _instance = new T;      
+        if (_instance == nullptr) _instance = new T;      
         return _instance;
     };
 
@@ -24,7 +24,7 @@ public:
     static void releaseInstance()
     {
         delete _instance;
-        _instance = NULL;
+        _instance = nullptr;
     };
 
 protected:
@@ -54,4 +54,4 @@ private:
 };
 
 //! static class member initialisation.
-template <typename T> T* CSingleton<T>::_instance = NULL;
+template <typename T> T* CSingleton<T>::_instance = nullptr;

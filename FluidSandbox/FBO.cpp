@@ -9,7 +9,7 @@ CFBO::CFBO(const int width, const int height):
 	textureCount(0),
 	maxColorAttachments(0) {
 	for(uint32_t i = 0; i < MaxTextureCount; ++i)
-		textures[i] = NULL;
+		textures[i] = nullptr;
 
 	GLint temp;
 	glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, &temp);
@@ -79,7 +79,7 @@ CTexture2D *CFBO::addTextureTarget(const GLint internalFormat, const GLenum form
 	// Create new texture
 	CTexture2D *newtex = new CTexture2D(GL_TEXTURE_2D, internalFormat, format, type, width, height, texfilter, texfilter);
 	newtex->setUserData(fbotype);
-	newtex->upload(NULL);
+	newtex->upload(nullptr);
 
 	// Add texture to array and map
 	textures[textureCount++] = newtex;
@@ -92,7 +92,7 @@ CTexture2D *CFBO::addRenderTarget(const GLint internalFormat, const GLenum forma
 	// Create new texture
 	CTexture2D *newtex = new CTexture2D(GL_TEXTURE_2D, internalFormat, format, type, width, height, texfilter, texfilter);
 	newtex->setUserData(fbotype);
-	newtex->upload(NULL);
+	newtex->upload(nullptr);
 
 	// Add texture to array and map
 	textures[textureCount++] = newtex;

@@ -30,7 +30,7 @@ void CGLSL::attachShader(const GLuint shaderType, const char* source)
 	GLint r = GL_FALSE;
 
 	GLuint sid = glCreateShader(shaderType);
-	glShaderSource(sid, 1, &source, NULL);
+	glShaderSource(sid, 1, &source, nullptr);
 	glCompileShader(sid);
 	glGetShaderiv(sid, GL_COMPILE_STATUS, &r);
 	if (r == GL_FALSE)

@@ -6,8 +6,8 @@
 #include "OSLowLevel.h"
 
 FontAtlas::FontAtlas():
-	glyphs(NULL),
-	bitmap(NULL),
+	glyphs(nullptr),
+	bitmap(nullptr),
 	bitmapWidth(0),
 	bitmapHeight(0){
 	info = {};
@@ -145,7 +145,7 @@ FontAtlas FontAtlas::LoadFromMemory(const uint8_t *fontData, const int fontIndex
 FontAtlas FontAtlas::LoadFromFile(const std::string &filePath, const int fontIndex, const float fontSize, const uint32_t minChar, const uint32_t maxChar, const uint32_t minBitmapSize, const uint32_t maxBitmapSize) {
 	FontAtlas result = {};
 	const uint8_t *data = COSLowLevel::getInstance()->getBinaryFileContent(filePath);
-	if(data != NULL) {
+	if(data != nullptr) {
 		result = LoadFromMemory(data, fontIndex, fontSize, minChar, maxChar, minBitmapSize, maxBitmapSize);
 	}
 	return(result);

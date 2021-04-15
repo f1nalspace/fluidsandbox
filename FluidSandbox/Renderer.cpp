@@ -24,7 +24,7 @@ CRenderer::CRenderer(void)
 	glDisable(GL_TEXTURE_CUBE_MAP);
 	for (int i = 0; i < MAX_TEXTURES; i++){
 		textureStates[i].active = false;
-		textureStates[i].texture = NULL;
+		textureStates[i].texture = nullptr;
 	}
 
 	glShadeModel(GL_SMOOTH);
@@ -270,9 +270,9 @@ void CRenderer::Flip()
 
 void CRenderer::EnableTexture(const int index, CTexture* texture)
 {
-	assert(texture != NULL);
+	assert(texture != nullptr);
 	assert(!textureStates[index].active);
-	assert(textureStates[index].texture == NULL);
+	assert(textureStates[index].texture == nullptr);
 	glActiveTexture(GL_TEXTURE0 + index);
 	glEnable(texture->getTarget());
 	texture->bind();
@@ -288,5 +288,5 @@ void CRenderer::DisableTexture(const int index, CTexture* texture)
 	texture->unbind();
 	glDisable(texture->getTarget());
 	textureStates[index].active = false;
-	textureStates[index].texture = NULL;
+	textureStates[index].texture = nullptr;
 }

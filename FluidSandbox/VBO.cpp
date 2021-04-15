@@ -68,7 +68,7 @@ void CVBO::bind()
 
 void CVBO::drawElements(const GLenum mode)
 {
-    glDrawElements(mode, indexCount, GL_UNSIGNED_INT, NULL);
+    glDrawElements(mode, indexCount, GL_UNSIGNED_INT, nullptr);
 }
 
 void CVBO::unbind()

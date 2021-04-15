@@ -47,7 +47,7 @@ const uint8_t *COSLowLevel::getBinaryFileContent(const std::string &filename) {
 		myfile.read((char *)result, size);
 		myfile.close();
 	}
-	return NULL;
+	return nullptr;
 }
 
 bool COSLowLevel::fileExists(const char* filename)
@@ -84,7 +84,7 @@ double COSLowLevel::getTimeMilliSeconds() {
 
 const std::string COSLowLevel::getAppPath(const int argc, char** argv) {
 	char buffer[MAX_PATH];
-	GetModuleFileNameA(NULL, buffer, MAX_PATH);
+	GetModuleFileNameA(nullptr, buffer, MAX_PATH);
 	std::string fullpath = buffer;
 	return std::string(fullpath, 0, fullpath.rfind("\\"));
 }

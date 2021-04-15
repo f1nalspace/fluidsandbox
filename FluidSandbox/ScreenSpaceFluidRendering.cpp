@@ -11,13 +11,13 @@ CScreenSpaceFluidRendering::CScreenSpaceFluidRendering(const int width, const in
 	curFBOHeight = CalcFBOSize(height, curFBOFactor);
 
 	// Init pointers
-	renderer = NULL;
-	pointSprites = NULL;
-	pointSpritesShader = NULL;
-	sceneTexture = NULL;
-	skyboxCubemap = NULL;
-	depthFrameBuffer = NULL;
-	fullFrameBuffer = NULL;
+	renderer = nullptr;
+	pointSprites = nullptr;
+	pointSpritesShader = nullptr;
+	sceneTexture = nullptr;
+	skyboxCubemap = nullptr;
+	depthFrameBuffer = nullptr;
+	fullFrameBuffer = nullptr;
 
 	// Check if max color attachments is at least 4
 	if (CFBO::getMaxColorAttachments() >= 4)
@@ -97,10 +97,10 @@ CScreenSpaceFluidRendering::~CScreenSpaceFluidRendering(void)
 		delete fullFrameBuffer;
 
 	// Release pointers
-	sceneTexture = NULL;
-	pointSprites = NULL;
-	pointSpritesShader = NULL;
-	renderer = NULL;
+	sceneTexture = nullptr;
+	pointSprites = nullptr;
+	pointSpritesShader = nullptr;
+	renderer = nullptr;
 }
 
 void CScreenSpaceFluidRendering::DepthPass(const unsigned int numPointSprites, const glm::mat4 &proj, const glm::mat4 &view, const float zfar, const float znear, const int wH)
@@ -143,7 +143,7 @@ void CScreenSpaceFluidRendering::ThicknessPass(const unsigned int numPointSprite
 
 void CScreenSpaceFluidRendering::RenderPointSprites(const unsigned int numPointSprites, const glm::mat4 &proj, const glm::mat4 &view, const float zfar, const float znear, CPointSpritesShader* shader, const int wH)
 {
-	if (shader != NULL){
+	if (shader != nullptr){
 		shader->enable();
 		shader->uniform1f(shader->ulocPointScale, CSphericalPointSprites::GetPointScale(wH, 50.0f));
 		shader->uniform1f(shader->ulocPointRadius, particleRadius);
@@ -153,7 +153,7 @@ void CScreenSpaceFluidRendering::RenderPointSprites(const unsigned int numPointS
 		shader->uniformMatrix4(shader->ulocProjMat, &proj[0][0]);
 	}
 	pointSprites->Draw(numPointSprites);
-	if (shader != NULL){
+	if (shader != nullptr){
 		shader->disable();
 	}
 }
@@ -369,7 +369,7 @@ void CScreenSpaceFluidRendering::Render(CCamera &cam, const unsigned int numPoin
 				renderer->SetColor(&dstate.fluidColor.color[0]);
 			else
 				renderer->SetColor(1,1,1,1);
-			RenderPointSprites(numPointSprites, mproj, mview, cam.farClip, cam.nearClip, NULL, wH);
+			RenderPointSprites(numPointSprites, mproj, mview, cam.farClip, cam.nearClip, nullptr, wH);
 			renderer->SetColor(1,1,1,1);
 			break;
 		}

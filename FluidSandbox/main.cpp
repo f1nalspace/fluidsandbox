@@ -149,6 +149,7 @@ License:
 #include "FluidProperties.h"
 #include "Light.h"
 #include "GLSLManager.h"
+#include "TextureFont.h"
 
 #include "AllShaders.hpp"
 #include "AllFBOs.hpp"
@@ -192,22 +193,22 @@ const char *PVD_Host = "localhost";
 const int PVD_Port = 5425;
 
 // PhysX SDK & Scene
-static physx::PxFoundation *gPhysXFoundation = NULL;
-static physx::PxPhysics *gPhysicsSDK = NULL;
+static physx::PxFoundation *gPhysXFoundation = nullptr;
+static physx::PxPhysics *gPhysicsSDK = nullptr;
 static physx::PxDefaultErrorCallback gDefaultErrorCallback;
 static physx::PxDefaultAllocator gDefaultAllocatorCallback;
 static physx::PxSimulationFilterShader gDefaultFilterShader = physx::PxDefaultSimulationFilterShader;
-static physx::PxMaterial *gDefaultMaterial = NULL;
-static physx::PxScene *gScene = NULL;
+static physx::PxMaterial *gDefaultMaterial = nullptr;
+static physx::PxScene *gScene = nullptr;
 #ifdef PVD_ENABLED
-static physx::PxPvd *gPhysXVisualDebugger = NULL;
-static physx::PxPvdTransport *gPhysXPvdTransport = NULL;
+static physx::PxPvd *gPhysXVisualDebugger = nullptr;
+static physx::PxPvdTransport *gPhysXPvdTransport = nullptr;
 static bool gIsPhysXPvdConnected = false;
 #endif
 
 // For GPU Acceleration
-static physx::PxGpuDispatcher *gGPUDispatcher = NULL;
-static physx::PxCudaContextManager *gCudaContextManager = NULL;
+static physx::PxGpuDispatcher *gGPUDispatcher = nullptr;
+static physx::PxCudaContextManager *gCudaContextManager = nullptr;
 
 // Window vars
 static bool windowFullscreen = false;
@@ -264,14 +265,14 @@ static uint32_t gTotalFluidParticles = 0;
 constexpr int MAX_FLUID_PARTICLES = 512000;
 
 static glm::vec3 gRigidBodyFallPos(0.0f, 10.0f, 0.0f);
-static CFluidSystem *gFluidSystem = NULL;
+static CFluidSystem *gFluidSystem = nullptr;
 
 // Debug types
 static FluidDebugType gFluidDebugType = FluidDebugType::Final;
 
-static CSphericalPointSprites *gPointSprites = NULL;
-static CPointSpritesShader *gPointSpritesShader = NULL;
-static CLightingShader *gLightingShader = NULL;
+static CSphericalPointSprites *gPointSprites = nullptr;
+static CPointSpritesShader *gPointSpritesShader = nullptr;
+static CLightingShader *gLightingShader = nullptr;
 
 static bool gFluidUseGPUAcceleration = false;
 
@@ -290,7 +291,7 @@ static float gFluidParticleRadius = 0.0f;
 static float gFluidParticleRenderFactor = 0.0f;
 
 static std::vector<FluidScenario *> gFluidScenarios;
-static FluidScenario *gActiveFluidScenario = NULL;
+static FluidScenario *gActiveFluidScenario = nullptr;
 static int gActiveFluidScenarioIdx = -1;
 
 // Fluid modification
@@ -326,10 +327,10 @@ static float dist = 15;
 static int lastFrameTime = 0;
 
 // Renderer
-static CRenderer *gRenderer = NULL;
+static CRenderer *gRenderer = nullptr;
 
 // Fluid Renderer
-static CScreenSpaceFluidRendering *gFluidRenderer = NULL;
+static CScreenSpaceFluidRendering *gFluidRenderer = nullptr;
 static SSFRenderMode gSSFRenderMode = SSFRenderMode::Fluid;
 static float gSSFDetailFactor = 1.0f;
 static float gSSFBlurDepthScale = 0.0008f;
@@ -337,25 +338,26 @@ static bool gSSFBlurActive = true;
 static bool gWaterAddBySceneChange = true;
 
 // Managers
-static CTextureManager *gTexMng = NULL;
-static CGLSLManager *gShaderMng = NULL;
+static CTextureManager *gTexMng = nullptr;
+static CGLSLManager *gShaderMng = nullptr;
 
 // Current fluid color index
 static int gSSFCurrentFluidIndex = 0;
 
 // Current scene
-static CScene *gActiveScene = NULL;
+static CScene *gActiveScene = nullptr;
 
 // Current camera
 static CCamera gCamera;
 
 // Non fluid rendering
-static CSceneFBO *gSceneFBO = NULL;
-static CGLSL *gSceneShader = NULL;
-static CVBO *gSkyboxVBO = NULL;
-static CSkyboxShader *gSkyboxShader = NULL;
-static CTexture *gSkyboxCubemap = NULL;
-static CTexture *gTestTexture = NULL;
+static CSceneFBO *gSceneFBO = nullptr;
+static CGLSL *gSceneShader = nullptr;
+static CVBO *gSkyboxVBO = nullptr;
+static CSkyboxShader *gSkyboxShader = nullptr;
+static CTexture *gSkyboxCubemap = nullptr;
+static CTexture *gTestTexture = nullptr;
+static CTextureFont *gFontTexture = nullptr;
 
 // Timing
 static float gTotalTimeElapsed = 0;
@@ -399,7 +401,7 @@ float getRandomFloat(float min, float max) {
 }
 
 void setActorDrain(physx::PxActor *actor, const bool enable) {
-	assert(actor != NULL);
+	assert(actor != nullptr);
 
 	physx::PxType actorType = actor->getConcreteType();
 	if(actorType == physx::PxConcreteType::eRIGID_STATIC || actorType == physx::PxConcreteType::eRIGID_DYNAMIC) {
@@ -710,7 +712,7 @@ static void AddScenarioActor(physx::PxScene &scene, Actor *actor) {
 }
 
 static void SaveFluidPositions() {
-	float minDensity = gActiveFluidScenario != NULL ? gActiveFluidScenario->render.minDensity : gActiveScene->render.minDensity;
+	float minDensity = gActiveFluidScenario != nullptr ? gActiveFluidScenario->render.minDensity : gActiveScene->render.minDensity;
 	float *data = gPointSprites->Map();
 	bool noDensity = gSSFRenderMode == SSFRenderMode::Points;
 	gFluidSystem->writeToVBO(data, gTotalFluidParticles, noDensity, minDensity);
@@ -879,13 +881,13 @@ void InitializePhysX() {
 	gPhysXFoundation = PxCreateFoundation(PX_FOUNDATION_VERSION, gDefaultAllocatorCallback, gDefaultErrorCallback);
 	gPhysicsSDK = PxCreatePhysics(PX_PHYSICS_VERSION, *gPhysXFoundation, physx::PxTolerancesScale());
 
-	if(gPhysicsSDK == NULL) {
+	if(gPhysicsSDK == nullptr) {
 		std::cerr << "  Could not create PhysX SDK, exiting!" << std::endl;
 		exit(1);
 	}
 
 	// Initialize PhysX Extensions
-	if(!PxInitExtensions(*gPhysicsSDK, NULL)) {
+	if(!PxInitExtensions(*gPhysicsSDK, nullptr)) {
 		std::cerr << "  Could not initialize PhysX extensions, exiting!" << std::endl;
 		exit(1);
 	}
@@ -894,9 +896,9 @@ void InitializePhysX() {
 #ifdef PVD_ENABLED
 	gIsPhysXPvdConnected = false;
 	gPhysXVisualDebugger = PxCreatePvd(*gPhysXFoundation);
-	if(gPhysXVisualDebugger != NULL) {
+	if(gPhysXVisualDebugger != nullptr) {
 		gPhysXPvdTransport = PxDefaultPvdSocketTransportCreate(PVD_Host, PVD_Port, 10000);
-		if(gPhysXPvdTransport != NULL) {
+		if(gPhysXPvdTransport != nullptr) {
 			printf("  Connect to PVD on host '%s' with port %d\n", PVD_Host, PVD_Port);
 			if(!gPhysXVisualDebugger->connect(*gPhysXPvdTransport, PxPvdInstrumentationFlag::eALL)) {
 				printf("  Failed to connect to PVD on host '%s' with port %d!\n", PVD_Host, PVD_Port);
@@ -1300,7 +1302,7 @@ void ShutdownPhysX() {
 		gCudaContextManager->release();
 
 #ifdef PVD_ENABLED
-	if(gPhysXVisualDebugger != NULL) {
+	if(gPhysXVisualDebugger != nullptr) {
 		if(gPhysXVisualDebugger->isConnected())
 			gPhysXVisualDebugger->disconnect();
 		gPhysXVisualDebugger->release();
@@ -2360,7 +2362,7 @@ void LoadFluidScenarios() {
 		gActiveFluidScenario = gFluidScenarios[gActiveFluidScenarioIdx];
 	} else {
 		gActiveFluidScenarioIdx = -1;
-		gActiveFluidScenario = NULL;
+		gActiveFluidScenario = nullptr;
 		std::cerr << "  No fluid scenario found, fluid cannot be used!" << std::endl;
 	}
 }
@@ -2558,7 +2560,7 @@ void main(int argc, char **argv) {
 	appPath = COSLowLevel::getInstance()->getAppPath(argc, argv);
 
 	// Initialize random generator
-	srand((unsigned int)time(NULL));
+	srand((unsigned int)time(nullptr));
 
 	// Initialize glut window
 	printf("Initialize Window\n");
@@ -2567,7 +2569,7 @@ void main(int argc, char **argv) {
 	glutInitWindowSize(windowWidth, windowHeight);
 	glutCreateWindow(APPTITLE.c_str());
 	HWND hwnd = FindWindow(L"GLUT", L"ogl");
-	SetWindowPos(hwnd, HWND_TOPMOST, NULL, NULL, NULL, NULL, SWP_NOREPOSITION | SWP_NOSIZE);
+	SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOREPOSITION | SWP_NOSIZE);
 	glutCloseFunc(OnShutdown);
 	lastWindowPosX = glutGet(GLUT_WINDOW_X);
 	lastWindowPosY = glutGet(GLUT_WINDOW_Y);

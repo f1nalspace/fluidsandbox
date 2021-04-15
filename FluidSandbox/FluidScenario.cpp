@@ -50,7 +50,7 @@ FluidScenario *FluidScenario::load(const char *filename, CScene *scene) {
 			doc.parse<0>(&xml_copy[0]);
 		} catch(...) {
 			std::cerr << "could not parse xml!" << std::endl;
-			return NULL;
+			return nullptr;
 		}
 		rapidxml::xml_node<> *rootNode = doc.first_node("Scenario");
 		if(rootNode) {
@@ -220,6 +220,6 @@ FluidScenario *FluidScenario::load(const char *filename, CScene *scene) {
 
 		return newScenario;
 	} else {
-		return NULL;
+		return nullptr;
 	}
 }

@@ -17,7 +17,7 @@ CGLSLManager::~CGLSLManager(void)
 CGLSL* CGLSLManager::add(const std::string &name, const GLuint what, const std::string &filename)
 {
 	CGLSL* shader = get(name);
-	if (shader == NULL) {
+	if (shader == nullptr) {
 		shader = new CGLSL();
 		nameShaderMap.insert(std::make_pair(name, shader));
 	}
@@ -43,5 +43,5 @@ CGLSL* CGLSLManager::addGeometry(const std::string &name, const std::string &fil
 CGLSL* CGLSLManager::get(const std::string &name){
 	if (nameShaderMap.count(name) > 0)
 		return (*nameShaderMap.find(name)).second;
-	return NULL;
+	return nullptr;
 }

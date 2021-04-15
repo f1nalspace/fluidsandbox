@@ -17,7 +17,7 @@ void CSphericalPointSprites::Allocate(const unsigned int total)
 	totalSpriteCount = total;
 	glGenBuffersARB(1, &vboId);
 	glBindBufferARB(GL_ARRAY_BUFFER_ARB, vboId);
-	glBufferDataARB(GL_ARRAY_BUFFER_ARB, total * sizeof(float) * 4, NULL, GL_STREAM_DRAW_ARB);
+	glBufferDataARB(GL_ARRAY_BUFFER_ARB, total * sizeof(float) * 4, nullptr, GL_STREAM_DRAW_ARB);
 	glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
 }
 
@@ -40,7 +40,7 @@ void CSphericalPointSprites::Draw(const unsigned int count)
 float* CSphericalPointSprites::Map()
 {
 	glBindBufferARB(GL_ARRAY_BUFFER_ARB, vboId);
-	glBufferDataARB(GL_ARRAY_BUFFER_ARB, totalSpriteCount * sizeof(float) * 4, NULL, GL_STREAM_DRAW_ARB);
+	glBufferDataARB(GL_ARRAY_BUFFER_ARB, totalSpriteCount * sizeof(float) * 4, nullptr, GL_STREAM_DRAW_ARB);
 	return (float*)glMapBufferARB(GL_ARRAY_BUFFER_ARB, GL_WRITE_ONLY);
 }
 
