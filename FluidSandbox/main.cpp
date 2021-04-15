@@ -380,7 +380,7 @@ struct OSDRenderPosition {
 	float fontHeight;
 	float lineHeight;
 
-	OSDRenderPosition(const int fontHeight, const float lineHeight):
+	OSDRenderPosition(const float fontHeight, const float lineHeight):
 		x(0),
 		y(0),
 		fontHeight(fontHeight),
@@ -921,7 +921,7 @@ void InitializePhysX() {
 		}
 	} else {
 		cerr << "  Failed creating visual debugger for PhysX, skip it!" << endl;
-}
+	}
 #endif
 
 	// Create the scene
@@ -1316,7 +1316,7 @@ void ShutdownPhysX() {
 		if(gPhysXVisualDebugger->isConnected())
 			gPhysXVisualDebugger->disconnect();
 		gPhysXVisualDebugger->release();
-}
+	}
 #endif
 
 	gPhysicsSDK->release();
@@ -1612,6 +1612,13 @@ void RenderOSD() {
 	// Enable blending
 	gRenderer->SetBlending(true);
 
+	if(showOSD) {
+		// Draw background
+		gRenderer->SetColor(0.1f, 0.1f, 0.1f, 0.2f);
+		gRenderer->DrawSimpleRect(0.0f, 0.0f, (float)windowWidth * 0.25f, (float)windowHeight);
+		gRenderer->SetColor(1, 1, 1, 1);
+	}
+
 	// Font height is proportional to window height
 	const float targetFontScale = 0.0225f;
 	float fontHeight = (float)windowHeight * targetFontScale;
@@ -1621,20 +1628,12 @@ void RenderOSD() {
 	osdPos.y = 20;
 
 	// Render text
-	gRenderer->SetColor(1, 1, 1, 1);
 	sprintf_s(buffer, "FPS: %3.2f", fps);
 	RenderOSDLine(osdPos, buffer);
 	sprintf_s(buffer, "Show osd: %s (T)", showOSD ? "yes" : "no");
 	RenderOSDLine(osdPos, buffer);
 
 	if(showOSD) {
-		// Draw background
-		gRenderer->SetColor(0.1f, 0.1f, 0.1f, 0.2f);
-		gRenderer->DrawSimpleRect(0, 0, windowWidth * 0.25f, windowHeight);
-
-		// Draw fonts
-		gRenderer->SetColor(1, 1, 1, 1);
-
 		sprintf_s(buffer, "Drawed actors: %zu of %zu", gDrawedActors, gTotalActors);
 		RenderOSDLine(osdPos, buffer);
 		sprintf_s(buffer, "Total fluid particles: %lu", gTotalFluidParticles);
