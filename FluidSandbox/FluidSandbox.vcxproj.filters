@@ -2,7 +2,6 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClCompile Include="FBO.cpp" />
-    <ClCompile Include="FluidScenario.cpp" />
     <ClCompile Include="FluidSystem.cpp" />
     <ClCompile Include="Frustum.cpp" />
     <ClCompile Include="GLSL.cpp" />
@@ -23,11 +22,11 @@
     <ClCompile Include="FontAtlas.cpp" />
     <ClCompile Include="TextureFont.cpp" />
     <ClCompile Include="PhysicsEngine.cpp" />
+    <ClCompile Include="Scenario.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.hpp" />
     <ClInclude Include="FBO.h" />
-    <ClInclude Include="FluidScenario.h" />
     <ClInclude Include="FluidSystem.h" />
     <ClInclude Include="Frustum.h" />
     <ClInclude Include="GLSL.h" />
@@ -55,6 +54,7 @@
     <ClInclude Include="AllShaders.hpp" />
     <ClInclude Include="FluidProperties.h" />
     <ClInclude Include="PhysicsEngine.h" />
+    <ClInclude Include="Scenario.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="LICENSE.txt" />

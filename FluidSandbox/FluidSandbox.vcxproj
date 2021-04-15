@@ -231,7 +231,7 @@ Copy "$(SolutionDir)Libraries\glew\bin\$(Platform)\glew32.dll" "$(OutDir)"</Comm
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="FBO.cpp" />
-    <ClCompile Include="FluidScenario.cpp" />
+    <ClCompile Include="Scenario.cpp" />
     <ClCompile Include="FluidSystem.cpp" />
     <ClCompile Include="FontAtlas.cpp" />
     <ClCompile Include="Frustum.cpp" />
@@ -260,7 +260,7 @@ Copy "$(SolutionDir)Libraries\glew\bin\$(Platform)\glew32.dll" "$(OutDir)"</Comm
     <ClInclude Include="Camera.hpp" />
     <ClInclude Include="FBO.h" />
     <ClInclude Include="FluidProperties.h" />
-    <ClInclude Include="FluidScenario.h" />
+    <ClInclude Include="Scenario.h" />
     <ClInclude Include="FluidSystem.h" />
     <ClInclude Include="FontAtlas.h" />
     <ClInclude Include="Fonts.h" />

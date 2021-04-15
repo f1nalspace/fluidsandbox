@@ -11,7 +11,7 @@
 
 #include "AllActors.hpp"
 
-struct FluidScenario
+struct Scenario
 {
 	glm::vec3 actorCreatePosition;
 	glm::vec3 gravity;
@@ -24,9 +24,9 @@ struct FluidScenario
 	FluidSimulationProperties sim;
 	FluidRenderProperties render;
 
-	FluidScenario();
-	~FluidScenario(void);
+	Scenario();
+	~Scenario(void);
 
-	static FluidScenario* load(const char* filename, CScene* scene);
+	static Scenario* load(const char* filename, CScene* scene);
 };
 

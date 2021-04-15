@@ -140,7 +140,7 @@ License:
 #include "Camera.hpp"
 #include "Utils.h"
 #include "ScreenSpaceFluidRendering.h"
-#include "FluidScenario.h"
+#include "Scenario.h"
 #include "Actor.hpp"
 #include "Scene.h"
 #include "FluidSystem.h"
@@ -292,8 +292,8 @@ static float gFluidParticleMass = 0.0f;
 static float gFluidParticleRadius = 0.0f;
 static float gFluidParticleRenderFactor = 0.0f;
 
-static std::vector<FluidScenario *> gFluidScenarios;
-static FluidScenario *gActiveFluidScenario = nullptr;
+static std::vector<Scenario *> gFluidScenarios;
+static Scenario *gActiveFluidScenario = nullptr;
 static int gActiveFluidScenarioIdx = -1;
 
 // Fluid modification
@@ -2354,7 +2354,7 @@ void LoadFluidScenarios() {
 	for(unsigned int i = 0; i < scenFiles.size(); i++) {
 		std::string filename = "scenarios\\";
 		filename += scenFiles[i];
-		FluidScenario *scenario = FluidScenario::load(filename.c_str(), gActiveScene);
+		Scenario *scenario = Scenario::load(filename.c_str(), gActiveScene);
 		gFluidScenarios.push_back(scenario);
 	}
 
@@ -2536,7 +2536,7 @@ void OnShutdown() {
 	printf("Release Fluid Scenarios\n");
 
 	for(unsigned int i = 0; i < gFluidScenarios.size(); i++) {
-		FluidScenario *scen = gFluidScenarios[i];
+		Scenario *scen = gFluidScenarios[i];
 		delete scen;
 	}
 

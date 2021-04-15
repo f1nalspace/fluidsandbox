@@ -1,4 +1,4 @@
-#include "FluidScenario.h"
+#include "Scenario.h"
 
 #include <iostream>
 
@@ -12,7 +12,7 @@
 
 #include "AllActors.hpp"
 
-FluidScenario::FluidScenario() {
+Scenario::Scenario() {
 	this->name[0] = 0;
 	this->actorCreatePosition = glm::vec3(0.0f, 0.0f, 0.0f);
 	this->sim = FluidSimulationProperties();
@@ -21,7 +21,7 @@ FluidScenario::FluidScenario() {
 }
 
 
-FluidScenario::~FluidScenario(void) {
+Scenario::~Scenario(void) {
 	for(size_t i = 0; i < fluids.size(); i++) {
 		const FluidActor *fluid = fluids[i];
 		delete fluid;
@@ -35,7 +35,7 @@ FluidScenario::~FluidScenario(void) {
 	bodies.clear();
 }
 
-FluidScenario *FluidScenario::load(const char *filename, CScene *scene) {
+Scenario *Scenario::load(const char *filename, CScene *scene) {
 	if(COSLowLevel::getInstance()->fileExists(filename)) {
 		std::cout << "  Load scenario from file '" << filename << "'" << std::endl;
 
@@ -79,7 +79,7 @@ FluidScenario *FluidScenario::load(const char *filename, CScene *scene) {
 		xml_copy = Utils::toCharVector(xml);
 		doc.parse<0>(&xml_copy[0]);
 
-		FluidScenario *newScenario = new FluidScenario();
+		Scenario *newScenario = new Scenario();
 
 		rootNode = doc.first_node("Scenario");
 		if(rootNode) {
