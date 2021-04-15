@@ -1881,7 +1881,8 @@ void OnRender() {
 
 	// Render scene
 	gDrawedActors = 0;
-	RenderScene(mvp);
+	if (!drawFluidParticles || options.debugType == FluidDebugType::Final)
+		RenderScene(mvp);
 
 	// Render fluid
 	if(drawFluidParticles) {
