@@ -148,8 +148,10 @@ License:
 #include "TextureManager.h"
 #include "FluidProperties.h"
 #include "Light.h"
-#include "GLSLManager.h"
+
+// Font
 #include "TextureFont.h"
+#include "Fonts.h"
 
 #include "AllShaders.hpp"
 #include "AllFBOs.hpp"
@@ -339,7 +341,6 @@ static bool gWaterAddBySceneChange = true;
 
 // Managers
 static CTextureManager *gTexMng = nullptr;
-static CGLSLManager *gShaderMng = nullptr;
 
 // Current fluid color index
 static int gSSFCurrentFluidIndex = 0;
@@ -357,7 +358,11 @@ static CVBO *gSkyboxVBO = nullptr;
 static CSkyboxShader *gSkyboxShader = nullptr;
 static CTexture *gSkyboxCubemap = nullptr;
 static CTexture *gTestTexture = nullptr;
-static CTextureFont *gFontTexture = nullptr;
+
+static FontAtlas *gFontAtlas16 = nullptr;
+static FontAtlas *gFontAtlas32 = nullptr;
+static CTextureFont *gFontTexture16 = nullptr;
+static CTextureFont *gFontTexture32 = nullptr;
 
 // Timing
 static float gTotalTimeElapsed = 0;
@@ -370,15 +375,20 @@ constexpr static glm::vec4 DefaultDynamicRigidBodySphereColor(0, 0.85f, 0.0f, 1.
 constexpr static glm::vec4 DefaultDynamicRigidBodyCapsuleColor(0.85f, 0.85f, 0.0f, 1.0f);
 
 struct OSDRenderPosition {
-	int x;
-	int y;
-	OSDRenderPosition() {
-		x = 0;
-		y = 0;
+	float x;
+	float y;
+	float fontHeight;
+	float lineHeight;
+
+	OSDRenderPosition(const int fontHeight, const float lineHeight):
+		x(0),
+		y(0),
+		fontHeight(fontHeight),
+		lineHeight(lineHeight) {
 	}
 
 	void newLine() {
-		y += 14;
+		y += lineHeight;
 	}
 };
 
@@ -911,7 +921,7 @@ void InitializePhysX() {
 		}
 	} else {
 		cerr << "  Failed creating visual debugger for PhysX, skip it!" << endl;
-	}
+}
 #endif
 
 	// Create the scene
@@ -1306,7 +1316,7 @@ void ShutdownPhysX() {
 		if(gPhysXVisualDebugger->isConnected())
 			gPhysXVisualDebugger->disconnect();
 		gPhysXVisualDebugger->release();
-	}
+}
 #endif
 
 	gPhysicsSDK->release();
@@ -1573,10 +1583,17 @@ void Update(const glm::mat4 &proj, const glm::mat4 &modl, const float frametime)
 }
 
 void RenderOSDLine(OSDRenderPosition &osdpos, char *value) {
-	gRenderer->SetColor(0, 0, 0, 0);
-	RenderSpacedBitmapString(osdpos.x, osdpos.y, -1, GLUT_BITMAP_8_BY_13, value);
+	CTextureFont *font;
+	if(osdpos.fontHeight <= 32)
+		font = gFontTexture16;
+	else
+		font = gFontTexture32;
+
+
+	gRenderer->SetColor(0.0f, 0.0f, 0.0f, 1.0f);
+	gRenderer->DrawString(0, font, osdpos.x, osdpos.y, osdpos.fontHeight, value);
 	gRenderer->SetColor(1, 1, 1, 1);
-	RenderSpacedBitmapString(osdpos.x + 1, osdpos.y + 1, -1, GLUT_BITMAP_8_BY_13, value);
+	gRenderer->DrawString(0, font, osdpos.x + 1, osdpos.y + 1, osdpos.fontHeight, value);
 	osdpos.newLine();
 }
 
@@ -1592,50 +1609,32 @@ void RenderOSD() {
 	// Disable depth testing
 	gRenderer->SetDepthTest(false);
 
-	// Set font color
-	gRenderer->SetColor(1, 1, 1, 1);
-
 	// Enable blending
-	//gRenderer->SetBlending(true);
+	gRenderer->SetBlending(true);
 
-	/*
-	// Enable font texture
-	gRenderer->EnableTexture(0, fontTex);
+	// Font height is proportional to window height
+	const float targetFontScale = 0.0225f;
+	float fontHeight = (float)windowHeight * targetFontScale;
 
-	gFontShader->enable();
-	gFontShader->uniformMatrix4(gFontShader->getUniformLocation("mvp"), &orthoMVP[0][0]);
-	gFontShader->uniform1i(gFontShader->getUniformLocation("fontTex"), 0);
-
-	texVertexBuffer->bind();
-	glEnableClientState(GL_VERTEX_ARRAY);
-	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-	glVertexPointer(3, GL_FLOAT, sizeof(float) * 9, (void*)(0));
-	glTexCoordPointer(2, GL_FLOAT, sizeof(float) * 9, (void*)(0 + (sizeof(float) * 3)));
-	texVertexBuffer->drawElements(GL_TRIANGLES);
-	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-	glDisableClientState(GL_VERTEX_ARRAY);
-	texVertexBuffer->unbind();
-
-	gFontShader->disable();
-
-	// Disable font texture
-	gRenderer->DisableTexture(0, fontTex);
-	*/
-
-	// Disable blending
-	//gRenderer->SetBlending(false);
-
-	OSDRenderPosition osdPos;
+	OSDRenderPosition osdPos = OSDRenderPosition(fontHeight, fontHeight * 0.9f);
 	osdPos.x = 20;
 	osdPos.y = 20;
 
 	// Render text
+	gRenderer->SetColor(1, 1, 1, 1);
 	sprintf_s(buffer, "FPS: %3.2f", fps);
 	RenderOSDLine(osdPos, buffer);
 	sprintf_s(buffer, "Show osd: %s (T)", showOSD ? "yes" : "no");
 	RenderOSDLine(osdPos, buffer);
 
 	if(showOSD) {
+		// Draw background
+		gRenderer->SetColor(0.1f, 0.1f, 0.1f, 0.2f);
+		gRenderer->DrawSimpleRect(0, 0, windowWidth * 0.25f, windowHeight);
+
+		// Draw fonts
+		gRenderer->SetColor(1, 1, 1, 1);
+
 		sprintf_s(buffer, "Drawed actors: %zu of %zu", gDrawedActors, gTotalActors);
 		RenderOSDLine(osdPos, buffer);
 		sprintf_s(buffer, "Total fluid particles: %lu", gTotalFluidParticles);
@@ -1723,6 +1722,9 @@ void RenderOSD() {
 		sprintf_s(buffer, "Fluid min density: %f", gActiveFluidScenario ? gActiveFluidScenario->render.minDensity : gActiveScene->render.minDensity);
 		RenderOSDLine(osdPos, buffer);
 	}
+
+	// Disable blending
+	gRenderer->SetBlending(false);
 
 	// Enable depth testing
 	gRenderer->SetDepthTest(true);
@@ -1883,7 +1885,7 @@ void OnRender() {
 
 	// Render scene
 	gDrawedActors = 0;
-	if (!drawFluidParticles || options.debugType == FluidDebugType::Final)
+	if(!drawFluidParticles || options.debugType == FluidDebugType::Final)
 		RenderScene(mvp);
 
 	// Render fluid
@@ -2398,11 +2400,15 @@ void initResources() {
 	// Create texture manager
 	printf("  Create texture manager\n");
 	gTexMng = new CTextureManager();
+
 	gSkyboxCubemap = gTexMng->addCubemap("skybox", "textures\\skybox_texture.jpg");
+
 	gTestTexture = gTexMng->add2D("test", "textures\\Pond.jpg");
 
-	// Create shader manager
-	gShaderMng = new CGLSLManager();
+	gFontAtlas16 = FontAtlas::LoadFromMemory(sulphurPointRegularData, 0, 16.0f, 32, 255);
+	gFontAtlas32 = FontAtlas::LoadFromMemory(sulphurPointRegularData, 0, 32.0f, 32, 255);
+	gFontTexture16 = gTexMng->addFont("Font", *gFontAtlas16);
+	gFontTexture32 = gTexMng->addFont("Font", *gFontAtlas32);
 
 	// Create scene
 	printf("  Load scene\n");
@@ -2468,58 +2474,55 @@ void initResources() {
 
 void ReleaseResources() {
 	printf("  Release skybox\n");
-
-	if(gSkyboxShader)
+	if(gSkyboxShader != nullptr)
 		delete gSkyboxShader;
-
-	if(gSkyboxVBO)
+	if(gSkyboxVBO != nullptr)
 		delete gSkyboxVBO;
 
-	if(gLightingShader)
+	if(gLightingShader != nullptr)
 		delete gLightingShader;
 
 	printf("  Release fluid renderer\n");
-
 	if(gFluidRenderer)
 		delete gFluidRenderer;
 
 	printf("  Release ortho shader\n");
-
-	if(gSceneShader)
+	if(gSceneShader != nullptr)
 		delete gSceneShader;
 
 	// Release scene FBO
 	printf("  Release scene fbo\n");
 
-	if(gSceneFBO)
+	if(gSceneFBO != nullptr)
 		delete gSceneFBO;
 
 	// Release point sprites shader
 	printf("  Release spherical point sprites\n");
 
-	if(gPointSpritesShader)
+	if(gPointSpritesShader != nullptr)
 		delete gPointSpritesShader;
 
-	if(gPointSprites)
+	if(gPointSprites != nullptr)
 		delete gPointSprites;
 
 	// Release scene
 	printf("  Release scene\n");
 
-	if(gActiveScene)
+	if(gActiveScene != nullptr)
 		delete gActiveScene;
-
-	// Release shader manager
-	printf("  Release shader manager\n");
-
-	if(gShaderMng)
-		delete gShaderMng;
 
 	// Release texture manager
 	printf("  Release texture manager\n");
 
-	if(gTexMng)
+	if(gTexMng != nullptr)
 		delete gTexMng;
+
+	if(gFontAtlas32 != nullptr) {
+		delete gFontAtlas32;
+	}
+	if(gFontAtlas16 != nullptr) {
+		delete gFontAtlas16;
+	}
 }
 
 void OnShutdown() {

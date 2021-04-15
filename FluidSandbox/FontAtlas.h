@@ -31,6 +31,6 @@ struct FontAtlas {
 	uint32_t bitmapHeight;
 	FontAtlas();
 	~FontAtlas();
-	static FontAtlas LoadFromMemory(const uint8_t *fontData, const int fontIndex, const float fontSize, const uint32_t minChar, const uint32_t maxChar, const uint32_t minBitmapSize = 256, const uint32_t maxBitmapSize = 8192);
-	static FontAtlas LoadFromFile(const std::string &filePath, const int fontIndex, const float fontSize, const uint32_t minChar, const uint32_t maxChar, const uint32_t minBitmapSize = 256, const uint32_t maxBitmapSize = 8192);
+	static FontAtlas *LoadFromMemory(const uint8_t *fontData, const int fontIndex, const float fontSize, const uint32_t minChar, const uint32_t maxChar, const uint32_t minBitmapSize = 256, const uint32_t maxBitmapSize = 8192);
+	static FontAtlas *LoadFromFile(const std::string &filePath, const int fontIndex, const float fontSize, const uint32_t minChar, const uint32_t maxChar, const uint32_t minBitmapSize = 256, const uint32_t maxBitmapSize = 8192);
 };

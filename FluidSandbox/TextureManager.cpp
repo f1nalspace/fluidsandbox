@@ -14,7 +14,7 @@ CTextureManager::~CTextureManager(void) {
 	}
 }
 
-CTexture *CTextureManager::loadCubemap(const char *filename) {
+CTextureCubemap *CTextureManager::loadCubemap(const char *filename) {
 	const int CUBEMAPOFFSETS[6][2] = {
 		{2, 1},
 		{0, 1},
@@ -113,7 +113,7 @@ CTexture *CTextureManager::loadCubemap(const char *filename) {
 	return result;
 }
 
-CTexture *CTextureManager::load2D(const char *filename) {
+CTexture2D *CTextureManager::load2D(const char *filename) {
 	CTexture2D *result = nullptr;
 
 	FREE_IMAGE_FORMAT imageFormat = FreeImage_GetFileType(filename);
@@ -160,16 +160,30 @@ CTexture *CTextureManager::load2D(const char *filename) {
 	return result;
 }
 
-CTexture *CTextureManager::add2D(const std::string &name, const std::string &filename) {
-	CTexture *newTexture = load2D(filename.c_str());
+CTexture2D *CTextureManager::add2D(const std::string &name, const std::string &filename) {
+	CTexture2D *newTexture = load2D(filename.c_str());
 	nameToTextureMap.insert(std::make_pair(name, newTexture));
 	return newTexture;
 }
 
-CTexture *CTextureManager::addCubemap(const std::string &name, const std::string &filename) {
-	CTexture *newTexture = loadCubemap(filename.c_str());
+CTextureCubemap *CTextureManager::addCubemap(const std::string &name, const std::string &filename) {
+	CTextureCubemap *newTexture = loadCubemap(filename.c_str());
 	nameToTextureMap.insert(std::make_pair(name, newTexture));
 	return newTexture;
+}
+
+CTextureFont *CTextureManager::addFont(const std::string &name, const FontAtlas &fontAtlas) {
+	CTextureFont *newTexture = new CTextureFont(fontAtlas);
+	nameToTextureMap.insert(std::make_pair(name, newTexture));
+	std::cout << "  Loaded font texture '" << name << "' successfully" << std::endl;
+	std::cout << "    Image info: " << newTexture->getWidth() << "x" << newTexture->getHeight() << std::endl;
+	std::cout << "    Glyphs: " << fontAtlas.info.minChar << " - " << fontAtlas.info.maxChar << std::endl;
+	std::cout << "    Font size: " << fontAtlas.info.fontSize << std::endl;
+
+	newTexture->upload((const char *)fontAtlas.bitmap);
+	std::cout << "    Uploaded font texture -> " << newTexture->getID() << std::endl;
+
+	return(newTexture);
 }
 
 CTexture *CTextureManager::get(const std::string &name) {

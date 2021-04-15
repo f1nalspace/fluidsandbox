@@ -25,20 +25,18 @@ FontAtlas::~FontAtlas() {
 	bitmapWidth = bitmapHeight = 0;
 }
 
-FontAtlas FontAtlas::LoadFromMemory(const uint8_t *fontData, const int fontIndex, const float fontSize, const uint32_t minChar, const uint32_t maxChar, const uint32_t minBitmapSize, const uint32_t maxBitmapSize) {
-	FontAtlas result = {};
-
-	uint32_t charCount = (maxChar - minChar) + 1;
-
+FontAtlas *FontAtlas::LoadFromMemory(const uint8_t *fontData, const int fontIndex, const float fontSize, const uint32_t minChar, const uint32_t maxChar, const uint32_t minBitmapSize, const uint32_t maxBitmapSize) {
 	int fontOffset = stbtt_GetFontOffsetForIndex(fontData, fontIndex);
 	if(fontOffset < 0) {
-		return(result);
+		return(nullptr);
 	}
 
 	stbtt_fontinfo fontInfo;
 	if(!stbtt_InitFont(&fontInfo, fontData, fontOffset)) {
-		return(result);
+		return(nullptr);
 	}
+
+	uint32_t charCount = (maxChar - minChar) + 1;
 
 	float pixelScale = stbtt_ScaleForPixelHeight(&fontInfo, fontSize);
 
@@ -75,7 +73,7 @@ FontAtlas FontAtlas::LoadFromMemory(const uint8_t *fontData, const int fontIndex
 
 	if(fontBitmap == nullptr) {
 		delete[] packedChars;
-		return(result);
+		return(nullptr);
 	}
 
 	float invAtlasW = 1.0f / (float)bitmapSize;
@@ -131,26 +129,20 @@ FontAtlas FontAtlas::LoadFromMemory(const uint8_t *fontData, const int fontIndex
 	info.ascent = ascent * pixelScale * fontScale;
 	info.spaceAdvance = spaceAdvance;
 
-	FontAtlas atlas = {};
-	atlas.info = info;
-	atlas.glyphs = glyphs;
-	atlas.bitmapWidth = bitmapSize;
-	atlas.bitmapHeight = bitmapSize;
-	atlas.bitmap = fontBitmap;
-
-	result = atlas;
+	FontAtlas *result = new FontAtlas();
+	result->info = info;
+	result->glyphs = glyphs;
+	result->bitmapWidth = bitmapSize;
+	result->bitmapHeight = bitmapSize;
+	result->bitmap = fontBitmap;
 	return(result);
 }
 
-FontAtlas FontAtlas::LoadFromFile(const std::string &filePath, const int fontIndex, const float fontSize, const uint32_t minChar, const uint32_t maxChar, const uint32_t minBitmapSize, const uint32_t maxBitmapSize) {
-	FontAtlas result = {};
+FontAtlas *FontAtlas::LoadFromFile(const std::string &filePath, const int fontIndex, const float fontSize, const uint32_t minChar, const uint32_t maxChar, const uint32_t minBitmapSize, const uint32_t maxBitmapSize) {
+	FontAtlas *result = nullptr;
 	const uint8_t *data = COSLowLevel::getInstance()->getBinaryFileContent(filePath);
 	if(data != nullptr) {
 		result = LoadFromMemory(data, fontIndex, fontSize, minChar, maxChar, minBitmapSize, maxBitmapSize);
 	}
 	return(result);
-}
-
-void Release() {
-	
 }

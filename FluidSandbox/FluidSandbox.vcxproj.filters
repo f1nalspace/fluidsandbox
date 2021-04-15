@@ -6,7 +6,6 @@
     <ClCompile Include="FluidSystem.cpp" />
     <ClCompile Include="Frustum.cpp" />
     <ClCompile Include="GLSL.cpp" />
-    <ClCompile Include="GLSLManager.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="OSLowLevel.cpp" />
     <ClCompile Include="Primitives.cpp" />
@@ -32,7 +31,6 @@
     <ClInclude Include="FluidSystem.h" />
     <ClInclude Include="Frustum.h" />
     <ClInclude Include="GLSL.h" />
-    <ClInclude Include="GLSLManager.h" />
     <ClInclude Include="Light.h" />
     <ClInclude Include="OSLowLevel.h" />
     <ClInclude Include="Primitives.h" />

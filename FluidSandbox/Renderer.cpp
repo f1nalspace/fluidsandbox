@@ -164,12 +164,22 @@ void CRenderer::DrawTexturedRect(const float left, const float top, const float 
 	glEnd();
 }
 
+void CRenderer::DrawSimpleRect(const float left, const float top, const float right, const float bottom)
+{
+	glBegin(GL_QUADS);
+	glVertex2f(left, top);
+	glVertex2f(left, bottom);
+	glVertex2f(right, bottom);
+	glVertex2f(right, top);
+	glEnd();
+}
+
 void CRenderer::DrawVBO(CVBO* vbo, const GLenum mode)
 {
 	vbo->drawElements(mode);
 }
 
-glm::vec2 CRenderer::GetTextSize(const CTextureFont *fontTex, const char *text, const size_t textLen, const float charHeight) {
+glm::vec2 CRenderer::GetStringSize(const CTextureFont *fontTex, const char *text, const size_t textLen, const float charHeight) {
 	glm::vec2 result = glm::vec2(0);
 	if(text != nullptr && textLen > 0 && fontTex != nullptr) {
 		const FontAtlas &atlas = fontTex->GetAtlas();
@@ -214,15 +224,17 @@ glm::vec2 CRenderer::GetTextSize(const CTextureFont *fontTex, const char *text, 
 	return(result);
 }
 
-void CRenderer::DrawText(const int texIndex, CTextureFont *fontTex, const float posX, const float posY, const char *text, const size_t textLen, const float charHeight) {
+void CRenderer::DrawString(const int texIndex, CTextureFont *fontTex, const float posX, const float posY, const float charHeight, const char *text, const size_t textLen) {
 	if(fontTex == nullptr) return;
 
 	const FontAtlas &atlas = fontTex->GetAtlas();
 	const FontInfo &info = atlas.info;
 
+	glm::vec2 size = GetStringSize(fontTex, text, textLen, charHeight);
+	glm::vec2 alignOffset = glm::vec2(0, size.y * 0.5f);
+
 	EnableTexture(texIndex, fontTex);
 
-	glColor4f(1, 1, 1, 1);
 	glBegin(GL_QUADS);
 	const char *p = text;
 	glm::vec2 d = glm::vec2(0, 0);
@@ -242,10 +254,10 @@ void CRenderer::DrawText(const int texIndex, CTextureFont *fontTex, const float 
 			uint32_t charIndex = codePoint - info.minChar;
 			const FontGlyph *glyph = atlas.glyphs + charIndex;
 
-			glm::vec2 v0 = pos + glyph->offset[0] * scale;
-			glm::vec2 v1 = pos + glyph->offset[1] * scale;
-			glm::vec2 v2 = pos + glyph->offset[2] * scale;
-			glm::vec2 v3 = pos + glyph->offset[3] * scale;
+			glm::vec2 v0 = pos + glyph->offset[0] * scale + alignOffset;
+			glm::vec2 v1 = pos + glyph->offset[1] * scale + alignOffset;
+			glm::vec2 v2 = pos + glyph->offset[2] * scale + alignOffset;
+			glm::vec2 v3 = pos + glyph->offset[3] * scale + alignOffset;
 
 			glTexCoord2fv(&glyph->uv[0][0]); glVertex2fv(&v0[0]);
 			glTexCoord2fv(&glyph->uv[1][0]); glVertex2fv(&v1[0]);
@@ -257,9 +269,13 @@ void CRenderer::DrawText(const int texIndex, CTextureFont *fontTex, const float 
 		++p;
 	}
 	glEnd();
-	glColor4f(1, 1, 1, 1);
 
 	DisableTexture(texIndex, fontTex);
+}
+
+void CRenderer::DrawString(const int texIndex, CTextureFont *fontTex, const float posX, const float posY, const float charHeight, const char *text) {
+	size_t textLen = strlen(text);
+	DrawString(texIndex, fontTex, posX, posY, charHeight, text, textLen);
 }
 
 void CRenderer::Flip()
