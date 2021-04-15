@@ -32,19 +32,11 @@ Todo:
 	- Replace rapidxml with final_xml.h
 	- Add proper OSD rendering using stb_freetype.h
 
-	- No more pragma comment lib for the libraries, just configure it in the project directly
-
-	- Update positions, rotations, etc. in source actor from PhysX actor
-
-	- Use source actor for rendering instead of PhysX actor
-
 	- Move all physics code into its own class, so we can swap physics engine any time
 
 	- More cameras (Free, Rotate around point, Fixed)
 
 	- More scenarios
-
-	- Use unsigned integer or size_t instead of integer (Unsigned by default)
 
 	- Migrate to OpenGL 3.x
 
@@ -87,42 +79,6 @@ License:
 
 // PhysX API
 #include <PxPhysicsAPI.h>
-
-// PhysX required libs
-#ifdef _DEBUG
-#   if defined(__x86_64__) || defined(_M_X64) || defined(__amd64__)
-#       pragma comment(lib, "PhysX3DEBUG_x64.lib")
-#       pragma comment(lib, "PhysX3CommonDEBUG_x64.lib")
-#       pragma comment(lib, "PhysX3ExtensionsDEBUG.lib")
-#       pragma comment(lib, "PxFoundationDEBUG_x64.lib")
-#       pragma comment(lib, "PxTaskDEBUG_x64.lib")
-#       pragma comment(lib, "PxPvdSDKDEBUG_x64.lib")
-#   else
-#       pragma comment(lib, "PhysX3DEBUG_x86.lib")
-#       pragma comment(lib, "PhysX3CommonDEBUG_x86.lib")
-#       pragma comment(lib, "PhysX3ExtensionsDEBUG.lib")
-#       pragma comment(lib, "PxFoundationDEBUG_x86.lib")
-#       pragma comment(lib, "PxTaskDEBUG_x86.lib")
-#       pragma comment(lib, "PxPvdSDKDEBUG_x86.lib")
-#   endif
-#else
-#   if defined(__x86_64__) || defined(_M_X64) || defined(__amd64__)
-#       pragma comment(lib, "PhysX3_x64.lib")
-#       pragma comment(lib, "PhysX3Common_x64.lib")
-#       pragma comment(lib, "PhysX3Extensions.lib")
-#       pragma comment(lib, "PxFoundation_x64.lib")
-#       pragma comment(lib, "PxTask_x64.lib")
-#       pragma comment(lib, "PxPvdSDK_x64.lib")
-#   else
-#       pragma comment(lib, "PhysX3_x86.lib")
-#       pragma comment(lib, "PhysX3Common_x86.lib")
-#       pragma comment(lib, "PhysX3Extensions.lib")
-#       pragma comment(lib, "PxFoundation_x86.lib")
-#       pragma comment(lib, "PxTask_x86.lib")
-#       pragma comment(lib, "PxPvdSDK_x86.lib")
-#       pragma comment(lib, "PhysX3_x86.lib")
-#   endif
-#endif
 
 // XML
 #include "rapidxml/rapidxml.hpp"
@@ -182,7 +138,21 @@ std::string appPath = "";
 
 // Application
 const char *APPLICATION_NAME = "Fluid Sandbox";
-const char *APPLICATION_VERSION = "1.8.0";
+
+#if defined(__x86_64__) || defined(_M_X64) || defined(__amd64__)
+#	ifdef _DEBUG
+const char *APPLICATION_VERSION = "1.8.0 (x64-debug)";
+#	else
+const char *APPLICATION_VERSION = "1.8.0 (x64-release)";
+#	endif
+#else
+#	ifdef _DEBUG
+const char *APPLICATION_VERSION = "1.8.0 (x86-debug)";
+#	else
+const char *APPLICATION_VERSION = "1.8.0 (x86-release)";
+#	endif
+#endif
+
 const char *APPLICATION_AUTHOR = "Torsten Spaete";
 const char *APPLICATION_COPYRIGHT = "(C) 2015-2021 Torsten Spaete - All rights reserved";
 const std::string APPTITLE = APPLICATION_NAME + std::string(" v") + APPLICATION_VERSION + std::string(" by ") + APPLICATION_AUTHOR;
@@ -2178,7 +2148,7 @@ void KeyUp(unsigned char key, int x, int y) {
 		{
 			gSSFCurrentFluidIndex++;
 
-			if(gSSFCurrentFluidIndex > gActiveScene->getFluidColorCount() - 1) gSSFCurrentFluidIndex = 0;
+			if(gSSFCurrentFluidIndex > (int)gActiveScene->getFluidColorCount() - 1) gSSFCurrentFluidIndex = 0;
 
 			break;
 		}
