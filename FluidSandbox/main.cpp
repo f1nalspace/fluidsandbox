@@ -1,4 +1,4 @@
-/*
+ï»¿/*
 =======================================================================================
 	Fluid Sandbox
 
@@ -181,7 +181,7 @@ std::string appPath = "";
 const char *APPLICATION_NAME = "Fluid Sandbox";
 const char *APPLICATION_VERSION = "1.8.0";
 const char *APPLICATION_AUTHOR = "Torsten Spaete";
-const char *APPLICATION_COPYRIGHT = "© 2015-2021 Torsten Spaete - All rights reserved";
+const char *APPLICATION_COPYRIGHT = "(C) 2015-2021 Torsten Spaete - All rights reserved";
 const std::string APPTITLE = APPLICATION_NAME + std::string(" v") + APPLICATION_VERSION + std::string(" by ") + APPLICATION_AUTHOR;
 
 // Math stuff
@@ -226,8 +226,7 @@ constexpr float gTimeSimulationStep = 1.0f / 60.0f;
 
 static bool gStoppedEmitter = false;
 
-// List of added actors and rigid bodies settings
-static std::vector<physx::PxActor *> gActors;
+// Rigid bodies settings
 constexpr float gDefaultRigidBodyDensity = 0.05f;
 constexpr static glm::vec3 gDefaultRigidBodyVelocity(0.0f, 0.0f, 0.0f);
 
@@ -242,6 +241,9 @@ enum class ActorCreationKind: int {
 	Max = FluidSphere
 };
 static ActorCreationKind gCurrentActorCreationKind = ActorCreationKind::FluidCube;
+
+static std::vector<physx::PxActor *> gPhysicsActors;
+static std::vector<Actor *> gAdditionalActors;
 
 constexpr int HideRigidBody_None = 0;
 constexpr int HideRigidBody_Blending = 1;
@@ -397,30 +399,23 @@ float getRandomFloat(float min, float max) {
 	return min + ((base + fine / scale) * (max - min));
 }
 
-physx::PxQuat createQuatRotation(const physx::PxVec3 &rotate) {
-	physx::PxQuat rot = physx::PxQuat(rotate.x, physx::PxVec3(1.0f, 0.0f, 0.0f));
-	rot *= physx::PxQuat(rotate.y, physx::PxVec3(0.0f, 1.0f, 0.0f));
-	rot *= physx::PxQuat(rotate.z, physx::PxVec3(0.0f, 0.0f, 1.0f));
-	return rot;
-}
-
 void setActorDrain(physx::PxActor *actor, const bool enable) {
 	assert(actor != NULL);
 
 	physx::PxType actorType = actor->getConcreteType();
 	if(actorType == physx::PxConcreteType::eRIGID_STATIC || actorType == physx::PxConcreteType::eRIGID_DYNAMIC) {
 		physx::PxRigidActor *rigActor = (physx::PxRigidActor *)actor;
-		physx::PxU32 nShapes = rigActor->getNbShapes();
-		physx::PxShape **shapes = new physx::PxShape * [nShapes];
-		rigActor->getShapes(shapes, nShapes);
+		physx::PxU32 shapeCount = rigActor->getNbShapes();
+		physx::PxShape **shapes = new physx::PxShape * [shapeCount];
+		rigActor->getShapes(shapes, shapeCount);
 
-		while(nShapes--) {
-			physx::PxShapeFlags flags = shapes[nShapes]->getFlags();
+		for (physx::PxU32 shapeIndex = 0; shapeIndex < shapeCount; ++shapeIndex) {
+			physx::PxShapeFlags flags = shapes[shapeIndex]->getFlags();
 			if(enable)
 				flags |= physx::PxShapeFlag::ePARTICLE_DRAIN;
 			else
 				flags &= ~physx::PxShapeFlag::ePARTICLE_DRAIN;
-			shapes[nShapes]->setFlags(flags);
+			shapes[shapeIndex]->setFlags(flags);
 		}
 
 		delete[] shapes;
@@ -433,128 +428,129 @@ std::string vecToString(const physx::PxVec3 &p) {
 	return str;
 }
 
-void AddBox(const glm::vec3 &pos, const glm::quat &rotation, const glm::vec3 &vel, const float density, const glm::vec3 &size, const bool isParticleDrain, const ActorMovementType movementType, CubeActor *sourceActor) {
-	// NOTE(final): Actor can be null
+struct PhysXActorProperties {
+	physx::PxVec3 vel;
+	physx::PxTransform transform;
 
-	// Create static box
-	physx::PxVec3 npos = toPxVec3(pos);
-	physx::PxVec3 nvel = toPxVec3(vel);
-	physx::PxQuat nrot = toPxQuat(rotation);
-	physx::PxTransform transform(npos, nrot);
-	physx::PxVec3 nsize = toPxVec3(size);
+	PhysXActorProperties(const Actor &actor) {
+		vel = toPxVec3(actor.velocity);
+		physx::PxVec3 pos = toPxVec3(actor.transform.position);
+		physx::PxQuat rot = toPxQuat(actor.transform.rotation);
+		transform = physx::PxTransform(pos, rot);
+	}
+};
 
-	physx::PxBoxGeometry geometry(nsize);
+static void AddBox(physx::PxScene &scene, CubeActor *cube) {
+	PhysXActorProperties props = PhysXActorProperties(*cube);
+	physx::PxReal density = cube->density;
+	physx::PxVec3 halfExtents = toPxVec3(cube->halfExtents);
+	physx::PxBoxGeometry geometry(halfExtents);
 	physx::PxActor *actor;
-	if(movementType == ActorMovementType::Static) {
-		actor = PxCreateStatic(*gPhysicsSDK, transform, geometry, *gDefaultMaterial);
+	if(cube->movementType == ActorMovementType::Static) {
+		actor = PxCreateStatic(*gPhysicsSDK, props.transform, geometry, *gDefaultMaterial);
 		assert(actor != nullptr);
 	} else {
-		physx::PxRigidDynamic *rigidbody = PxCreateDynamic(*gPhysicsSDK, transform, geometry, *gDefaultMaterial, density);
+		physx::PxRigidDynamic *rigidbody = PxCreateDynamic(*gPhysicsSDK, props.transform, geometry, *gDefaultMaterial, density);
 		assert(rigidbody != nullptr);
 		actor = rigidbody;
 		physx::PxRigidBodyExt::updateMassAndInertia(*rigidbody, density);
 		rigidbody->setAngularDamping(0.75);
-		rigidbody->setLinearVelocity(nvel);
+		rigidbody->setLinearVelocity(props.vel);
 	}
 
-	actor->userData = sourceActor;
+	setActorDrain(actor, cube->particleDrain);
 
-	gScene->addActor(*actor);
-	gActors.push_back(actor);
+	actor->userData = cube;
+	cube->physicsData = actor;
 
-	setActorDrain(actor, isParticleDrain);
+	scene.addActor(*actor);
+	gPhysicsActors.push_back(actor);
 }
 
-void AddSphere(const glm::vec3 &pos, const glm::quat &rotation, const glm::vec3 &vel, const float density, const float radius, const ActorMovementType movementType, SphereActor *sphereActor) {
-	// NOTE(final): Actor can be null
-
-	// Create static sphere
-	physx::PxVec3 npos = toPxVec3(pos);
-	physx::PxVec3 nvel = toPxVec3(vel);
-	physx::PxQuat nrot = toPxQuat(rotation);
-	physx::PxTransform transform(npos, nrot);
-
-	physx::PxSphereGeometry geometry(radius);
+static void AddSphere(physx::PxScene &scene, SphereActor *sphere) {
+	PhysXActorProperties props = PhysXActorProperties(*sphere);
+	physx::PxReal density = sphere->density;
+	physx::PxSphereGeometry geometry(sphere->radius);
 	physx::PxActor *actor;
-	if(movementType == ActorMovementType::Static) {
-		actor = PxCreateStatic(*gPhysicsSDK, transform, geometry, *gDefaultMaterial);
+	if(sphere->movementType == ActorMovementType::Static) {
+		actor = PxCreateStatic(*gPhysicsSDK, props.transform, geometry, *gDefaultMaterial);
 		assert(actor != nullptr);
 	} else {
-		physx::PxRigidDynamic *rigidbody = PxCreateDynamic(*gPhysicsSDK, transform, geometry, *gDefaultMaterial, density);
+		physx::PxRigidDynamic *rigidbody = PxCreateDynamic(*gPhysicsSDK, props.transform, geometry, *gDefaultMaterial, density);
 		assert(rigidbody != nullptr);
 		actor = rigidbody;
 		physx::PxRigidBodyExt::updateMassAndInertia(*rigidbody, density);
 		rigidbody->setAngularDamping(0.75);
-		rigidbody->setLinearVelocity(nvel);
+		rigidbody->setLinearVelocity(props.vel);
 	}
 
-	actor->userData = sphereActor;
+	setActorDrain(actor, sphere->particleDrain);
 
-	gScene->addActor(*actor);
-	gActors.push_back(actor);
+	actor->userData = sphere;
+	sphere->physicsData = actor;
+
+	scene.addActor(*actor);
+	gPhysicsActors.push_back(actor);
 }
 
-void AddCapsule(const glm::vec3 &pos, const glm::quat &rotation, const glm::vec3 &vel, const float density, const glm::vec2 ext, const ActorMovementType movementType) {
-	// TODO(final): Capsule Actor!
-
-	// Create capsule
-	physx::PxVec3 npos = toPxVec3(pos);
-	physx::PxVec3 nvel = toPxVec3(vel);
-	physx::PxQuat nrot = toPxQuat(rotation);
-	physx::PxTransform transform(npos, nrot);
-
-	physx::PxCapsuleGeometry geometry(ext.x, ext.y);
-
+static void AddCapsule(physx::PxScene &scene, CapsuleActor *capsule) {
+	PhysXActorProperties props = PhysXActorProperties(*capsule);
+	physx::PxReal density = capsule->density;
+	physx::PxCapsuleGeometry geometry(capsule->radius, capsule->halfHeight);
 	physx::PxActor *actor;
-	if(movementType == ActorMovementType::Static) {
-		actor = PxCreateStatic(*gPhysicsSDK, transform, geometry, *gDefaultMaterial);
+	if(capsule->movementType == ActorMovementType::Static) {
+		actor = PxCreateStatic(*gPhysicsSDK, props.transform, geometry, *gDefaultMaterial);
 		assert(actor != nullptr);
 	} else {
-		physx::PxRigidDynamic *rigidbody = PxCreateDynamic(*gPhysicsSDK, transform, geometry, *gDefaultMaterial, density);
+		physx::PxRigidDynamic *rigidbody = PxCreateDynamic(*gPhysicsSDK, props.transform, geometry, *gDefaultMaterial, density);
 		assert(rigidbody != nullptr);
 		actor = rigidbody;
 		physx::PxRigidBodyExt::updateMassAndInertia(*rigidbody, density);
 		rigidbody->setAngularDamping(0.75);
-		rigidbody->setLinearVelocity(nvel);
+		rigidbody->setLinearVelocity(props.vel);
 	}
 
-	gScene->addActor(*actor);
+	setActorDrain(actor, capsule->particleDrain);
 
-	gActors.push_back(actor);
+	actor->userData = capsule;
+	capsule->physicsData = actor;
+
+	scene.addActor(*actor);
+	gPhysicsActors.push_back(actor);
 }
 
-bool PointInSphere(const physx::PxVec3 &spherePos, const float &sphereRadius, const physx::PxVec3 point, const float particleRadius) {
+inline bool PointInSphere(const physx::PxVec3 &spherePos, const float &sphereRadius, const physx::PxVec3 point, const float particleRadius) {
 	physx::PxVec3 distance = spherePos - point;
 	float length = distance.magnitude();
 	float sumRadius = sphereRadius + particleRadius;
 	return length <= sumRadius;
 }
 
-void AddWater(FluidContainer &container, const FluidType type) {
+static void AddFluid(CFluidSystem &fluidSys, const FluidContainer &container, const FluidType type) {
 	uint32_t numParticles = 0;
-	std::vector<physx::PxVec3> particlePositionBuffer;
-	std::vector<physx::PxVec3> particleVelocityBuffer;
 
 	float distance = gFluidRestParticleDistance;
 
-	physx::PxVec3 vel = toPxVec3(container.vel);
+	physx::PxVec3 vel = toPxVec3(container.velocity);
 
-	float centerX = container.pos.x;
-	float centerY = container.pos.y;
-	float centerZ = container.pos.z;
+	glm::vec3 center = container.position;
+
+	float centerX = center.x;
+	float centerY = center.y;
+	float centerZ = center.z;
 
 	float sizeX = container.size.x;
 	float sizeY = container.size.y;
 	float sizeZ = container.size.z;
 
-	if(type == FluidType::Sphere) {
-		if(container.radius < 0.00001f)
-			container.radius = ((sizeX + sizeY + sizeZ) / 3.0f) / 2.0f;
+	float radius = container.radius;
+	if(radius < 0.00001f) {
+		radius = ((sizeX + sizeY + sizeZ) / 3.0f) / 2.0f;
 	}
 
-	long numX = (long)(container.size.x / distance);
-	long numY = (long)(container.size.y / distance);
-	long numZ = (long)(container.size.z / distance);
+	long numX = (long)(sizeX / distance);
+	long numY = (long)(sizeY / distance);
+	long numZ = (long)(sizeZ / distance);
 
 	float dX = distance * numX;
 	float dY = distance * numY;
@@ -562,6 +558,8 @@ void AddWater(FluidContainer &container, const FluidType type) {
 
 	int idx;
 
+	std::vector<physx::PxVec3> particlePositionBuffer;
+	std::vector<physx::PxVec3> particleVelocityBuffer;
 	if(type == FluidType::Drop) {
 		// Single drop
 		numParticles++;
@@ -609,11 +607,10 @@ void AddWater(FluidContainer &container, const FluidType type) {
 
 			zpos += distance;
 		}
-	} else if(type == FluidType::Sphere)  // Water sphere
-	{
+	} else if(type == FluidType::Sphere) {
+		// Water sphere
 		physx::PxVec3 center = physx::PxVec3(centerX, centerY, centerZ);
 
-		float radius = container.radius;
 		float zpos = centerZ - (dZ / 2.0f);
 		idx = 0;
 
@@ -644,94 +641,38 @@ void AddWater(FluidContainer &container, const FluidType type) {
 	}
 
 	if(numParticles > 0) {
-		gFluidSystem->createParticles(numParticles, &particlePositionBuffer[0], &particleVelocityBuffer[0]);
+		fluidSys.createParticles(numParticles, &particlePositionBuffer[0], &particleVelocityBuffer[0]);
 	}
 }
 
-void AddWater(FluidType waterType) {
-	if(!gActiveFluidScenario) return;
-
-	for(size_t i = 0; i < gActiveFluidScenario->getFluidContainerCount(); i++) {
-		FluidContainer *container = gActiveFluidScenario->getFluidContainer(i);
-
-		if(container->time <= 0)
-			AddWater(*container, waterType);
+static void AddFluids(CFluidSystem &fluidSys, const FluidType type) {
+	assert(gActiveFluidScenario != nullptr);
+	for(size_t i = 0, count = gActiveFluidScenario->fluidContainers.size(); i < count; i++) {
+		const FluidContainer *container = gActiveFluidScenario->fluidContainers[i];
+		if(container->time <= 0) {
+			AddFluid(fluidSys, *container, type);
+		}
 	}
 }
 
-void AddPlane() {
+static void AddPlane(physx::PxScene &scene, PlaneActor *plane) {
+	// TODO(final): Use plane position and rotation!
+
 	// Create ground plane
-	physx::PxTransform pose = physx::PxTransform(physx::PxVec3(0.0f, 0, 0.0f), physx::PxQuat(physx::PxHalfPi, physx::PxVec3(0.0f, 0.0f, 1.0f)));
+	physx::PxTransform transform = physx::PxTransform(physx::PxVec3(0.0f, 0, 0.0f), physx::PxQuat(physx::PxHalfPi, physx::PxVec3(0.0f, 0.0f, 1.0f)));
 
-	physx::PxRigidStatic *plane = gPhysicsSDK->createRigidStatic(pose);
+	physx::PxRigidStatic *actor = gPhysicsSDK->createRigidStatic(transform);
 
-	if(!plane)
-		std::cerr << "create plane failed!" << std::endl;
+	physx::PxShape *shape = actor->createShape(physx::PxPlaneGeometry(), *gDefaultMaterial);
 
-	physx::PxShape *shape = plane->createShape(physx::PxPlaneGeometry(), *gDefaultMaterial);
+	actor->userData = plane;
+	plane->physicsData = actor;
 
-	if(!shape)
-		std::cerr << "create shape failed!" << std::endl;
-
-	gScene->addActor(*plane);
-	gActors.push_back(plane);
+	scene.addActor(*actor);
+	gPhysicsActors.push_back(actor);
 }
 
-void ClearScene() {
-	// Remove fluid system
-	if(gFluidSystem)
-		delete gFluidSystem;
-
-	// Remove actors
-	for(size_t index = 0; index < gActors.size(); ++index) {
-		physx::PxActor *act = gActors[index];
-		gScene->removeActor(*act);
-		act->release();
-	}
-
-	gActors.clear();
-
-	// Reset drawing statistics
-	//gTotalFluidParticles = 0;
-}
-
-void AddScenarioActor(Actor *actor) {
-	if(actor->type == ActorType::Cube) {
-		CubeActor *cube = (CubeActor *)actor;
-		AddBox(cube->pos, cube->rotation, cube->velocity, cube->density, cube->size, cube->particleDrain, cube->movementType, cube);
-	} else if(actor->type == ActorType::Sphere) {
-		SphereActor *sphere = (SphereActor *)actor;
-		AddSphere(sphere->pos, sphere->rotation, sphere->velocity, sphere->density, sphere->radius, sphere->movementType, sphere);
-	}
-}
-
-void SaveFluidPositions() {
-	float minDensity = gActiveFluidScenario != NULL ? gActiveFluidScenario->render.minDensity : gActiveScene->render.minDensity;
-	float *data = gPointSprites->Map();
-	bool noDensity = gSSFRenderMode == SSFRenderMode::Points;
-	gFluidSystem->writeToVBO(data, gTotalFluidParticles, noDensity, minDensity);
-	gPointSprites->UnMap();
-}
-
-void advanceSimulation(float dtime) {
-	const physx::PxReal timestep = 1.0f / 60.0f;
-	while(dtime > 0.0f) {
-		gScene->simulate(timestep);
-		gScene->fetchResults(true);
-		dtime -= timestep;
-	}
-}
-
-void SingleStepPhysX(const float frametime) {
-	// Advance simulation
-	advanceSimulation(frametime);
-
-	// Save fluid positions
-	if(gSSFRenderMode != SSFRenderMode::Disabled)
-		SaveFluidPositions();
-}
-
-CFluidSystem *CreateParticleFluidSystem() {
+static CFluidSystem *CreateParticleFluidSystem() {
 	FluidSimulationProperties particleSystemDesc = FluidSimulationProperties();
 
 	particleSystemDesc.stiffness = gFluidStiffness;
@@ -753,17 +694,82 @@ CFluidSystem *CreateParticleFluidSystem() {
 	return new CFluidSystem(gPhysicsSDK, particleSystemDesc, MAX_FLUID_PARTICLES);
 }
 
-void ResetScene() {
+static void AddScenarioActor(physx::PxScene &scene, Actor *actor) {
+	if(actor->type == ActorType::Cube) {
+		CubeActor *cube = static_cast<CubeActor *>(actor);
+		AddBox(scene, cube);
+	} else if(actor->type == ActorType::Sphere) {
+		SphereActor *sphere = static_cast<SphereActor *>(actor);
+		AddSphere(scene, sphere);
+	} else if(actor->type == ActorType::Capsule) {
+		CapsuleActor *capsule = static_cast<CapsuleActor *>(actor);
+		AddCapsule(scene, capsule);
+	} else if(actor->type == ActorType::Plane) {
+		PlaneActor *plane = static_cast<PlaneActor *>(actor);
+		AddPlane(scene, plane);
+	}
+}
+
+static void SaveFluidPositions() {
+	float minDensity = gActiveFluidScenario != NULL ? gActiveFluidScenario->render.minDensity : gActiveScene->render.minDensity;
+	float *data = gPointSprites->Map();
+	bool noDensity = gSSFRenderMode == SSFRenderMode::Points;
+	gFluidSystem->writeToVBO(data, gTotalFluidParticles, noDensity, minDensity);
+	gPointSprites->UnMap();
+}
+
+static void advanceSimulation(float dtime) {
+	const physx::PxReal timestep = 1.0f / 60.0f;
+	while(dtime > 0.0f) {
+		gScene->simulate(timestep);
+		gScene->fetchResults(true);
+		dtime -= timestep;
+	}
+}
+
+static void SingleStepPhysX(const float frametime) {
+	// Advance simulation
+	advanceSimulation(frametime);
+
+	// Save fluid positions
+	if(gSSFRenderMode != SSFRenderMode::Disabled)
+		SaveFluidPositions();
+}
+
+static void ClearScene(physx::PxScene &scene) {
+	// Remove fluid system
+	if(gFluidSystem != nullptr) {
+		delete gFluidSystem;
+		gFluidSystem = nullptr;
+	}
+
+	// Remove all actors
+	for(size_t index = 0, count = gPhysicsActors.size(); index < count; ++index) {
+		physx::PxActor *nactor = gPhysicsActors[index];
+		scene.removeActor(*nactor);
+		nactor->release();
+	}
+	gPhysicsActors.clear();
+
+	// Remove additional actors (Groundplane, Dynamic bodies)
+	for(size_t index = 0, count = gAdditionalActors.size(); index < count; ++index) {
+		Actor *actor = gAdditionalActors[index];
+		delete actor;
+	}
+	gAdditionalActors.clear();
+}
+
+static void ResetScene(physx::PxScene &scene) {
 	assert(gActiveFluidScenario != nullptr);
 
 	printf("Load/Reload scene: %s\n", gActiveFluidScenario->name);
 
-	// Release actors
-	ClearScene();
+	ClearScene(scene);
 
 	// Set scene properties
-	gScene->setGravity(toPxVec3(gActiveFluidScenario->gravity));
+	scene.setGravity(toPxVec3(gActiveFluidScenario->gravity));
 
+	// Set global fluid properties
 	gFluidMaxMotionDistance = gActiveFluidScenario->sim.maxMotionDistance;
 	gFluidContactOffset = gActiveFluidScenario->sim.contactOffset;
 	gFluidRestOffset = gActiveFluidScenario->sim.restOffset;
@@ -779,42 +785,42 @@ void ResetScene() {
 	gRigidBodyFallPos = gActiveFluidScenario->actorCreatePosition;
 	gFluidParticleRenderFactor = gActiveFluidScenario->render.particleRenderFactor;
 
-	// Add plane
-	AddPlane();
+	// Add ground plane
+	PlaneActor *groundPlane = new PlaneActor();
+	AddPlane(scene, groundPlane);
+	gAdditionalActors.push_back(groundPlane);
 
 	// Create fluid system
 	gFluidSystem = CreateParticleFluidSystem();
+	assert(gFluidSystem != nullptr);
 
 	// Set GPU acceleration for particle fluid if supported
 	gFluidSystem->setParticleBaseFlag(physx::PxParticleBaseFlag::eCOLLISION_TWOWAY, true);
 	gFluidSystem->setParticleBaseFlag(physx::PxParticleBaseFlag::eGPU, gGPUDispatcher && gFluidUseGPUAcceleration);
 
-	if(gFluidSystem) {
-		physx::PxActor *fluidActor = gFluidSystem->getActor();
-		gScene->addActor(*fluidActor);
-		gActors.push_back(fluidActor);
-	}
+	// Add fluid system as actor
+	physx::PxActor *nFluidActor = gFluidSystem->getActor();
+	scene.addActor(*nFluidActor);
+	gPhysicsActors.push_back(nFluidActor);
 
 	// Adding actors immediately
-	for(size_t i = 0, count = gActiveFluidScenario->getActorCount(); i < count; i++) {
-		Actor *actor = gActiveFluidScenario->getActor(i);
+	for(size_t i = 0, count = gActiveFluidScenario->actors.size(); i < count; i++) {
+		Actor *actor = gActiveFluidScenario->actors[i];
 		actor->timeElapsed = 0.0f;
-
 		if(actor->time == -1) {
-			AddScenarioActor(actor);
+			AddScenarioActor(scene, actor);
 		}
 	}
 
 	// Adding waters immediately
-	for(size_t i = 0; i < gActiveFluidScenario->getFluidContainerCount(); i++) {
-		FluidContainer *container = gActiveFluidScenario->getFluidContainer(i);
+	for(size_t i = 0, count = gActiveFluidScenario->fluidContainers.size(); i < count; i++) {
+		FluidContainer *container = gActiveFluidScenario->fluidContainers[i];
 		container->timeElapsed = 0.0f;
 		container->emitterElapsed = 0.0f;
 		container->emitterCoolDownElapsed = 0.0f;
 		container->emitterCoolDownActive = false;
-
 		if(container->time == -1 && !container->isEmitter && gWaterAddBySceneChange) {
-			AddWater(*container, container->type);
+			AddFluid(*gFluidSystem, *container, container->type);
 		}
 	}
 
@@ -1074,9 +1080,10 @@ glm::vec4 getColor(physx::PxActor *actor, const glm::vec4 &defaultColor) {
 }
 
 void DrawBox(physx::PxShape *pShape) {
-	glm::vec4 color = getColor(pShape->getActor(), DefaultDynamicRigidBodyCubeColor);
+	physx::PxRigidActor *actor = pShape->getActor();
+	glm::vec4 color = getColor(actor, DefaultDynamicRigidBodyCubeColor);
 
-	physx::PxTransform pT = physx::PxShapeExt::getGlobalPose(*pShape, *pShape->getActor());
+	physx::PxTransform pT = physx::PxShapeExt::getGlobalPose(*pShape, *actor);
 	physx::PxBoxGeometry bg;
 	pShape->getBoxGeometry(bg);
 	physx::PxMat33 m = physx::PxMat33(pT.q);
@@ -1091,9 +1098,10 @@ void DrawBox(physx::PxShape *pShape) {
 }
 
 void DrawSphere(physx::PxShape *pShape) {
-	glm::vec4 color = getColor(pShape->getActor(), DefaultDynamicRigidBodySphereColor);
+	physx::PxRigidActor *actor = pShape->getActor();
+	glm::vec4 color = getColor(actor, DefaultDynamicRigidBodySphereColor);
 
-	physx::PxTransform pT = physx::PxShapeExt::getGlobalPose(*pShape, *pShape->getActor());
+	physx::PxTransform pT = physx::PxShapeExt::getGlobalPose(*pShape, *actor);
 	physx::PxSphereGeometry sg;
 	pShape->getSphereGeometry(sg);
 	physx::PxMat33 m = physx::PxMat33(pT.q);
@@ -1108,9 +1116,10 @@ void DrawSphere(physx::PxShape *pShape) {
 }
 
 void DrawCapsule(physx::PxShape *pShape) {
+	physx::PxRigidActor *actor = pShape->getActor();
 	glm::vec4 color = getColor(pShape->getActor(), DefaultDynamicRigidBodyCapsuleColor);
 
-	physx::PxTransform pT = physx::PxShapeExt::getGlobalPose(*pShape, *pShape->getActor());
+	physx::PxTransform pT = physx::PxShapeExt::getGlobalPose(*pShape, *actor);
 	physx::PxCapsuleGeometry cg;
 	pShape->getCapsuleGeometry(cg);
 	physx::PxMat33 m = physx::PxMat33(pT.q);
@@ -1220,22 +1229,22 @@ void DrawActor(physx::PxActor *actor) {
 
 void RenderActors() {
 	// Render all the actors in the scene
-	for(size_t index = 0; index < gActors.size(); ++index) {
-		physx::PxActor *act = gActors.at(index);
+	for(size_t index = 0, count = gPhysicsActors.size(); index < count; ++index) {
+		physx::PxActor *act = gPhysicsActors.at(index);
 		DrawActor(act);
 	}
 }
 
 void RenderActorBoundings() {
 	// Render all the actors in the scene as bounding volume
-	for(size_t index = 0; index < gActors.size(); ++index) {
-		physx::PxActor *act = gActors.at(index);
+	for(size_t index = 0; index < gPhysicsActors.size(); ++index) {
+		physx::PxActor *act = gPhysicsActors.at(index);
 		DrawActorBounding(act);
 	}
 }
 
 void ShutdownPhysX() {
-	ClearScene();
+	ClearScene(*gScene);
 	gScene->release();
 
 	gDefaultMaterial->release();
@@ -1248,7 +1257,7 @@ void ShutdownPhysX() {
 		if(gPhysXVisualDebugger->isConnected())
 			gPhysXVisualDebugger->disconnect();
 		gPhysXVisualDebugger->release();
-	}
+}
 #endif
 
 	gPhysicsSDK->release();
@@ -1427,23 +1436,21 @@ void CreateActorsBasedOnTime(const float frametime) {
 	// Add not fallen fluids from active scenario
 	if(gActiveFluidScenario) {
 		// Add actors
-		for(size_t i = 0, count = gActiveFluidScenario->getActorCount(); i < count; i++) {
-			Actor *actor = gActiveFluidScenario->getActor(i);
-
+		for(size_t i = 0, count = gActiveFluidScenario->actors.size(); i < count; i++) {
+			Actor *actor = gActiveFluidScenario->actors[i];
 			if(actor->time > 0) {
 				if(actor->timeElapsed < (float)actor->time) {
 					actor->timeElapsed += frametime;
-
 					if(actor->timeElapsed >= (float)actor->time) {
-						AddScenarioActor(actor);
+						AddScenarioActor(*gScene, actor);
 					}
 				}
 			}
 		}
 
 		// Add fluids
-		for(size_t i = 0, count = gActiveFluidScenario->getFluidContainerCount(); i < count; i++) {
-			FluidContainer *container = gActiveFluidScenario->getFluidContainer(i);
+		for(size_t i = 0, count = gActiveFluidScenario->fluidContainers.size(); i < count; i++) {
+			FluidContainer *container = gActiveFluidScenario->fluidContainers[i];
 
 			float time;
 
@@ -1456,7 +1463,7 @@ void CreateActorsBasedOnTime(const float frametime) {
 						container->timeElapsed += frametime;
 
 						if(container->timeElapsed >= time) {
-							AddWater(*container, container->type);
+							AddFluid(*gFluidSystem, *container, container->type);
 						}
 					}
 				}
@@ -1473,7 +1480,7 @@ void CreateActorsBasedOnTime(const float frametime) {
 
 							if(container->timeElapsed >= time) {
 								container->timeElapsed = 0.0f;
-								AddWater(*container, container->type);
+								AddFluid(*gFluidSystem, *container, container->type);
 							}
 						}
 					} else if(container->emitterCoolDown > 0.0f) {
@@ -1776,7 +1783,7 @@ void OnRender() {
 	}
 
 	// Update counters
-	gTotalActors = gActors.size();
+	gTotalActors = gPhysicsActors.size();
 	gDrawedActors = 0;
 
 	// Set drawing options
@@ -1872,38 +1879,62 @@ void Motion(int x, int y) {
 	glutPostRedisplay();
 }
 
-void AddActor(const ActorCreationKind kind) {
+static void AddDynamicActor(physx::PxScene &scene, CFluidSystem &fluidSys, const ActorCreationKind kind) {
 	glm::vec3 pos = gRigidBodyFallPos;
 	glm::vec3 vel = gDefaultRigidBodyVelocity;
 	float density = gDefaultRigidBodyDensity;
 	glm::quat rotation = toGLMQuat(physx::PxQuat(Deg2Rad(RandomRadius()), physx::PxVec3(0, 1, 0)));
 	switch(kind) {
 		case ActorCreationKind::RigidBox:
-			AddBox(pos, rotation, vel, density, glm::vec3(0.5, 0.5, 0.5), false, ActorMovementType::Dynamic, nullptr);
-			break;
+		{
+			CubeActor *box = new CubeActor(ActorMovementType::Dynamic, glm::vec3(0.5, 0.5, 0.5));
+			box->color = glm::vec4(0.0f, 0.1f, 1.0f, 1.0f);
+			box->transform.position = pos;
+			box->transform.rotation = rotation;
+			box->velocity = vel;
+			box->density = density;
+			AddBox(scene, box);
+			gAdditionalActors.push_back(box);
+		} break;
 
 		case ActorCreationKind::RigidSphere:
-			AddSphere(pos, rotation, vel, density, 0.5f, ActorMovementType::Dynamic, nullptr);
-			break;
+		{
+			SphereActor *sphere = new SphereActor(ActorMovementType::Dynamic, 0.5f);
+			sphere->color = glm::vec4(0.0f, 1.0f, 0.1f, 1.0f);
+			sphere->transform.position = pos;
+			sphere->transform.rotation = rotation;
+			sphere->velocity = vel;
+			sphere->density = density;
+			AddSphere(scene, sphere);
+			gAdditionalActors.push_back(sphere);
+		} break;
 
 		case ActorCreationKind::RigidCapsule:
-			AddCapsule(pos, rotation, vel, density, glm::vec2(0.5f, 1.0f), ActorMovementType::Dynamic);
-			break;
+		{
+			CapsuleActor *capsule = new CapsuleActor(ActorMovementType::Dynamic, 0.5f, 1.0f);
+			capsule->color = glm::vec4(1.0f, 0.9f, 0.1f, 1.0f);
+			capsule->transform.position = pos;
+			capsule->transform.rotation = rotation;
+			capsule->velocity = vel;
+			capsule->density = density;
+			AddCapsule(scene, capsule);
+			gAdditionalActors.push_back(capsule);
+		} break;
 
 		case ActorCreationKind::FluidDrop:
-			AddWater(FluidType::Drop);
+			AddFluids(fluidSys, FluidType::Drop);
 			break;
 
 		case ActorCreationKind::FluidPlane:
-			AddWater(FluidType::Plane);
+			AddFluids(fluidSys, FluidType::Plane);
 			break;
 
 		case ActorCreationKind::FluidCube:
-			AddWater(FluidType::Box);
+			AddFluids(fluidSys, FluidType::Box);
 			break;
 
 		case ActorCreationKind::FluidSphere:
-			AddWater(FluidType::Sphere);
+			AddFluids(fluidSys, FluidType::Sphere);
 			break;
 
 		default:
@@ -1995,7 +2026,7 @@ void KeyUp(unsigned char key, int x, int y) {
 		}
 		case 114: // r
 		{
-			ResetScene();
+			ResetScene(*gScene);
 			break;
 		}
 
@@ -2056,7 +2087,7 @@ void KeyUp(unsigned char key, int x, int y) {
 				if(gActiveFluidScenarioIdx > (int)gFluidScenarios.size() - 1) gActiveFluidScenarioIdx = 0;
 
 				gActiveFluidScenario = gFluidScenarios[gActiveFluidScenarioIdx];
-				ResetScene();
+				ResetScene(*gScene);
 			}
 
 			break;
@@ -2234,7 +2265,7 @@ void KeyDown(unsigned char key, int x, int y) {
 	switch(key) {
 		case 32: // Space
 		{
-			AddActor(gCurrentActorCreationKind);
+			AddDynamicActor(*gScene, *gFluidSystem, gCurrentActorCreationKind);
 			break;
 		}
 
@@ -2550,7 +2581,7 @@ void main(int argc, char **argv) {
 	LoadFluidScenarios();
 
 	printf("Load Fluid Scenario\n");
-	ResetScene();
+	ResetScene(*gScene);
 
 	printf("Main loop\n");
 	glutMainLoop();

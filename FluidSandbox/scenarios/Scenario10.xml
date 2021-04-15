@@ -30,16 +30,16 @@
 		<Actor blending="false" type="static" primitive="cube" pos="3.75, 2.5, 0.25" size="0.25, 0.75, 0.75" color="{%FloorColor}" time="-1" />
 		<Actor blending="false" type="static" primitive="cube" pos="3.0, 1.25, 3.0" size="1.5, 0.25, 1.5" color="{%FloorColor}" time="-1" />
 			
-		<Actor blending="false" type="static" primitive="cube" pos="-2, 4, 3" size="2.0, 0.25, 2.0" color="{%FloorColor}" time="-1" rotate="0, 0, 0" />
-		<Actor blending="false" type="static" primitive="cube" pos="-3.75, 5.75, 3" size="0.25, 1.5, 2.0" color="{%FloorColor}" time="-1" rotate="0, 0, 0" />
-		<Actor blending="false" type="static" primitive="cube" pos="-2, 5.75, 4.75" size="1.5, 1.5, 0.25" color="{%FloorColor}" time="-1" rotate="0, 0, 0" />
-		<Actor blending="false" type="static" primitive="cube" pos="-2, 5.75, 1.25" size="1.5, 1.5, 0.25" color="{%FloorColor}" time="-1" rotate="0, 0, 0" />
-		<Actor blending="false" type="static" primitive="cube" pos="-0.25, 4.5, 3" size="0.25, 0.25, 0.5" color="{%FloorColor}" time="-1" rotate="0, 0, 0" />
-		<Actor blending="false" type="static" primitive="cube" pos="0.5, 5, 3" size="1.0, 0.25, 0.5" color="{%FloorColor}" time="-1" rotate="0, 0, 0" />
-		<Actor blending="false" type="static" primitive="cube" pos="-0.25, 5.75, 4.25" size="0.25, 1.5, 0.75" color="{%FloorColor}" time="-1" rotate="0, 0, 0" />
-		<Actor blending="false" type="static" primitive="cube" pos="-0.25, 5.75, 1.75" size="0.25, 1.5, 0.75" color="{%FloorColor}" time="-1" rotate="0, 0, 0" />
-		<Actor blending="false" type="static" primitive="cube" pos="0.75, 5.5, 2.25" size="0.75, 0.75, 0.25" color="{%FloorColor}" time="-1" rotate="0, 0, 0" />
-		<Actor blending="false" type="static" primitive="cube" pos="0.75, 5.5, 3.75" size="0.75, 0.75, 0.25" color="{%FloorColor}" time="-1" rotate="0, 0, 0" />
+		<Actor blending="false" type="static" primitive="cube" pos="-2, 4, 3" size="2.0, 0.25, 2.0" color="{%FloorColor}" time="-1" rot="0, 0, 0" />
+		<Actor blending="false" type="static" primitive="cube" pos="-3.75, 5.75, 3" size="0.25, 1.5, 2.0" color="{%FloorColor}" time="-1" rot="0, 0, 0" />
+		<Actor blending="false" type="static" primitive="cube" pos="-2, 5.75, 4.75" size="1.5, 1.5, 0.25" color="{%FloorColor}" time="-1" rot="0, 0, 0" />
+		<Actor blending="false" type="static" primitive="cube" pos="-2, 5.75, 1.25" size="1.5, 1.5, 0.25" color="{%FloorColor}" time="-1" rot="0, 0, 0" />
+		<Actor blending="false" type="static" primitive="cube" pos="-0.25, 4.5, 3" size="0.25, 0.25, 0.5" color="{%FloorColor}" time="-1" rot="0, 0, 0" />
+		<Actor blending="false" type="static" primitive="cube" pos="0.5, 5, 3" size="1.0, 0.25, 0.5" color="{%FloorColor}" time="-1" rot="0, 0, 0" />
+		<Actor blending="false" type="static" primitive="cube" pos="-0.25, 5.75, 4.25" size="0.25, 1.5, 0.75" color="{%FloorColor}" time="-1" rot="0, 0, 0" />
+		<Actor blending="false" type="static" primitive="cube" pos="-0.25, 5.75, 1.75" size="0.25, 1.5, 0.75" color="{%FloorColor}" time="-1" rot="0, 0, 0" />
+		<Actor blending="false" type="static" primitive="cube" pos="0.75, 5.5, 2.25" size="0.75, 0.75, 0.25" color="{%FloorColor}" time="-1" rot="0, 0, 0" />
+		<Actor blending="false" type="static" primitive="cube" pos="0.75, 5.5, 3.75" size="0.75, 0.75, 0.25" color="{%FloorColor}" time="-1" rot="0, 0, 0" />
 		<Actor blending="false" type="static" primitive="cube" pos="-2, 4.25, 3" size="1.5, 0.25, 1.5" color="{%FloorColor}" time="-1" />
 
 		<Actor blending="false" type="static" primitive="cube" pos="2.0, 0.3, 2.0" size="1.5, 0.3, 1.5" color="{%WallColor}" time="-1" />

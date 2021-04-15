@@ -9,7 +9,7 @@
 		<PoolColor>0.0, 0.0, 0.2, 0.25</PoolColor>
 		<WallColor>1.0, 0.0, 0.0, 0.75</WallColor>
 		<KillColor>0.0, 0.0, 0.0, 1.0</KillColor>
-		<PoolHeight>4.0</PoolHeight>
+		<PoolHeight>5.0</PoolHeight>
 		<PoolDepth>2.0</PoolDepth>
 		<PoolWidth>6.0</PoolWidth>
 		<PoolLeftRight>5.975000</PoolLeftRight>
@@ -21,13 +21,14 @@
 		<Actor type="static" primitive="cube" pos="0.000000, {%PoolHeight}, -{%PoolTopBottom}" size="{%PoolWidth}, {%PoolHeight}, 0.025000" color="{%PoolColor}" alpha="{%PoolAlpha}" time="-1" />
 		<Actor type="static" primitive="cube" pos="0.000000, {%PoolHeight}, {%PoolTopBottom}" size="{%PoolWidth}, {%PoolHeight}, 0.025000" color="{%PoolColor}" alpha="{%PoolAlpha}" time="-1" />
 
-		<Actor blending="false" type="static" primitive="cube" pos="3.00000, 4.000000, 0.000000" size="2.900000, 0.250000, 1.975" rotate="0.0, 0.0, 0.25" color="{%WallColor}" time="-1" />
-		<Actor blending="false" type="static" primitive="cube" pos="-3.00000, 4.000000, 0.000000" size="2.900000, 0.250000, 1.975" rotate="0.0, 0.0, -0.25" color="{%WallColor}" time="-1" />
+		<Actor blending="false" type="static" primitive="cube" pos="3.10000, 4.500000, 0.000000" size="3.0, 0.250000, 1.975" rot="0.0, 0.0, 0.3" color="{%WallColor}" time="-1" />
+		<Actor blending="false" type="static" primitive="cube" pos="-3.10000, 4.500000, 0.000000" size="3.0, 0.250000, 1.975" rot="0.0, 0.0, -0.3" color="{%WallColor}" time="-1" />
 		
-		<Actor blending="false" type="static" primitive="cube" pos="0.0, 0.5, 0.0" size="2.0, 0.1, 1.975" rotate="0.0, 0.0, 0.0" color="{%WallColor}" time="-1" />
-		<Actor blending="false" type="static" primitive="cube" pos="-1.9, 1.1, 0.0" size="0.1, 0.5, 1.975" rotate="0.0, 0.0, 0.0" color="{%WallColor}" time="-1" />
-		<Actor blending="false" type="static" primitive="cube" pos="1.9, 1.1, 0.0" size="0.1, 0.5, 1.975" rotate="0.0, 0.0, 0.0" color="{%WallColor}" time="-1" />
+		<Actor blending="false" type="static" primitive="cube" pos="0.0, 1.5, 0.0" size="2.0, 0.1, 1.975" rot="0.0, 0.0, 0.0" color="{%WallColor}" time="-1" />
+		<Actor blending="false" type="static" primitive="cube" pos="-1.9, 2.0, 0.0" size="0.1, 0.5, 1.975" rot="0.0, 0.0, 0.0" color="{%WallColor}" time="-1" />
+		<Actor blending="false" type="static" primitive="cube" pos="1.9, 2.0, 0.0" size="0.1, 0.5, 1.975" rot="0.0, 0.0, 0.0" color="{%WallColor}" time="-1" />
 		
+		<Actor blending="false" type="static" primitive="cube" pos="0.0, -0.25, 0.0" size="{%PoolWidth}, 0.5, {%PoolDepth}" rot="0.0, 0.0, 0.0" color="{%KillColor}" time="-1" particleDrain="true" />
 	</Actors>
 	<Fluids>
 		<Fluid type="blob" pos="4.0, 6.0, 0.0" size="2.0, 2.0, 3.75" vel="0.0, 0.0, 0.0" time="-1"></Fluid>

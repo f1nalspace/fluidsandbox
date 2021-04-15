@@ -26,15 +26,6 @@ struct FluidScenario
 	FluidScenario();
 	~FluidScenario(void);
 
-	void addActor(Actor* actor) { actors.push_back(actor); }
-	void addFluidContainer(FluidContainer* fluidContainer) { fluidContainers.push_back(fluidContainer); }
-
-	size_t getActorCount() const { return actors.size(); }
-	Actor* getActor(const size_t index) { return actors[index]; }
-
-	size_t getFluidContainerCount() const { return fluidContainers.size(); }
-	FluidContainer* getFluidContainer(size_t index) { return fluidContainers[index]; }
-
 	static FluidScenario* load(const char* filename, CScene* scene);
 };
 

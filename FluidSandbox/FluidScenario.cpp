@@ -16,15 +16,7 @@ FluidScenario::FluidScenario() {
 	this->name[0] = 0;
 	this->actorCreatePosition = glm::vec3(0.0f, 0.0f, 0.0f);
 	this->sim = FluidSimulationProperties();
-#if 0
-	this->viscosity = 20.0f;
-	this->stiffness = 35.0f;
-	this->damping = 0.0f;
-	this->particleDistanceFactor = 2.0f;
-	this->particleRenderFactor = 1.0f;
-	this->particleRadius = 0.05f;
-	this->particleMinDensity = 0.01f;
-#endif
+	this->render = FluidRenderProperties();
 	this->gravity = glm::vec3(0.0f, -9.8f, 0.0f);
 }
 
@@ -147,7 +139,9 @@ FluidScenario *FluidScenario::load(const char *filename, CScene *scene) {
 
 					glm::vec4 color = Utils::toVec4(XMLUtils::getAttribute(actorNode, "color", "1, 1, 1, 1"));
 					glm::vec3 velocity = Utils::toVec3(XMLUtils::getAttribute(actorNode, "vel", "0, 0, 0"), glm::vec3(0.0f));
-					glm::vec3 rotate = Utils::toVec3(XMLUtils::getAttribute(actorNode, "rotate", "0, 0, 0"), glm::vec3(0.0f));
+
+					// TODO(final): Change scenario format to degrees instead and convert it to radians here!
+					glm::vec3 eulerRotation = Utils::toVec3(XMLUtils::getAttribute(actorNode, "rot", "0, 0, 0"), glm::vec3(0.0f));
 
 					std::string defaultDensity = Utils::toString(scene->defaultActorDensity);
 
@@ -156,35 +150,33 @@ FluidScenario *FluidScenario::load(const char *filename, CScene *scene) {
 					int actorTime = Utils::toInt(XMLUtils::getAttribute(actorNode, "time", "0"));
 					float density = Utils::toFloat(XMLUtils::getAttribute(actorNode, "density", defaultDensity.c_str()));
 					float radius = Utils::toFloat(XMLUtils::getAttribute(actorNode, "radius", "0.5"));
+					float halfHeight = Utils::toFloat(XMLUtils::getAttribute(actorNode, "halfHeight", "1.0"));
 					bool visible = Utils::toBool(XMLUtils::getAttribute(actorNode, "visible", "true"));
 					bool blending = Utils::toBool(XMLUtils::getAttribute(actorNode, "blending", defaultBlending.c_str()));
 					bool particleDrain = Utils::toBool(XMLUtils::getAttribute(actorNode, "particleDrain", "false"));
 
-					Actor *newactor = NULL;
+					Actor *newactor = nullptr;
 					if(strcmp(primitive.c_str(), "cube") == 0) {
-						CubeActor *typedActor = new CubeActor(atype);
-						typedActor->size = size;
-						newactor = typedActor;
+						newactor = new CubeActor(atype, size);
 					} else if(strcmp(primitive.c_str(), "sphere") == 0) {
-						SphereActor *typedActor = new SphereActor(atype);
-						typedActor->radius = radius;
-						newactor = typedActor;
+						newactor = new SphereActor(atype, radius);
+					} else if(strcmp(primitive.c_str(), "capsule") == 0) {
+						newactor = new CapsuleActor(atype, radius, halfHeight);
 					} else {
 						std::cerr << "    Actor primitive type '" << primitive << "' is not valid!" << std::endl;
 					}
 
-					newactor->pos = pos;
-					newactor->time = actorTime;
-					newactor->color = color;
-					newactor->density = density;
-					newactor->velocity = velocity;
-					newactor->visible = visible;
-					newactor->blending = blending;
-					newactor->rotation = rotate;
-					newactor->particleDrain = particleDrain;
-
-					if(newactor) {
-						newScenario->addActor(newactor);
+					if(newactor != nullptr) {
+						newactor->transform.position = pos;
+						newactor->transform.rotation = glm::quat(eulerRotation);
+						newactor->time = actorTime;
+						newactor->color = color;
+						newactor->density = density;
+						newactor->velocity = velocity;
+						newactor->visible = visible;
+						newactor->blending = blending;
+						newactor->particleDrain = particleDrain;
+						newScenario->actors.push_back(newactor);
 					}
 
 				}
@@ -210,7 +202,7 @@ FluidScenario *FluidScenario::load(const char *filename, CScene *scene) {
 					uint32_t emitterDuration = Utils::toUInt(XMLUtils::getAttribute(fluidNode, "emitterDuration", "0"));
 					uint32_t emitterCoolDown = Utils::toUInt(XMLUtils::getAttribute(fluidNode, "emitterCoolDown", "0"));
 					FluidContainer *fluidCon = new FluidContainer(pos, size, fluidType);
-					fluidCon->vel = velocity;
+					fluidCon->velocity = velocity;
 					fluidCon->time = fluidTime;
 					fluidCon->radius = radius;
 					fluidCon->isEmitter = isEmitter;
@@ -218,7 +210,7 @@ FluidScenario *FluidScenario::load(const char *filename, CScene *scene) {
 					fluidCon->emitterTime = emitterTime;
 					fluidCon->emitterDuration = emitterDuration;
 					fluidCon->emitterCoolDown = emitterCoolDown;
-					newScenario->addFluidContainer(fluidCon);
+					newScenario->fluidContainers.push_back(fluidCon);
 				}
 			}
 		}

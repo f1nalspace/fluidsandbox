@@ -1,6 +1,7 @@
 #pragma once
 
 #include <glm/glm.hpp>
+#include <glm/gtc/quaternion.hpp>
 
 enum class ActorMovementType {
 	Static = 0,
@@ -16,11 +17,21 @@ enum class ActorType {
 	Fluid
 };
 
+struct ActorTransform {
+	glm::quat rotation;
+	glm::vec3 position;
+
+	ActorTransform():
+		rotation(glm::quat()),
+		position(glm::vec3(0.0f)) {
+
+	}
+};
+
 struct Actor {
+	ActorTransform transform;
 	glm::vec4 color;
-	glm::vec3 pos;
 	glm::vec3 velocity;
-	glm::vec3 rotation;
 	void *physicsData;
 	float timeElapsed;
 	float density;
@@ -32,10 +43,9 @@ struct Actor {
 	bool particleDrain;
 
 	Actor(const ActorType type, const ActorMovementType movementType):
+		transform(ActorTransform()),
 		color(glm::vec4(1.0f)),
-		pos(glm::vec3(0)),
 		velocity(glm::vec3(0.0f)),
-		rotation(glm::vec3(0.0f)),
 		physicsData(nullptr),
 		timeElapsed(0.0f),
 		density(1.0f),
