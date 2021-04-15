@@ -1,5 +1,7 @@
 #pragma once
 
+#include <assert.h>
+
 struct FluidSimulationProperties {
 	constexpr static float DefaultViscosity = 10.0f;
 	constexpr static float DefaultStiffness = 50.0f;
@@ -8,7 +10,7 @@ struct FluidSimulationProperties {
 	constexpr static float DefaultDynamicFriction = 0.001f;
 	constexpr static float DefaultMaxMotionDistance = 0.3f;
 	constexpr static float DefaultRestOffset = 0.12f;
-	constexpr static float DefaultContactOffset = 0.036f;
+	constexpr static float DefaultContactOffset = 0.12f;
 	constexpr static float DefaultParticleMass = 0.005f;
 	constexpr static float DefaultParticleRadius = 0.05f;
 	constexpr static float DefaultParticleRestDistanceFactor = 2.0f;
@@ -44,6 +46,9 @@ struct FluidSimulationProperties {
 		result.particleDistanceFactor = particleDistanceFactor;
 		result.restParticleDistance = particleRadius * particleDistanceFactor;
 		result.gridSize = particleRadius * DefaultParticleGridFactor;
+
+		assert(result.contactOffset >= result.restOffset);
+
 		return(result);
 	}
 };

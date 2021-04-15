@@ -748,6 +748,8 @@ CFluidSystem *CreateParticleFluidSystem() {
 	particleSystemDesc.contactOffset = gFluidContactOffset;
 	particleSystemDesc.gridSize = gFluidParticleRadius * 6;
 
+	assert(particleSystemDesc.contactOffset >= particleSystemDesc.restOffset);
+
 	return new CFluidSystem(gPhysicsSDK, particleSystemDesc, MAX_FLUID_PARTICLES);
 }
 
