@@ -28,7 +28,6 @@
   <ItemGroup>
     <ClInclude Include="Camera.hpp" />
     <ClInclude Include="FBO.h" />
-    <ClInclude Include="FluidContainer.hpp" />
     <ClInclude Include="FluidScenario.h" />
     <ClInclude Include="FluidSystem.h" />
     <ClInclude Include="Frustum.h" />

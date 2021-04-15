@@ -41,6 +41,7 @@ struct Actor {
 	bool visible;
 	bool blending;
 	bool particleDrain;
+	bool isTemplate;
 
 	Actor(const ActorType type, const ActorMovementType movementType):
 		transform(ActorTransform()),
@@ -54,6 +55,24 @@ struct Actor {
 		time(0),
 		visible(true),
 		blending(false),
-		particleDrain(false) {
+		particleDrain(false),
+		isTemplate(false) {
+	}
+
+	void Assign(const Actor *source) {
+		assert(source != nullptr);
+		transform = source->transform;
+		color = source->color;
+		velocity = source->velocity;
+		physicsData = nullptr;
+		timeElapsed = source->timeElapsed;
+		density = source->density;
+		type = source->type;
+		movementType = source->movementType;
+		time = source->time;
+		visible = source->visible;
+		blending = source->blending;
+		particleDrain = source->particleDrain;
+		isTemplate = source->isTemplate;
 	}
 };

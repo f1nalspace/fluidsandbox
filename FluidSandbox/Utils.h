@@ -7,8 +7,9 @@
 
 #include "GLSL.h"
 #include "OSLowLevel.h"
-#include "FluidContainer.hpp"
 #include "Actor.hpp"
+
+#include "AllActors.hpp"
 
 namespace Utils {
 	void trim(std::string &str);

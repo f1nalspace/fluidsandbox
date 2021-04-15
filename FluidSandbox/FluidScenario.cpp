@@ -22,17 +22,17 @@ FluidScenario::FluidScenario() {
 
 
 FluidScenario::~FluidScenario(void) {
-	for(size_t i = 0; i < fluidContainers.size(); i++) {
-		FluidContainer *container = fluidContainers[i];
-		delete container;
+	for(size_t i = 0; i < fluids.size(); i++) {
+		const FluidActor *fluid = fluids[i];
+		delete fluid;
 	}
-	fluidContainers.clear();
+	fluids.clear();
 
-	for(size_t i = 0; i < actors.size(); i++) {
-		Actor *actor = actors[i];
-		delete actor;
+	for(size_t i = 0; i < bodies.size(); i++) {
+		const Actor *body = bodies[i];
+		delete body;
 	}
-	actors.clear();
+	bodies.clear();
 }
 
 FluidScenario *FluidScenario::load(const char *filename, CScene *scene) {
@@ -155,28 +155,29 @@ FluidScenario *FluidScenario::load(const char *filename, CScene *scene) {
 					bool blending = Utils::toBool(XMLUtils::getAttribute(actorNode, "blending", defaultBlending.c_str()));
 					bool particleDrain = Utils::toBool(XMLUtils::getAttribute(actorNode, "particleDrain", "false"));
 
-					Actor *newactor = nullptr;
+					Actor *newBody = nullptr;
 					if(strcmp(primitive.c_str(), "cube") == 0) {
-						newactor = new CubeActor(atype, size);
+						newBody = new CubeActor(atype, size);
 					} else if(strcmp(primitive.c_str(), "sphere") == 0) {
-						newactor = new SphereActor(atype, radius);
+						newBody = new SphereActor(atype, radius);
 					} else if(strcmp(primitive.c_str(), "capsule") == 0) {
-						newactor = new CapsuleActor(atype, radius, halfHeight);
+						newBody = new CapsuleActor(atype, radius, halfHeight);
 					} else {
 						std::cerr << "    Actor primitive type '" << primitive << "' is not valid!" << std::endl;
 					}
 
-					if(newactor != nullptr) {
-						newactor->transform.position = pos;
-						newactor->transform.rotation = glm::quat(eulerRotation);
-						newactor->time = actorTime;
-						newactor->color = color;
-						newactor->density = density;
-						newactor->velocity = velocity;
-						newactor->visible = visible;
-						newactor->blending = blending;
-						newactor->particleDrain = particleDrain;
-						newScenario->actors.push_back(newactor);
+					if(newBody != nullptr) {
+						newBody->transform.position = pos;
+						newBody->transform.rotation = glm::quat(eulerRotation);
+						newBody->time = actorTime;
+						newBody->color = color;
+						newBody->density = density;
+						newBody->velocity = velocity;
+						newBody->visible = visible;
+						newBody->blending = blending;
+						newBody->particleDrain = particleDrain;
+						newBody->isTemplate = true;
+						newScenario->bodies.push_back(newBody);
 					}
 
 				}
@@ -201,7 +202,8 @@ FluidScenario *FluidScenario::load(const char *filename, CScene *scene) {
 					float emitterTime = emitterRate > 0.0f ? 1000.0f / emitterRate : 0.0f;
 					uint32_t emitterDuration = Utils::toUInt(XMLUtils::getAttribute(fluidNode, "emitterDuration", "0"));
 					uint32_t emitterCoolDown = Utils::toUInt(XMLUtils::getAttribute(fluidNode, "emitterCoolDown", "0"));
-					FluidContainer *fluidCon = new FluidContainer(pos, size, fluidType);
+					FluidActor *fluidCon = new FluidActor(size, radius, fluidType);
+					fluidCon->transform.position = pos;
 					fluidCon->velocity = velocity;
 					fluidCon->time = fluidTime;
 					fluidCon->radius = radius;
@@ -210,7 +212,8 @@ FluidScenario *FluidScenario::load(const char *filename, CScene *scene) {
 					fluidCon->emitterTime = emitterTime;
 					fluidCon->emitterDuration = emitterDuration;
 					fluidCon->emitterCoolDown = emitterCoolDown;
-					newScenario->fluidContainers.push_back(fluidCon);
+					fluidCon->isTemplate = true;
+					newScenario->fluids.push_back(fluidCon);
 				}
 			}
 		}

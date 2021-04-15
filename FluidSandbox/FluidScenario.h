@@ -6,17 +6,18 @@
 
 #include <glm/glm.hpp> 
 
-#include "FluidContainer.hpp"
 #include "Actor.hpp"
 #include "Scene.h"
+
+#include "AllActors.hpp"
 
 struct FluidScenario
 {
 	glm::vec3 actorCreatePosition;
 	glm::vec3 gravity;
 
-	std::vector<Actor *> actors;
-	std::vector<FluidContainer *> fluidContainers;
+	std::vector<const Actor *> bodies;
+	std::vector<const FluidActor *> fluids;
 
 	char name[128];
 
