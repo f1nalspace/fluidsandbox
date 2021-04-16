@@ -14,8 +14,8 @@
 		<PoolTopBottom>2.025000</PoolTopBottom>
 	</Variables>
 	<FluidProperties>
-		<Viscosity>50.0</Viscosity>
-		<Stiffness>50.0</Stiffness>
+	<Viscosity>10.0</Viscosity>
+	<Stiffness>10.0</Stiffness>
 	</FluidProperties>
 	<Actors>
 		<Actor type="static" primitive="cube" pos="{%PoolLeftRight}, {%PoolHeight}, 0.000000" size="0.025000, {%PoolHeight}, {%PoolDepth}" color="{%PoolColor}" alpha="{%PoolAlpha}" time="-1" />
