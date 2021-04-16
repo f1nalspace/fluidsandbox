@@ -106,7 +106,13 @@ Scenario *Scenario::load(const char *filename, CScene *scene) {
 
 				newScenario->sim.viscosity = XMLUtils::findNodeFloat(fpNode, "Viscosity", scene->sim.viscosity);
 				newScenario->sim.stiffness = XMLUtils::findNodeFloat(fpNode, "Stiffness", scene->sim.stiffness);
+				newScenario->sim.restitution = XMLUtils::findNodeFloat(fpNode, "Restitution", scene->sim.restitution);
 				newScenario->sim.damping = XMLUtils::findNodeFloat(fpNode, "Damping", scene->sim.damping);
+				newScenario->sim.dynamicFriction = XMLUtils::findNodeFloat(fpNode, "DynamicFriction", scene->sim.dynamicFriction);
+				newScenario->sim.maxMotionDistance = XMLUtils::findNodeFloat(fpNode, "MaxMotionDistance", scene->sim.maxMotionDistance);
+				newScenario->sim.restOffset = XMLUtils::findNodeFloat(fpNode, "RestOffset", scene->sim.restOffset);
+				newScenario->sim.contactOffset = XMLUtils::findNodeFloat(fpNode, "ContactOffset", scene->sim.contactOffset);
+				newScenario->sim.particleMass = XMLUtils::findNodeFloat(fpNode, "ParticleMass", scene->sim.particleMass);
 
 				newScenario->render.particleRenderFactor = XMLUtils::findNodeFloat(fpNode, "ParticleRenderFactor", scene->render.particleRenderFactor);
 				newScenario->render.minDensity = XMLUtils::findNodeFloat(fpNode, "ParticleMinDensity", scene->render.minDensity);
