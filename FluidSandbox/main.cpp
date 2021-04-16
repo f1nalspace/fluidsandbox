@@ -265,7 +265,7 @@ static Scenario *gActiveFluidScenario = nullptr;
 static int gActiveFluidScenarioIdx = -1;
 
 // Fluid modification
-static int gFluidLatestExternalAccelerationTime = -1;
+static int64_t gFluidLatestExternalAccelerationTime = -1;
 
 // Fluid property realtime change
 const unsigned int FLUID_PROPERTY_NONE = 0;
@@ -2385,7 +2385,10 @@ void initResources() {
 
 	// Create skybox vbo and shader
 	printf("  Create skybox\n");
-	gSkyboxVBO = Primitives::createCube(100, 100, 100, false);
+	Primitives::Primitive boxPrim = Primitives::createBox(glm::vec3(100.0f));
+	gSkyboxVBO = new CVBO();
+	gSkyboxVBO->bufferVertices(&boxPrim.positions[0][0], boxPrim.sizeOfPositions, GL_STATIC_DRAW);
+	gSkyboxVBO->bufferIndices(&boxPrim.indices[0], boxPrim.indexCount, GL_STATIC_DRAW);
 	gSkyboxShader = new CSkyboxShader();
 	Utils::attachShaderFromFile(gSkyboxShader, GL_VERTEX_SHADER, "shaders\\Skybox.vertex", "    ");
 	Utils::attachShaderFromFile(gSkyboxShader, GL_FRAGMENT_SHADER, "shaders\\Skybox.fragment", "    ");
