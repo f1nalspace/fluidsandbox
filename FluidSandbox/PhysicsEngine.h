@@ -66,6 +66,8 @@ struct PhysicsShape {
 
 	Type type;
 
+	bool isParticleDrain;
+
 	union {
 		PhysicsPlane plane;
 		PhysicsBoxShape box;
@@ -87,6 +89,7 @@ struct PhysicsRigidBody: public PhysicsActor {
 	glm::quat rotation;
 	glm::vec3 position;
 	glm::vec3 velocity;
+	float density;
 
 	uint32_t shapeCount;
 	MotionKind motionKind;
@@ -95,12 +98,13 @@ protected:
 		PhysicsActor(PhysicsActor::Type::RigidBody),
 		position(glm::vec3(0)),
 		velocity(glm::vec3(0)),
+		density(1.0f),
 		shapeCount(0),
 		motionKind(motionKind) {
 		memset(shapes, 0, sizeof(shapes));
 	}
 public:
-	void AddShape(const PhysicsShape &shape) {
+	virtual void AddShape(const PhysicsShape &shape) {
 		assert(shapeCount < MaxShapeCount);
 		PhysicsShape *targetShape = shapes + shapeCount;
 		*targetShape = shape;
@@ -142,11 +146,6 @@ public:
 		newShape.localPosition = localPosition;
 		newShape.localRotation = localRotation;
 		AddShape(newShape);
-	}
-
-	void ClearShapes() {
-		memset(shapes, 0, sizeof(shapes));
-		shapeCount = 0;
 	}
 };
 
@@ -196,7 +195,7 @@ protected:
 	virtual PhysicsParticleSystem *CreateParticleSystem(const FluidSimulationProperties &desc, const uint32_t maxParticleCount) = 0;
 	virtual void AddActor(PhysicsActor *actor) = 0;
 	virtual void RemoveActor(PhysicsActor *actor) = 0;
-	virtual PhysicsRigidBody *CreateRigidBody(const PhysicsRigidBody::MotionKind motionKind) = 0;
+	virtual PhysicsRigidBody *CreateRigidBody(const PhysicsRigidBody::MotionKind motionKind, const glm::vec3 &pos, const glm::quat &rotation, const PhysicsShape &shape) = 0;
 public:
 	PhysicsEngine();
 	~PhysicsEngine();
@@ -211,7 +210,7 @@ public:
 	void RemoveParticleSystem(PhysicsParticleSystem *particleSystem);
 	virtual bool AddParticles(PhysicsParticleSystem *particleSystem, const PhysicsParticlesStorage &storage) = 0;
 
-	PhysicsRigidBody *AddRigidBody(const PhysicsRigidBody::MotionKind motionKind);
+	PhysicsRigidBody *AddRigidBody(const PhysicsRigidBody::MotionKind motionKind, const glm::vec3 &pos, const glm::quat &rotation, const PhysicsShape &shape);
 	void RemoveRigidBody(PhysicsRigidBody *body);
 
 	virtual bool SupportsGPUAcceleration() = 0;

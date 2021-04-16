@@ -81,11 +81,76 @@ struct NativePhysicsActor: public PhysicsActor {
 
 struct NativeRigidBody: public PhysicsRigidBody, public NativePhysicsActor {
 	physx::PxRigidActor *nRigidActor;
+	physx::PxPhysics *physics;
+	physx::PxMaterial *defaultMaterial;
 
-	NativeRigidBody(MotionKind motionKind):
+	physx::PxShape *CreateShape(const PhysicsShape &shape) {
+		physx::PxGeometry *geometry = nullptr;
+		physx::PxBoxGeometry boxGeometry;
+		physx::PxSphereGeometry sphereGeometry;
+		physx::PxCapsuleGeometry capsuleGeometry;
+		switch(shape.type) {
+			case PhysicsShape::Type::Box:
+				boxGeometry = physx::PxBoxGeometry(shape.box.halfExtents.x, shape.box.halfExtents.y, shape.box.halfExtents.z);
+				geometry = &boxGeometry;
+				break;
+			case PhysicsShape::Type::Sphere:
+				sphereGeometry = physx::PxSphereGeometry(shape.sphere.radius);
+				geometry = &sphereGeometry;
+				break;
+			case PhysicsShape::Type::Capsule:
+				capsuleGeometry = physx::PxCapsuleGeometry(shape.capsule.radius, shape.capsule.halfHeight);
+				geometry = &capsuleGeometry;
+				break;
+			default:
+				assert(!"Shape type not supported!");
+				break;
+		}
+
+		physx::PxShapeFlags shapeFlags =
+			physx::PxShapeFlag::eVISUALIZATION |
+			physx::PxShapeFlag::eSCENE_QUERY_SHAPE |
+			physx::PxShapeFlag::eSIMULATION_SHAPE;
+		if(shape.isParticleDrain) {
+			shapeFlags |= physx::PxShapeFlag::ePARTICLE_DRAIN;
+		}
+
+		physx::PxShape *result = physics->createShape(*geometry, *defaultMaterial, true, shapeFlags);
+		return(result);
+	}
+
+	NativeRigidBody(physx::PxPhysics *physics, physx::PxMaterial *defaultMaterial, const MotionKind motionKind, const glm::vec3 &pos, const glm::quat &rotation, const PhysicsShape &shape):
 		PhysicsRigidBody(motionKind),
 		NativePhysicsActor(PhysicsActor::Type::RigidBody),
-		nRigidActor(nullptr) {
+		nRigidActor(nullptr),
+		physics(physics),
+		defaultMaterial(defaultMaterial) {
+		this->position = position;
+		this->rotation = rotation;
+		physx::PxVec3 npos = PhysicsUtils::toPxVec3(position);
+		physx::PxQuat nrot = PhysicsUtils::toPxQuat(rotation);
+		physx::PxTransform transform = physx::PxTransform(npos, nrot);
+		physx::PxShape *newShape = CreateShape(shape);
+		if(motionKind == PhysicsRigidBody::MotionKind::Static) {
+			nRigidActor = physx::PxCreateStatic(*physics, transform, *newShape);
+		} else {
+			nRigidActor = physx::PxCreateDynamic(*physics, transform, *newShape, density);
+		}
+	}
+
+	~NativeRigidBody() {
+		if(nRigidActor != nullptr) {
+			nRigidActor->release();
+			nRigidActor = nullptr;
+		}
+		NativePhysicsActor::~NativePhysicsActor();
+		PhysicsRigidBody::~PhysicsRigidBody();
+	}
+
+	void AddShape(const PhysicsShape &shape) {
+		PhysicsRigidBody::AddShape(shape);
+		physx::PxShape *newShape = CreateShape(shape);
+		nRigidActor->attachShape(*newShape);
 	}
 };
 
@@ -230,7 +295,7 @@ struct NativeParticleSystem: public PhysicsParticleSystem {
 };
 
 class NativePhysicsEngine: public PhysicsEngine {
-private:
+public:
 	constexpr static char *PVD_Host = "localhost";
 	constexpr static int PVD_Port = 5425;
 
@@ -324,7 +389,7 @@ private:
 			foundation = nullptr;
 		}
 	}
-public:
+
 	NativePhysicsEngine::NativePhysicsEngine(const PhysicsEngineConfiguration &config):
 		PhysicsEngine(),
 		foundation(nullptr),
@@ -583,8 +648,8 @@ public:
 		return(result);
 	}
 
-	PhysicsRigidBody *CreateRigidBody(const PhysicsRigidBody::MotionKind motionKind) {
-		NativeRigidBody *nativeRigidBody = new NativeRigidBody(motionKind);
+	PhysicsRigidBody *CreateRigidBody(const PhysicsRigidBody::MotionKind motionKind, const glm::vec3 &pos, const glm::quat &rotation, const PhysicsShape &shape) {
+		PhysicsRigidBody *nativeRigidBody = new NativeRigidBody(physics, defaultMaterial, motionKind, pos, rotation, shape);
 		return(nativeRigidBody);
 	}
 
@@ -653,8 +718,8 @@ void PhysicsEngine::RemoveParticleSystem(PhysicsParticleSystem *particleSystem) 
 	}
 }
 
-PhysicsRigidBody *PhysicsEngine::AddRigidBody(const PhysicsRigidBody::MotionKind motionKind) {
-	PhysicsRigidBody *result = CreateRigidBody(motionKind);
+PhysicsRigidBody *PhysicsEngine::AddRigidBody(const PhysicsRigidBody::MotionKind motionKind, const glm::vec3 &pos, const glm::quat &rotation, const PhysicsShape &shape) {
+	PhysicsRigidBody *result = CreateRigidBody(motionKind, pos, rotation, shape);
 	if(result != nullptr) {
 		AddActor(result);
 		actors.push_back(result);
