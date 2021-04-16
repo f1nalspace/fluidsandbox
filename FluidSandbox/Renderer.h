@@ -103,11 +103,10 @@ public:
 	void EnableTexture(const int index, CTexture *texture);
 	void DisableTexture(const int index, CTexture *texture);
 
-	void DrawSphere(const float radius, const uint32_t N);
 	void DrawTexturedQuad(const float posX, const float posY, const float scaleW, const float scaleH);
 	void DrawTexturedRect(const float left, const float top, const float right, const float bottom);
 	void DrawSimpleRect(const float left, const float top, const float right, const float bottom);
-	void DrawVBO(CVBO *vbo, const GLenum mode);
+	void DrawVBO(CVBO *vbo, const GLenum mode, const GLuint count);
 	glm::vec2 GetStringSize(const CTextureFont *fontTex, const char *text, const size_t textLen, const float charHeight);
 	void DrawString(const int texIndex, CTextureFont *fontTex, const float posX, const float posY, const float charHeight, const char *text, const size_t textLen);
 	void DrawString(const int texIndex, CTextureFont *fontTex, const float posX, const float posY, const float charHeight, const char *text);

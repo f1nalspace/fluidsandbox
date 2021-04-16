@@ -181,13 +181,8 @@ static physx::PxGpuDispatcher *gGPUDispatcher = nullptr;
 static physx::PxCudaContextManager *gCudaContextManager = nullptr;
 
 // Window vars
-static bool windowFullscreen = false;
-static int windowWidth = 1280;
-static int windowHeight = 720;
-static int lastWindowWidth = windowWidth;
-static int lastWindowHeight = windowHeight;
-static int lastWindowPosX = 0;
-static int lastWindowPosY = 0;
+constexpr int DefaultWindowWidth = 1280;
+constexpr int DefaultWindowHeight = 720;
 
 constexpr float defaultFov = 60.0;
 constexpr float defaultZNear = 0.1f;
@@ -325,7 +320,10 @@ static CGLSL *gSceneShader = nullptr;
 static CVBO *gSkyboxVBO = nullptr;
 static CSkyboxShader *gSkyboxShader = nullptr;
 static CTexture *gSkyboxCubemap = nullptr;
-static CTexture *gTestTexture = nullptr;
+
+static CVBO *gBoxVBO = nullptr;
+static CVBO *gSphereVBO = nullptr;
+static CVBO *gCylinderVBO = nullptr;
 
 static FontAtlas *gFontAtlas16 = nullptr;
 static FontAtlas *gFontAtlas32 = nullptr;
@@ -963,42 +961,6 @@ glm::mat4 getColumnMajor(physx::PxMat33 m, physx::PxVec3 t) {
 	return mat;
 }
 
-void DrawGLCube(float hx, float hy, float hz) {
-	glBegin(GL_QUADS);		// Draw The Cube Using quads
-
-	glNormal3f(0.0f, 1.0f, 0.0f); glVertex3f(hx, hy, -hz);	// Top Right Of The Quad (Top)
-	glNormal3f(0.0f, 1.0f, 0.0f); glVertex3f(-hx, hy, -hz);	// Top Left Of The Quad (Top)
-	glNormal3f(0.0f, 1.0f, 0.0f); glVertex3f(-hx, hy, hz);	// Bottom Left Of The Quad (Top)
-	glNormal3f(0.0f, 1.0f, 0.0f); glVertex3f(hx, hy, hz);	// Bottom Right Of The Quad (Top)
-
-	glNormal3f(0.0f, -1.0f, 0.0f); glVertex3f(hx, -hy, hz);	// Top Right Of The Quad (Bottom)
-	glNormal3f(0.0f, -1.0f, 0.0f); glVertex3f(-hx, -hy, hz);	// Top Left Of The Quad (Bottom)
-	glNormal3f(0.0f, -1.0f, 0.0f); glVertex3f(-hx, -hy, -hz);	// Bottom Left Of The Quad (Bottom)
-	glNormal3f(0.0f, -1.0f, 0.0f); glVertex3f(hx, -hy, -hz);	// Bottom Right Of The Quad (Bottom)
-
-	glNormal3f(0.0f, 0.0, 1.0f); glVertex3f(hx, hy, hz);	// Top Right Of The Quad (Front)
-	glNormal3f(0.0f, 0.0, 1.0f); glVertex3f(-hx, hy, hz);	// Top Left Of The Quad (Front)
-	glNormal3f(0.0f, 0.0, 1.0f); glVertex3f(-hx, -hy, hz);	// Bottom Left Of The Quad (Front)
-	glNormal3f(0.0f, 0.0, 1.0f); glVertex3f(hx, -hy, hz);	// Bottom Right Of The Quad (Front)
-
-	glNormal3f(0.0f, 0.0, -1.0f); glVertex3f(hx, -hy, -hz);	// Top Right Of The Quad (Back)
-	glNormal3f(0.0f, 0.0, -1.0f); glVertex3f(-hx, -hy, -hz);	// Top Left Of The Quad (Back)
-	glNormal3f(0.0f, 0.0, -1.0f); glVertex3f(-hx, hy, -hz);	// Bottom Left Of The Quad (Back)
-	glNormal3f(0.0f, 0.0, -1.0f); glVertex3f(hx, hy, -hz);	// Bottom Right Of The Quad (Back)
-
-	glNormal3f(-1.0f, 0.0, 0.0f); glVertex3f(-hx, hy, hz);	// Top Right Of The Quad (Left)
-	glNormal3f(-1.0f, 0.0, 0.0f); glVertex3f(-hx, hy, -hz);	// Top Left Of The Quad (Left)
-	glNormal3f(-1.0f, 0.0, 0.0f); glVertex3f(-hx, -hy, -hz);	// Bottom Left Of The Quad (Left)
-	glNormal3f(-1.0f, 0.0, 0.0f); glVertex3f(-hx, -hy, hz);	// Bottom Right Of The Quad (Left)
-
-	glNormal3f(1.0f, 0.0, 0.0f); glVertex3f(hx, hy, -hz);	// Top Right Of The Quad (Right)
-	glNormal3f(1.0f, 0.0, 0.0f); glVertex3f(hx, hy, hz);	// Top Left Of The Quad (Right)
-	glNormal3f(1.0f, 0.0, 0.0f); glVertex3f(hx, -hy, hz);	// Bottom Left Of The Quad (Right)
-	glNormal3f(1.0f, 0.0, 0.0f); glVertex3f(hx, -hy, -hz);	// Bottom Right Of The Quad (Right)
-
-	glEnd();			// End Drawing The Cube
-}
-
 void DrawGrid(int GRID_SIZE) {
 	glBegin(GL_LINES);
 	glColor3f(0.25f, 0.25f, 0.25f);
@@ -1044,7 +1006,25 @@ glm::vec4 getColor(physx::PxActor *actor, const glm::vec4 &defaultColor) {
 	}
 }
 
-void DrawBox(physx::PxShape *pShape) {
+void DrawPrimitive(CVBO *vbo) {
+	// Ensure that the matrix has correct transform for scale, position, rotation
+
+	// Vertex (vec3, vec3, vec2)
+	vbo->bind();
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_NORMAL_ARRAY);
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+	glVertexPointer(3, GL_FLOAT, sizeof(Primitives::Vertex), (void *)(offsetof(Primitives::Vertex, pos)));
+	glNormalPointer(GL_FLOAT, sizeof(Primitives::Vertex), (void *)(offsetof(Primitives::Vertex, normal)));
+	glTexCoordPointer(2, GL_FLOAT, sizeof(Primitives::Vertex), (void *)(offsetof(Primitives::Vertex, texcoord)));
+	gRenderer->DrawVBO(vbo, GL_TRIANGLES, vbo->indexCount);
+	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+	glDisableClientState(GL_NORMAL_ARRAY);
+	glDisableClientState(GL_VERTEX_ARRAY);
+	vbo->unbind();
+}
+
+void DrawBoxShape(physx::PxShape *pShape) {
 	physx::PxRigidActor *actor = pShape->getActor();
 	glm::vec4 color = getColor(actor, DefaultDynamicRigidBodyCubeColor);
 
@@ -1053,16 +1033,17 @@ void DrawBox(physx::PxShape *pShape) {
 	pShape->getBoxGeometry(bg);
 	physx::PxMat33 m = physx::PxMat33(pT.q);
 	glm::mat4 mat = getColumnMajor(m, pT.p);
-	glm::mat4 multm = gCamera.mvp * mat;
-	gRenderer->LoadMatrix(multm);
+	glm::mat4 scaled = glm::scale(mat, glm::vec3(bg.halfExtents.x, bg.halfExtents.y, bg.halfExtents.z));
+	glm::mat4 mvp = gCamera.mvp * scaled;
+	gRenderer->LoadMatrix(mvp);
 
 	gLightingShader->enable();
 	gLightingShader->uniform4f(gLightingShader->ulocColor, &color[0]);
-	DrawGLCube(bg.halfExtents.x, bg.halfExtents.y, bg.halfExtents.z);
+	DrawPrimitive(gBoxVBO);
 	gLightingShader->disable();
 }
 
-void DrawSphere(physx::PxShape *pShape) {
+void DrawSphereShape(physx::PxShape *pShape) {
 	physx::PxRigidActor *actor = pShape->getActor();
 	glm::vec4 color = getColor(actor, DefaultDynamicRigidBodySphereColor);
 
@@ -1071,16 +1052,17 @@ void DrawSphere(physx::PxShape *pShape) {
 	pShape->getSphereGeometry(sg);
 	physx::PxMat33 m = physx::PxMat33(pT.q);
 	glm::mat4 mat = getColumnMajor(m, pT.p);
-	glm::mat4 multm = gCamera.mvp * mat;
-	gRenderer->LoadMatrix(multm);
+	glm::mat4 scaled = glm::scale(mat, glm::vec3(sg.radius));
+	glm::mat4 mvp = gCamera.mvp * scaled;
+	gRenderer->LoadMatrix(mvp);
 
 	gLightingShader->enable();
 	gLightingShader->uniform4f(gLightingShader->ulocColor, &color[0]);
-	gRenderer->DrawSphere(sg.radius, 16);
+	DrawPrimitive(gSphereVBO);
 	gLightingShader->disable();
 }
 
-void DrawCapsule(physx::PxShape *pShape) {
+void DrawCapsuleShape(physx::PxShape *pShape) {
 	physx::PxRigidActor *actor = pShape->getActor();
 	glm::vec4 color = getColor(pShape->getActor(), DefaultDynamicRigidBodyCapsuleColor);
 
@@ -1098,10 +1080,15 @@ void DrawCapsule(physx::PxShape *pShape) {
 	glm::mat4 translation = glm::translate(rotation, glm::vec3(0.0f, 0.0f, -cg.halfHeight));
 	gRenderer->LoadMatrix(translation);
 	//glutSolidCylinder(cg.radius, 2 * cg.halfHeight, 16, 16);
-	gRenderer->DrawSphere(cg.radius, 16);
+
+	glm::mat4 scaled = glm::scale(translation, glm::vec3(cg.radius));
+	gRenderer->LoadMatrix(scaled);
+	DrawPrimitive(gSphereVBO);
+
 	glm::mat4 trans2 = glm::translate(translation, glm::vec3(0.0f, 0.0f, 2.0f * cg.halfHeight));
-	gRenderer->LoadMatrix(trans2);
-	gRenderer->DrawSphere(cg.radius, 16);
+	glm::mat4 scaled2 = glm::scale(trans2, glm::vec3(cg.radius));
+	gRenderer->LoadMatrix(scaled2);
+	DrawPrimitive(gSphereVBO);
 
 	gLightingShader->disable();
 }
@@ -1111,15 +1098,15 @@ void DrawShape(physx::PxShape *shape) {
 
 	switch(type) {
 		case physx::PxGeometryType::eBOX:
-			DrawBox(shape);
+			DrawBoxShape(shape);
 			break;
 
 		case physx::PxGeometryType::eSPHERE:
-			DrawSphere(shape);
+			DrawSphereShape(shape);
 			break;
 
 		case physx::PxGeometryType::eCAPSULE:
-			DrawCapsule(shape);
+			DrawCapsuleShape(shape);
 			break;
 	}
 }
@@ -1131,9 +1118,11 @@ void DrawBounds(const physx::PxBounds3 &bounds) {
 	GLfloat mat_diffuse[4] = { 0, 1, 1, 1 };
 	glColor4fv(mat_diffuse);
 
-	glm::mat4 mvp = glm::translate(gCamera.mvp, glm::vec3(center.x, center.y, center.z));
+	glm::mat4 translation = glm::translate(glm::mat4(1.0f), glm::vec3(center.x, center.y, center.z));
+	glm::mat4 scaled = glm::scale(translation, glm::vec3(scale.x * 0.5f, scale.y * 0.5f, scale.z * 0.5f));
+	glm::mat4 mvp = gCamera.mvp * scaled;
 	gRenderer->LoadMatrix(mvp);
-	DrawGLCube(scale.x / 2, scale.y / 2, scale.z / 2);
+	DrawPrimitive(gBoxVBO);
 }
 
 void DrawActorBounding(physx::PxActor *actor) {
@@ -1228,18 +1217,11 @@ void ShutdownPhysX() {
 		if(gPhysXVisualDebugger->isConnected())
 			gPhysXVisualDebugger->disconnect();
 		gPhysXVisualDebugger->release();
-	}
+}
 #endif
 
 	gPhysicsSDK->release();
 	gPhysXFoundation->release();
-}
-
-void OnReshape(int nw, int nh) {
-	windowWidth = nw;
-	windowHeight = nh;
-
-	if(windowHeight < 1) windowHeight = 1;
 }
 
 const char *GetNameOfActorCreationKind(const ActorCreationKind kind) {
@@ -1510,7 +1492,7 @@ void RenderOSDLine(OSDRenderPosition &osdpos, char *value) {
 }
 
 std::string drawingError = "";
-void RenderOSD() {
+void RenderOSD(const int windowWidth, const int windowHeight) {
 	char buffer[256];
 
 	// Setup ortho for font rendering
@@ -1643,9 +1625,7 @@ void RenderOSD() {
 
 void RenderSkybox(const glm::mat4 &mvp) {
 	if(!gSkyboxVBO) return;
-
 	if(!gSkyboxShader) return;
-
 	if(!gSkyboxCubemap) return;
 
 	gRenderer->SetColor(1, 1, 1, 1);
@@ -1657,14 +1637,7 @@ void RenderSkybox(const glm::mat4 &mvp) {
 	gSkyboxShader->enable();
 	gSkyboxShader->uniformMatrix4(gSkyboxShader->ulocMVP, &mvp[0][0]);
 	gSkyboxShader->uniform1i(gSkyboxShader->ulocCubemap, 0);
-
-	gSkyboxVBO->bind();
-	glEnableClientState(GL_VERTEX_ARRAY);
-	glVertexPointer(3, GL_FLOAT, sizeof(float) * 3, (void *)(0));
-	gSkyboxVBO->drawElements(GL_TRIANGLES);
-	glDisableClientState(GL_VERTEX_ARRAY);
-	gSkyboxVBO->unbind();
-
+	DrawPrimitive(gSkyboxVBO);
 	gSkyboxShader->disable();
 
 	gRenderer->DisableTexture(0, gSkyboxCubemap);
@@ -1700,7 +1673,7 @@ void RenderScene(const glm::mat4 &mvp) {
 		gRenderer->SetWireframe(false);
 }
 
-void RenderSceneFBO(const glm::mat4 &mvp) {
+void RenderSceneFBO(const glm::mat4 &mvp, const int windowWidth, const int windowHeight) {
 	// Save latest draw buffer
 	GLint latestDrawBuffer = gSceneFBO->getDrawBuffer();
 
@@ -1733,7 +1706,7 @@ void RenderSceneFBO(const glm::mat4 &mvp) {
 float appStartTime = 0.0f;
 float realLatestFrameTime = 0.0f;
 float fixedFrametime = 1.0f / 60.0f;
-void OnRender() {
+void OnRender(const int windowWidth, const int windowHeight) {
 	if(!gScene) return;
 
 	float realFrametimeStart = (float)COSLowLevel::getInstance()->getTimeMilliSeconds();
@@ -1789,7 +1762,7 @@ void OnRender() {
 
 	// Render scene to FBO
 	if(drawFluidParticles)
-		RenderSceneFBO(mvp);
+		RenderSceneFBO(mvp, windowWidth, windowHeight);
 
 	// Load mvp matrix
 	gRenderer->LoadMatrix(mvp);
@@ -1809,7 +1782,7 @@ void OnRender() {
 	drawingError = gRenderer->CheckError();
 
 	// Render OSD
-	RenderOSD();
+	RenderOSD(windowWidth, windowHeight);
 
 	// Draw frame
 	gRenderer->Flip();
@@ -1993,12 +1966,8 @@ void KeyUp(const fplKey key, const int x, const int y) {
 		}
 		case fplKey_F: // f
 		{
-			if(!fplIsWindowFullscreen()) {
-				windowFullscreen = fplEnableWindowFullscreen();
-			} else {
-				fplDisableWindowFullscreen();
-				windowFullscreen = false;
-			}
+			bool wasFullscreen = fplIsWindowFullscreen();
+			fplSetWindowFullscreenSize(!wasFullscreen, 0, 0, 0);
 			break;
 		}
 		case fplKey_R: // r
@@ -2301,7 +2270,7 @@ void printOpenGLInfos() {
 		printf("  OpenGL FBO Max Color Attachments: %d\n", temp);
 		glGetIntegerv(GL_MAX_RENDERBUFFER_SIZE, &temp);
 		printf("  OpenGL FBO Max Render Buffer Size: %d\n", temp);
-	}
+}
 #endif
 }
 
@@ -2321,8 +2290,6 @@ void initResources() {
 	gTexMng = new CTextureManager();
 
 	gSkyboxCubemap = gTexMng->addCubemap("skybox", "textures\\skybox_texture.jpg");
-
-	gTestTexture = gTexMng->add2D("test", "textures\\Pond.jpg");
 
 	gFontAtlas16 = FontAtlas::LoadFromMemory(sulphurPointRegularData, 0, 16.0f, 32, 255);
 	gFontAtlas32 = FontAtlas::LoadFromMemory(sulphurPointRegularData, 0, 32.0f, 32, 255);
@@ -2357,7 +2324,7 @@ void initResources() {
 
 	// Create scene FBO
 	printf("  Create scene FBO\n");
-	gSceneFBO = new CSceneFBO(windowWidth, windowHeight);
+	gSceneFBO = new CSceneFBO(128, 128); // Initial FBO size does not matter, because its resized on render anyway
 	gSceneFBO->depthTexture = gSceneFBO->addRenderTarget(GL_DEPTH_COMPONENT32, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, GL_DEPTH_ATTACHMENT, GL_NEAREST);
 	gSceneFBO->sceneTexture = gSceneFBO->addTextureTarget(GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, GL_COLOR_ATTACHMENT0, GL_LINEAR);
 	gSceneFBO->update();
@@ -2370,7 +2337,7 @@ void initResources() {
 
 	// Create fluid renderer
 	printf("  Create fluid renderer\n");
-	gFluidRenderer = new CScreenSpaceFluidRendering(windowWidth, windowHeight, gFluidParticleRadius * 2.0f);
+	gFluidRenderer = new CScreenSpaceFluidRendering(128, 128, gFluidParticleRadius * 2.0f); // Initial FBO size does not matter, because its resized on render anyway
 	gFluidRenderer->SetRenderer(gRenderer);
 	gFluidRenderer->SetPointSprites(gPointSprites);
 	gFluidRenderer->SetPointSpritesShader(gPointSpritesShader);
@@ -2385,16 +2352,47 @@ void initResources() {
 
 	// Create skybox vbo and shader
 	printf("  Create skybox\n");
-	Primitives::Primitive boxPrim = Primitives::createBox(glm::vec3(100.0f));
 	gSkyboxVBO = new CVBO();
-	gSkyboxVBO->bufferVertices(&boxPrim.positions[0][0], boxPrim.sizeOfPositions, GL_STATIC_DRAW);
-	gSkyboxVBO->bufferIndices(&boxPrim.indices[0], (GLuint)boxPrim.indexCount, GL_STATIC_DRAW);
+	{
+		Primitives::Primitive skyboxPrim = Primitives::CreateBox(glm::vec3(100.0f), true);
+		gSkyboxVBO->bufferVertices(skyboxPrim.verts[0].data(), skyboxPrim.sizeOfVertices, GL_STATIC_DRAW);
+		gSkyboxVBO->bufferIndices(&skyboxPrim.indices[0], (GLuint)skyboxPrim.indexCount, GL_STATIC_DRAW);
+	}
 	gSkyboxShader = new CSkyboxShader();
 	Utils::attachShaderFromFile(gSkyboxShader, GL_VERTEX_SHADER, "shaders\\Skybox.vertex", "    ");
 	Utils::attachShaderFromFile(gSkyboxShader, GL_FRAGMENT_SHADER, "shaders\\Skybox.fragment", "    ");
+
+	// Create geometry buffers
+	printf("  Create geometry buffers\n");
+	gBoxVBO = new CVBO();
+	{
+		Primitives::Primitive geoBoxPrim = Primitives::CreateBox(glm::vec3(1.0f), false);
+		gBoxVBO->bufferVertices(geoBoxPrim.verts[0].data(), geoBoxPrim.sizeOfVertices, GL_STATIC_DRAW);
+		gBoxVBO->bufferIndices(&geoBoxPrim.indices[0], (GLuint)geoBoxPrim.indexCount, GL_STATIC_DRAW);
+	}
+	gSphereVBO = new CVBO();
+	{
+		Primitives::Primitive geoSpherePrim = Primitives::CreateSphere(1.0f, 16, 16);
+		gSphereVBO->bufferVertices(geoSpherePrim.verts[0].data(), geoSpherePrim.sizeOfVertices, GL_STATIC_DRAW);
+		gSphereVBO->bufferIndices(&geoSpherePrim.indices[0], (GLuint)geoSpherePrim.indexCount, GL_STATIC_DRAW);
+	}
+	gCylinderVBO = new CVBO();
+	{
+		Primitives::Primitive geoCylinderPrim = Primitives::CreateCylinder(1.0f, 1.0f, 1.0f, 16, 16);
+		gCylinderVBO->bufferVertices(geoCylinderPrim.verts[0].data(), geoCylinderPrim.sizeOfVertices, GL_STATIC_DRAW);
+		gCylinderVBO->bufferIndices(&geoCylinderPrim.indices[0], (GLuint)geoCylinderPrim.indexCount, GL_STATIC_DRAW);
+	}
 }
 
 void ReleaseResources() {
+	printf("  Release geometry buffers\n");
+	if(gCylinderVBO != nullptr)
+		delete gCylinderVBO;
+	if(gSphereVBO != nullptr)
+		delete gSphereVBO;
+	if(gBoxVBO != nullptr)
+		delete gBoxVBO;
+
 	printf("  Release skybox\n");
 	if(gSkyboxShader != nullptr)
 		delete gSkyboxShader;
@@ -2490,9 +2488,9 @@ int main(int argc, char **argv) {
 	// Initialize glut window
 	fplConsoleFormatOut("Initialize Window\n");
 	fplSettings platformSettings = fplMakeDefaultSettings();
-	platformSettings.window.windowSize.width = windowWidth;
-	platformSettings.window.windowSize.height = windowHeight;
-	platformSettings.window.isFullscreen = windowFullscreen;
+	platformSettings.window.windowSize.width = DefaultWindowWidth;
+	platformSettings.window.windowSize.height = DefaultWindowHeight;
+	platformSettings.window.isFullscreen = false;
 	platformSettings.video.isVSync = true;
 	platformSettings.video.graphics.opengl.compabilityFlags = fplOpenGLCompabilityFlags_Legacy;
 	platformSettings.video.graphics.opengl.majorVersion = 2;
@@ -2569,7 +2567,6 @@ int main(int argc, char **argv) {
 
 					case fplEventType_Window:
 						if(ev.window.type == fplWindowEventType_Resized) {
-							OnReshape(ev.window.size.width, ev.window.size.height);
 						}
 						break;
 
@@ -2584,7 +2581,10 @@ int main(int argc, char **argv) {
 				}
 			}
 
-			OnRender();
+			fplWindowSize winSize;
+			fplGetWindowSize(&winSize);
+
+			OnRender(winSize.width, winSize.height);
 		}
 
 		OnShutdown();

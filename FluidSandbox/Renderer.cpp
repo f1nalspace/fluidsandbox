@@ -161,44 +161,8 @@ void CRenderer::DrawSimpleRect(const float left, const float top, const float ri
 	glEnd();
 }
 
-void CRenderer::DrawSphere(const float radius, const uint32_t N) {
-
-	const float pi = (float)M_PI;
-	int i, j;
-	float theta1, theta2, theta3;
-	float X, Y, Z, px, py, pz;
-
-	for(j = 0; j < N/2; j++) {
-		theta1 = (float)j * 2.0f * pi / N - pi * 0.5f;
-		theta2 = (float)(j + 1) * 2.0f * pi / N - pi * 0.5f;
-		glBegin(GL_TRIANGLE_STRIP);
-		for(int i = 0; i <= N; i++) {
-			theta3 = (float)i * 2.0f * pi / (float)N;
-			X = cosf(theta2) * cosf(theta3);
-			Y = sinf(theta2);
-			Z = cosf(theta2) * sinf(theta3);
-			px = 0 + radius * X;
-			py = 0 + radius * Y;
-			pz = 0 + radius * Z;
-			glNormal3f(X, Y, Z);
-			//glTexCoord2f(1 - i / N, 2 * (j + 1) / N);
-			glVertex3f(px, py, pz);
-			X = cosf(theta1) * cosf(theta3);
-			Y = sinf(theta1);
-			Z = cosf(theta1) * sinf(theta3);
-			px = 0 + radius * X;
-			py = 0 + radius * Y;
-			pz = 0 + radius * Z;
-			glNormal3f(X, Y, Z);
-			//glTexCoord2f(1 - i / N, 2 * j / N);
-			glVertex3f(px, py, pz);
-		}
-		glEnd();
-	}
-}
-
-void CRenderer::DrawVBO(CVBO *vbo, const GLenum mode) {
-	vbo->drawElements(mode);
+void CRenderer::DrawVBO(CVBO *vbo, const GLenum mode, const GLuint count) {
+	vbo->drawElements(mode, count);
 }
 
 glm::vec2 CRenderer::GetStringSize(const CTextureFont *fontTex, const char *text, const size_t textLen, const float charHeight) {
