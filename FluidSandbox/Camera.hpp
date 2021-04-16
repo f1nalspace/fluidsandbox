@@ -1,6 +1,5 @@
 #pragma once
 
-#include <GL/glew.h> 
 #include <glm\glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -10,10 +9,10 @@ struct CCamera {
 	glm::mat4 mvp;
 	glm::vec3 position;
 	glm::vec2 rotation;
-	GLfloat nearClip;
-	GLfloat farClip;
-	GLfloat fieldOfView;
-	GLfloat aspect;
+	float nearClip;
+	float farClip;
+	float fieldOfView;
+	float aspect;
 
 	CCamera() {
 		projection = glm::mat4(1.0f);

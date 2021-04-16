@@ -18,17 +18,16 @@ Dependencies:
 
 	- Visual Studio 2019
 	- PhysX SDK 3.4.2 (Multithreaded DLL, x64/win32)
-	- FreeGlut (Multithreaded DLL, x64/win32)
 	- FreeImage (Multithreaded DLL, x64/win32)
-	- Glew (Multithreaded DLL, x64/win32)
+	- Final Platform Layer
+	- Glad
 	- glm
 	- rapidxml
 =======================================================================================
 Todo:
 
-	- Replace freeglut with final_platform_layer.h
 	- Replace FreeImage with stb_image.h
-	- Replace Glew with final_dynamic_opengl.h
+	- Replace Glad with final_dynamic_opengl.h
 	- Replace rapidxml with final_xml.h
 	- Add proper OSD rendering using stb_freetype.h
 
@@ -55,6 +54,10 @@ License:
 // Enable this to activate support for PhysX Visual Debugger
 //#define PVD_ENABLED
 
+#define FPL_ENTRYPOINT
+#define FPL_NO_AUDIO
+#include <final_platform_layer.h>
+
 #include <iostream>
 #include <vector>
 #include <time.h>
@@ -65,17 +68,13 @@ License:
 #include <math.h>
 #include <typeinfo>
 
-// OpenGL (Glut + Glew)
-#include <GL/glew.h>
-#include <GL/wglew.h>
-#include <GL/freeglut.h>
-// OpenGL required libs
-#pragma comment(lib, "glew32.lib")
+// OpenGL (Glad)
+#include <glad/glad.h>
 
 // OpenGL mathmatics
-#include <glm\glm.hpp>
-#include <glm\gtc\matrix_transform.hpp>
-#include <glm\gtc\quaternion.hpp>
+#include <glm/glm.hpp>
+#include <glm/gtc\matrix_transform.hpp>
+#include <glm/gtc\quaternion.hpp>
 
 // PhysX API
 #include <PxPhysicsAPI.h>
@@ -84,7 +83,6 @@ License:
 #include "rapidxml/rapidxml.hpp"
 
 // Free image
-#include "freeimage/FreeImage.h"
 #pragma comment(lib, "FreeImage.lib")
 
 // Classes
@@ -965,22 +963,6 @@ glm::mat4 getColumnMajor(physx::PxMat33 m, physx::PxVec3 t) {
 	return mat;
 }
 
-void RenderSpacedBitmapString(
-	int x,
-	int y,
-	int spacing,
-	void *font,
-	char *string) {
-	char *c;
-	int x1 = x;
-
-	for(c = string; *c != '\0'; c++) {
-		glRasterPos2i(x1, y);
-		glutBitmapCharacter(font, *c);
-		x1 = x1 + glutBitmapWidth(font, *c) + spacing;
-	}
-}
-
 void DrawGLCube(float hx, float hy, float hz) {
 	glBegin(GL_QUADS);		// Draw The Cube Using quads
 
@@ -1017,45 +999,6 @@ void DrawGLCube(float hx, float hy, float hz) {
 	glEnd();			// End Drawing The Cube
 }
 
-void DrawAxes() {
-	//To prevent the view from disturbed on repaint
-	//this push matrix call stores the current matrix state
-	//and restores it once we are done with the arrow rendering
-	glPushMatrix();
-	glColor3f(0, 0, 1);
-	glPushMatrix();
-	glTranslatef(0, 0, 0.8f);
-	glutSolidCone(0.0325, 0.2, 4, 1);
-	//Draw label
-	glTranslatef(0, 0.0625, 0.225f);
-	RenderSpacedBitmapString(0, 0, 0, GLUT_BITMAP_HELVETICA_10, "Z");
-	glPopMatrix();
-	glutSolidCone(0.0225, 1, 4, 1);
-
-	glColor3f(1, 0, 0);
-	glRotatef(90, 0, 1, 0);
-	glPushMatrix();
-	glTranslatef(0, 0, 0.8f);
-	glutSolidCone(0.0325, 0.2, 4, 1);
-	//Draw label
-	glTranslatef(0, 0.0625, 0.225f);
-	RenderSpacedBitmapString(0, 0, 0, GLUT_BITMAP_HELVETICA_10, "X");
-	glPopMatrix();
-	glutSolidCone(0.0225, 1, 4, 1);
-
-	glColor3f(0, 1, 0);
-	glRotatef(90, -1, 0, 0);
-	glPushMatrix();
-	glTranslatef(0, 0, 0.8f);
-	glutSolidCone(0.0325, 0.2, 4, 1);
-	//Draw label
-	glTranslatef(0, 0.0625, 0.225f);
-	RenderSpacedBitmapString(0, 0, 0, GLUT_BITMAP_HELVETICA_10, "Y");
-	glPopMatrix();
-	glutSolidCone(0.0225, 1, 4, 1);
-	glPopMatrix();
-}
-
 void DrawGrid(int GRID_SIZE) {
 	glBegin(GL_LINES);
 	glColor3f(0.25f, 0.25f, 0.25f);
@@ -1075,8 +1018,7 @@ void DrawGrid(int GRID_SIZE) {
 void UpdatePhysX(const float frametime) {
 	// Update water external direction if required
 	if(gFluidLatestExternalAccelerationTime > -1) {
-		int current = glutGet(GLUT_ELAPSED_TIME);
-
+		uint64_t current = fplGetTimeInMillisecondsLP();
 		if(current > gFluidLatestExternalAccelerationTime) {
 			gFluidSystem->setExternalAcceleration(physx::PxVec3(0.0f, 0.0f, 0.0f));
 			gFluidLatestExternalAccelerationTime = -1;
@@ -1134,7 +1076,7 @@ void DrawSphere(physx::PxShape *pShape) {
 
 	gLightingShader->enable();
 	gLightingShader->uniform4f(gLightingShader->ulocColor, &color[0]);
-	glutSolidSphere(sg.radius, 16, 16);
+	gRenderer->DrawSphere(sg.radius, 16);
 	gLightingShader->disable();
 }
 
@@ -1155,11 +1097,11 @@ void DrawCapsule(physx::PxShape *pShape) {
 	glm::mat4 rotation = glm::rotate(multm, 90.0f, glm::vec3(0.0f, 1.0f, 0.0f));
 	glm::mat4 translation = glm::translate(rotation, glm::vec3(0.0f, 0.0f, -cg.halfHeight));
 	gRenderer->LoadMatrix(translation);
-	glutSolidCylinder(cg.radius, 2 * cg.halfHeight, 16, 16);
-	glutSolidSphere(cg.radius, 16, 16);
+	//glutSolidCylinder(cg.radius, 2 * cg.halfHeight, 16, 16);
+	gRenderer->DrawSphere(cg.radius, 16);
 	glm::mat4 trans2 = glm::translate(translation, glm::vec3(0.0f, 0.0f, 2.0f * cg.halfHeight));
 	gRenderer->LoadMatrix(trans2);
-	glutSolidSphere(cg.radius, 16, 16);
+	gRenderer->DrawSphere(cg.radius, 16);
 
 	gLightingShader->disable();
 }
@@ -1878,30 +1820,49 @@ void OnRender() {
 	gTotalTimeElapsed += (curTime - realFrametimeStart);
 }
 
-void Mouse(int button, int s, int x, int y) {
-	if(s == GLUT_DOWN) {
-		oldX = x;
-		oldY = y;
-	}
+enum class MouseAction: int {
+	None = 0,
+	Rotate,
+	Zoom,
+};
 
-	if(button == GLUT_RIGHT_BUTTON)
-		state = 0;
-	else
-		state = 1;
+static fplMouseButtonType gMouseButton = fplMouseButtonType::fplMouseButtonType_None;
+static bool gMouseDown = false;
+static MouseAction gMouseAction = MouseAction::None;
+static int gMouseOldX = -1;
+static int gMouseOldY = -1;
+
+static void OnMouseButton(const fplMouseButtonType button, fplButtonState s, int x, int y) {
+	if(s == fplButtonState::fplButtonState_Press) {
+		gMouseOldX = x;
+		gMouseOldY = y;
+		if(button == fplMouseButtonType::fplMouseButtonType_Left)
+			gMouseAction = MouseAction::Rotate;
+		else if(button == fplMouseButtonType::fplMouseButtonType_Right)
+			gMouseAction = MouseAction::Zoom;
+		else
+			gMouseAction = MouseAction::None;
+		gMouseButton = button;
+		gMouseDown = true;
+	} else if(s == fplButtonState::fplButtonState_Release) {
+		gMouseOldX = x;
+		gMouseOldY = y;
+		gMouseAction = MouseAction::None;
+		gMouseDown = false;
+	}
 }
 
-void Motion(int x, int y) {
-	if(state == 0)
-		dist *= (1 + (y - oldY) / 60.0f);
-	else {
-		rY += (x - oldX) / 5.0f;
-		rX += (y - oldY) / 5.0f;
+void OnMouseMove(const fplMouseButtonType button, const fplButtonState state, const int x, const int y) {
+	if(gMouseDown) {
+		if(gMouseAction == MouseAction::Zoom) {
+			dist *= (1 + (y - gMouseOldY) / 60.0f);
+		} else if(gMouseAction == MouseAction::Rotate) {
+			rY += (x - gMouseOldX) / 5.0f;
+			rX += (y - gMouseOldY) / 5.0f;
+		}
+		gMouseOldX = x;
+		gMouseOldY = y;
 	}
-
-	oldX = x;
-	oldY = y;
-
-	glutPostRedisplay();
 }
 
 static void AddDynamicActor(physx::PxScene &scene, CFluidSystem &fluidSys, const ActorCreationKind kind) {
@@ -1978,96 +1939,87 @@ void ToggleFluidGPUAcceleration() {
 }
 
 void SetFluidExternalAcceleration(const physx::PxVec3 &acc) {
-	gFluidLatestExternalAccelerationTime = glutGet(GLUT_ELAPSED_TIME) + 3000; // 3 Seconds
+	gFluidLatestExternalAccelerationTime = fplGetTimeInMillisecondsLP() + 3000; // 3 Seconds
 	gFluidSystem->setExternalAcceleration(acc);
 }
 
-void KeyDownSpecial(int key, int x, int y) {
+void KeyUp(const fplKey key, const int x, const int y) {
 	const float accSpeed = 10.0f;
 	const physx::PxForceMode::Enum accMode = physx::PxForceMode::eACCELERATION;
 
 	switch(key) {
-		case GLUT_KEY_RIGHT:
+		case fplKey_Escape: // Escape
+		{
+			fplWindowShutdown();
+			break;
+		}
+
+		case fplKey_Right:
 		{
 			gFluidSystem->addForce(physx::PxVec3(1.0f * accSpeed, 0.0f, 0.0f), accMode);
 			break;
 		}
 
-		case GLUT_KEY_LEFT:
+		case fplKey_Left:
 		{
 			gFluidSystem->addForce(physx::PxVec3(-1.0f * accSpeed, 0.0f, 0.0f), accMode);
 			break;
 		}
 
-		case GLUT_KEY_UP:
+		case fplKey_Up:
 		{
 			gFluidSystem->addForce(physx::PxVec3(0.0f, 0.0f, -1.0f * accSpeed), accMode);
 			break;
 		}
 
-		case GLUT_KEY_DOWN:
+		case fplKey_Down:
 		{
 			gFluidSystem->addForce(physx::PxVec3(0.0f, 0.0f, 1.0f * accSpeed), accMode);
 			break;
 		}
-	}
-}
 
-void KeyUp(unsigned char key, int x, int y) {
-	switch(key) {
-		case 27: // Escape
+		case fplKey_1: // 1 - 7
+		case fplKey_2:
+		case fplKey_3:
+		case fplKey_4:
+		case fplKey_5:
+		case fplKey_6:
+		case fplKey_7:
 		{
-			exit(0);
-			break;
-		}
-
-		case 49: // 1 - 7
-		case 50:
-		case 51:
-		case 52:
-		case 53:
-		case 54:
-		case 55:
-		{
-			int index = key - 49;
+			int index = (int)(key - fplKey_1);
 			assert(index >= 0 && index <= (int)ActorCreationKind::Max);
 			gCurrentActorCreationKind = (ActorCreationKind)index;
 			break;
 		}
-		case 102: // f
+		case fplKey_F: // f
 		{
-			windowFullscreen = !windowFullscreen;
-			if(windowFullscreen) {
-				lastWindowPosX = glutGet(GLUT_WINDOW_X);
-				lastWindowPosY = glutGet(GLUT_WINDOW_Y);
-				lastWindowWidth = windowWidth;
-				lastWindowHeight = windowHeight;
-				glutFullScreen();
+			if(!fplIsWindowFullscreen()) {
+				windowFullscreen = fplEnableWindowFullscreen();
 			} else {
-				glutPositionWindow(lastWindowPosX, lastWindowPosY);
-				glutReshapeWindow(lastWindowWidth, lastWindowHeight);
+				fplDisableWindowFullscreen();
+				windowFullscreen = false;
 			}
 			break;
 		}
-		case 114: // r
+		case fplKey_R: // r
 		{
 			ResetScene(*gScene);
 			break;
 		}
 
-		case 116: // t
+		case fplKey_T: // t
 		{
 			showOSD = !showOSD;
 			break;
 		}
 
-		case 98: // b
+		case fplKey_B: // b
 		{
 			gDrawBoundBox = !gDrawBoundBox;
 			break;
 		}
 
-		case 100: // d
+		case fplKey_D: // d
 		{
 			gHideRigidBodies++;
 
@@ -2077,13 +2029,13 @@ void KeyUp(unsigned char key, int x, int y) {
 			break;
 		}
 
-		case 119: // w
+		case fplKey_W: // w
 		{
 			gDrawWireframe = !gDrawWireframe;
 			break;
 		}
 
-		case 118: // v
+		case fplKey_V: // v
 		{
 			gFluidCurrentProperty++;
 
@@ -2092,19 +2044,19 @@ void KeyUp(unsigned char key, int x, int y) {
 			break;
 		}
 
-		case 104: // h
+		case fplKey_H: // h
 		{
 			ToggleFluidGPUAcceleration();
 			break;
 		}
 
-		case 107: // k
+		case fplKey_K: // k
 		{
 			gStoppedEmitter = !gStoppedEmitter;
 			break;
 		}
 
-		case 108: // l
+		case fplKey_L: // l
 		{
 			if(gFluidScenarios.size() > 0) {
 				gActiveFluidScenarioIdx++;
@@ -2118,19 +2070,19 @@ void KeyUp(unsigned char key, int x, int y) {
 			break;
 		}
 
-		case 109: // m
+		case fplKey_M: // m
 		{
 			gSSFBlurActive = !gSSFBlurActive;
 			break;
 		}
 
-		case 110: // n
+		case fplKey_N: // n
 		{
 			gWaterAddBySceneChange = !gWaterAddBySceneChange;
 			break;
 		}
 
-		case 115: // s
+		case fplKey_S: // s
 		{
 			gFluidDebugType = FluidDebugType::Final;
 
@@ -2144,7 +2096,7 @@ void KeyUp(unsigned char key, int x, int y) {
 			break;
 		}
 
-		case 99: // c
+		case fplKey_C: // c
 		{
 			gSSFCurrentFluidIndex++;
 
@@ -2153,13 +2105,13 @@ void KeyUp(unsigned char key, int x, int y) {
 			break;
 		}
 
-		case 111: // o
+		case fplKey_O: // o
 		{
 			paused = !paused;
 			break;
 		}
 
-		case 112: // p
+		case fplKey_P: // p
 		{
 			gSSFDetailFactor += -0.10f;
 
@@ -2313,10 +2265,6 @@ void KeyDown(unsigned char key, int x, int y) {
 	}
 }
 
-void OnIdle() {
-	glutPostRedisplay();
-}
-
 void LoadFluidScenarios() {
 	// Load scenarios
 	std::vector<std::string> scenFiles = COSLowLevel::getInstance()->getFilesInDirectory("scenarios\\*.xml");
@@ -2343,6 +2291,7 @@ void printOpenGLInfos() {
 	printf("  OpenGL Vendor: %s\n", glGetString(GL_VENDOR));
 	printf("  OpenGL Version: %s\n", glGetString(GL_VERSION));
 
+#if 0
 	if(GLEW_VERSION_2_0)
 		printf("  GLSL Version: %s\n", glGetString(GL_SHADING_LANGUAGE_VERSION));
 
@@ -2353,6 +2302,7 @@ void printOpenGLInfos() {
 		glGetIntegerv(GL_MAX_RENDERBUFFER_SIZE, &temp);
 		printf("  OpenGL FBO Max Render Buffer Size: %d\n", temp);
 	}
+#endif
 }
 
 void drawPlane(float size) {
@@ -2523,10 +2473,10 @@ void OnShutdown() {
 	COSLowLevel::releaseInstance();
 }
 
-void main(int argc, char **argv) {
-	printf("%s v%s\n", APPLICATION_NAME, APPLICATION_VERSION);
-	printf("%s\n", APPLICATION_COPYRIGHT);
-	printf("\n");
+int main(int argc, char **argv) {
+	fplConsoleFormatOut("%s v%s\n", APPLICATION_NAME, APPLICATION_VERSION);
+	fplConsoleFormatOut("%s\n", APPLICATION_COPYRIGHT);
+	fplConsoleFormatOut("\n");
 
 	// Get application path
 	appPath = COSLowLevel::getInstance()->getAppPath(argc, argv);
@@ -2535,80 +2485,113 @@ void main(int argc, char **argv) {
 	srand((unsigned int)time(nullptr));
 
 	// Initialize glut window
-	printf("Initialize Window\n");
-	glutInit(&argc, argv);
-	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
-	glutInitWindowSize(windowWidth, windowHeight);
-	glutCreateWindow(APPTITLE.c_str());
-	HWND hwnd = FindWindow(L"GLUT", L"ogl");
-	SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOREPOSITION | SWP_NOSIZE);
-	glutCloseFunc(OnShutdown);
-	lastWindowPosX = glutGet(GLUT_WINDOW_X);
-	lastWindowPosY = glutGet(GLUT_WINDOW_Y);
-	if(windowFullscreen) {
-		glutFullScreen();
+	fplConsoleFormatOut("Initialize Window\n");
+	fplSettings platformSettings = fplMakeDefaultSettings();
+	platformSettings.window.windowSize.width = windowWidth;
+	platformSettings.window.windowSize.height = windowHeight;
+	platformSettings.window.isFullscreen = windowFullscreen;
+	platformSettings.video.isVSync = true;
+	platformSettings.video.graphics.opengl.compabilityFlags = fplOpenGLCompabilityFlags_Legacy;
+	platformSettings.video.graphics.opengl.majorVersion = 2;
+	platformSettings.video.graphics.opengl.minorVersion = 1;
+	fplCopyString(APPTITLE.c_str(), platformSettings.window.title, fplArrayCount(platformSettings.window.title));
+	if(fplPlatformInit(fplInitFlags_Console | fplInitFlags_Video, &platformSettings)) {
+
+		if(!gladLoadGL()) {
+			std::cerr << "Failed to initialize OpenGL loader" << std::endl;
+			fplPlatformRelease();
+			return -1;
+		}
+
+		// Print OpenGL stuff
+		printOpenGLInfos();
+
+		// Required extensions check
+		fplConsoleFormatOut("  Checking opengl requirements...");
+
+		int maxColorAttachments = 0;
+		glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, &maxColorAttachments);
+
+		if(!gladHasExtension("GL_ARB_texture_float") ||
+			!gladHasExtension("GL_ARB_point_sprite") ||
+			!gladHasExtension("GL_ARB_framebuffer_object")) {
+			fplConsoleFormatError("failed\n");
+			std::cerr << std::endl << "Your graphics adapter is not supported, press any key to exit!" << std::endl;
+			std::cerr << "Required opengl version:" << std::endl;
+			std::cerr << "  OpenGL version 2.0 or higher" << std::endl;
+			std::cerr << "Required opengl extensions:" << std::endl;
+			std::cerr << "  GL_ARB_texture_float" << std::endl;
+			std::cerr << "  GL_ARB_point_sprite" << std::endl;
+			std::cerr << "  GL_ARB_framebuffer_object" << std::endl;
+			std::cerr << "Required constants:" << std::endl;
+			std::cerr << "  GL_MAX_COLOR_ATTACHMENTS >= 4" << std::endl;
+			fplConsoleWaitForCharInput();
+			gladUnload();
+			fplPlatformRelease();
+			return(1);
+		} else {
+			fplConsoleFormatOut("ok\n");
+		}
+
+		fplConsoleFormatOut("Initialize Renderer\n");
+		gRenderer = new CRenderer();
+
+		fplConsoleFormatOut("Initialize Resources\n");
+		initResources();
+
+		fplConsoleFormatOut("Initialize PhysX\n");
+		InitializePhysX();
+
+		fplConsoleFormatOut("Load Fluid Scenarios\n");
+		LoadFluidScenarios();
+
+		fplConsoleFormatOut("Load Fluid Scenario\n");
+		ResetScene(*gScene);
+
+		fplEvent ev;
+
+		fplConsoleFormatOut("Main loop\n\n");
+		while(fplWindowUpdate()) {
+			while(fplPollEvent(&ev)) {
+				switch(ev.type) {
+					case fplEventType_Keyboard:
+						if(ev.keyboard.type == fplKeyboardEventType_Button) {
+							if(ev.keyboard.buttonState == fplButtonState_Release) {
+								KeyUp(ev.keyboard.mappedKey, 0, 0);
+							} else {
+								KeyDown(ev.keyboard.mappedKey, 0, 0);
+							}
+						}
+						break;
+
+					case fplEventType_Window:
+						if(ev.window.type == fplWindowEventType_Resized) {
+							OnReshape(ev.window.size.width, ev.window.size.height);
+						}
+						break;
+
+					case fplEventType_Mouse:
+						if(ev.mouse.type == fplMouseEventType_Move) {
+							OnMouseMove(ev.mouse.mouseButton, ev.mouse.buttonState, ev.mouse.mouseX, ev.mouse.mouseY);
+						} else if(ev.mouse.type == fplMouseEventType_Button) {
+							OnMouseButton(ev.mouse.mouseButton, ev.mouse.buttonState, ev.mouse.mouseX, ev.mouse.mouseY);
+						}
+						break;
+
+				}
+			}
+
+			OnRender();
+		}
+
+		OnShutdown();
+
+		gladUnload();
+		fplPlatformRelease();
+
+		return(0);
+	} else {
+		return(1);
 	}
-
-	// Initialize glew
-	if(glewInit() != GLEW_OK) {
-		std::cerr << "Could not initialize glew!" << std::endl;
-		exit(1);
-	}
-
-	// Print OpenGL stuff
-	printOpenGLInfos();
-
-	// Required extensions check
-	printf("  Checking opengl requirements...");
-
-	int maxColorAttachments = 0;
-	glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, &maxColorAttachments);
-
-	if((!GLEW_VERSION_2_0) ||
-		(!glewIsSupported("GL_ARB_texture_float GL_ARB_point_sprite GL_ARB_framebuffer_object")) ||
-		(maxColorAttachments < 4)) {
-		printf("failed\n");
-		std::cerr << std::endl << "Your graphics adapter is not supported, press any key to exit!" << std::endl;
-		std::cerr << "Required opengl version:" << std::endl;
-		std::cerr << "  OpenGL version 2.0 or higher" << std::endl;
-		std::cerr << "Required opengl extensions:" << std::endl;
-		std::cerr << "  GL_ARB_texture_float" << std::endl;
-		std::cerr << "  GL_ARB_point_sprite" << std::endl;
-		std::cerr << "  GL_ARB_framebuffer_object" << std::endl;
-		std::cerr << "Required constants:" << std::endl;
-		std::cerr << "  GL_MAX_COLOR_ATTACHMENTS >= 4" << std::endl;
-		getchar();
-		exit(1);
-	} else
-		printf("ok\n");
-
-	wglSwapIntervalEXT(1);
-
-	glutDisplayFunc(OnRender);
-	glutIdleFunc(OnIdle);
-	glutReshapeFunc(OnReshape);
-
-	glutMouseFunc(Mouse);
-	glutMotionFunc(Motion);
-	glutKeyboardUpFunc(KeyUp);
-	glutKeyboardFunc(KeyDown);
-	glutSpecialFunc(KeyDownSpecial);
-
-	printf("Initialize Renderer\n");
-	gRenderer = new CRenderer();
-
-	printf("Initialize Resources\n");
-	initResources();
-
-	printf("Initialize PhysX\n");
-	InitializePhysX();
-
-	printf("Load Fluid Scenarios\n");
-	LoadFluidScenarios();
-
-	printf("Load Fluid Scenario\n");
-	ResetScene(*gScene);
-
-	printf("Main loop\n");
-	glutMainLoop();
 }
+

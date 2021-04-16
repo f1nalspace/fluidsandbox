@@ -23,6 +23,8 @@
     <ClCompile Include="TextureFont.cpp" />
     <ClCompile Include="PhysicsEngine.cpp" />
     <ClCompile Include="Scenario.cpp" />
+    <ClCompile Include="final_platform_layer.cpp" />
+    <ClCompile Include="..\Libraries\glad\src\glad.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.hpp" />

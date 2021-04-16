@@ -1,9 +1,13 @@
 #include "Renderer.h"
 
+#define _USE_MATH_DEFINES 1
+#include <math.h>
+
+#include <final_platform_layer.h>
+
 constexpr int SpacesForTabstop = 2;
 
-CRenderer::CRenderer(void)
-{
+CRenderer::CRenderer(void) {
 	glClearDepth(1.0f);
 	glDepthFunc(GL_LESS);
 
@@ -22,7 +26,7 @@ CRenderer::CRenderer(void)
 	glDisable(GL_TEXTURE_2D);
 	glDisable(GL_TEXTURE_1D);
 	glDisable(GL_TEXTURE_CUBE_MAP);
-	for (int i = 0; i < MAX_TEXTURES; i++){
+	for(int i = 0; i < MAX_TEXTURES; i++) {
 		textureStates[i].active = false;
 		textureStates[i].texture = nullptr;
 	}
@@ -41,111 +45,96 @@ CRenderer::CRenderer(void)
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
-CRenderer::~CRenderer(void)
-{
+CRenderer::~CRenderer(void) {
 }
 
-void CRenderer::Clear(const ClearFlags flags)
-{
+void CRenderer::Clear(const ClearFlags flags) {
 	GLbitfield f = 0;
-	if ((flags & ClearFlags::Color) == ClearFlags::Color) 
+	if((flags & ClearFlags::Color) == ClearFlags::Color)
 		f |= GL_COLOR_BUFFER_BIT;
-	if ((flags & ClearFlags::Depth) == ClearFlags::Depth) 
+	if((flags & ClearFlags::Depth) == ClearFlags::Depth)
 		f |= GL_DEPTH_BUFFER_BIT;
 	glClear(f);
 }
 
-void CRenderer::ClearColor(const float r, const float g, const float b, const float a)
-{
+void CRenderer::ClearColor(const float r, const float g, const float b, const float a) {
 	glClearColor(r, g, b, a);
 }
 
-void CRenderer::SetViewport(const int left, const int top, const int width, const int height)
-{
+void CRenderer::SetViewport(const int left, const int top, const int width, const int height) {
 	glViewport(left, top, width, height);
 }
 
-void CRenderer::SetScissor(const int left, const int top, const int width, const int height)
-{
+void CRenderer::SetScissor(const int left, const int top, const int width, const int height) {
 	glScissor(left, top, width, height);
 }
 
-void CRenderer::LoadMatrix(const glm::mat4 &m)
-{
+void CRenderer::LoadMatrix(const glm::mat4 &m) {
 	glMatrixMode(GL_MODELVIEW);
 	glLoadMatrixf(&m[0][0]);
 }
 
-void CRenderer::SetColor(const float r, const float g, const float b, const float a)
-{
+void CRenderer::SetColor(const float r, const float g, const float b, const float a) {
 	glColor4f(r, g, b, a);
 }
 
-void CRenderer::SetColor(const float* color)
-{
+void CRenderer::SetColor(const float *color) {
 	glColor4fv(color);
 }
 
-void CRenderer::SetDepthTest(const bool enabled)
-{
+void CRenderer::SetDepthTest(const bool enabled) {
 	assert(depthTestEnabled != enabled);
 	depthTestEnabled = enabled;
-	if (depthTestEnabled)
+	if(depthTestEnabled)
 		glEnable(GL_DEPTH_TEST);
 	else
 		glDisable(GL_DEPTH_TEST);
 }
 
-void CRenderer::SetDepthMask(const bool enabled)
-{
+void CRenderer::SetDepthMask(const bool enabled) {
 	assert(depthMaskEnabled != enabled);
 	depthMaskEnabled = enabled;
-	if (depthMaskEnabled)
+	if(depthMaskEnabled)
 		glDepthMask(GL_TRUE);
 	else
 		glDepthMask(GL_FALSE);
 }
 
-void CRenderer::SetCullFace(const bool enabled)
-{
+void CRenderer::SetCullFace(const bool enabled) {
 	assert(cullFaceEnabled != enabled);
 	cullFaceEnabled = enabled;
-	if (cullFaceEnabled)
+	if(cullFaceEnabled)
 		glEnable(GL_CULL_FACE);
 	else
 		glDisable(GL_CULL_FACE);
 }
 
-void CRenderer::SetBlending(const bool enabled)
-{
+void CRenderer::SetBlending(const bool enabled) {
 	assert(blendingEnabled != enabled);
 	blendingEnabled = enabled;
-	if (blendingEnabled)
+	if(blendingEnabled)
 		glEnable(GL_BLEND);
 	else
 		glDisable(GL_BLEND);
 }
 
-void CRenderer::SetBlendFunc(const GLenum sfactor, const GLenum dfactor)
-{
+void CRenderer::SetBlendFunc(const GLenum sfactor, const GLenum dfactor) {
 	assert(blendFunc[0] != sfactor || blendFunc[1] != dfactor);
 	blendFunc[0] = sfactor;
 	blendFunc[1] = dfactor;
 	glBlendFunc(blendFunc[0], blendFunc[1]);
 }
 
-void CRenderer::SetWireframe(const bool enabled)
-{
+void CRenderer::SetWireframe(const bool enabled) {
 	assert(wireframeEnabled != enabled);
 	wireframeEnabled = enabled;
-	if (wireframeEnabled)
+	if(wireframeEnabled)
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	else
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
-void CRenderer::DrawTexturedQuad(const float posX, const float posY, const float scaleW, const float scaleH)
-{
+void CRenderer::DrawTexturedQuad(const float posX, const float posY, const float scaleW, const float scaleH) {
 	glBegin(GL_QUADS);
 	glTexCoord2f(0.0f, 1.0f); glVertex2f(posX + 0.0f, posY + 0.0f);
 	glTexCoord2f(0.0f, 0.0f); glVertex2f(posX + 0.0f, posY + 1.0f * scaleW);
@@ -154,8 +143,7 @@ void CRenderer::DrawTexturedQuad(const float posX, const float posY, const float
 	glEnd();
 }
 
-void CRenderer::DrawTexturedRect(const float left, const float top, const float right, const float bottom)
-{
+void CRenderer::DrawTexturedRect(const float left, const float top, const float right, const float bottom) {
 	glBegin(GL_QUADS);
 	glTexCoord2f(0.0f, 0.0f); glVertex2f(left, top);
 	glTexCoord2f(0.0f, 1.0f); glVertex2f(left, bottom);
@@ -164,8 +152,7 @@ void CRenderer::DrawTexturedRect(const float left, const float top, const float 
 	glEnd();
 }
 
-void CRenderer::DrawSimpleRect(const float left, const float top, const float right, const float bottom)
-{
+void CRenderer::DrawSimpleRect(const float left, const float top, const float right, const float bottom) {
 	glBegin(GL_QUADS);
 	glVertex2f(left, top);
 	glVertex2f(left, bottom);
@@ -174,8 +161,43 @@ void CRenderer::DrawSimpleRect(const float left, const float top, const float ri
 	glEnd();
 }
 
-void CRenderer::DrawVBO(CVBO* vbo, const GLenum mode)
-{
+void CRenderer::DrawSphere(const float radius, const uint32_t N) {
+
+	const float pi = (float)M_PI;
+	int i, j;
+	float theta1, theta2, theta3;
+	float X, Y, Z, px, py, pz;
+
+	for(j = 0; j < N/2; j++) {
+		theta1 = (float)j * 2.0f * pi / N - pi * 0.5f;
+		theta2 = (float)(j + 1) * 2.0f * pi / N - pi * 0.5f;
+		glBegin(GL_TRIANGLE_STRIP);
+		for(int i = 0; i <= N; i++) {
+			theta3 = (float)i * 2.0f * pi / (float)N;
+			X = cosf(theta2) * cosf(theta3);
+			Y = sinf(theta2);
+			Z = cosf(theta2) * sinf(theta3);
+			px = 0 + radius * X;
+			py = 0 + radius * Y;
+			pz = 0 + radius * Z;
+			glNormal3f(X, Y, Z);
+			//glTexCoord2f(1 - i / N, 2 * (j + 1) / N);
+			glVertex3f(px, py, pz);
+			X = cosf(theta1) * cosf(theta3);
+			Y = sinf(theta1);
+			Z = cosf(theta1) * sinf(theta3);
+			px = 0 + radius * X;
+			py = 0 + radius * Y;
+			pz = 0 + radius * Z;
+			glNormal3f(X, Y, Z);
+			//glTexCoord2f(1 - i / N, 2 * j / N);
+			glVertex3f(px, py, pz);
+		}
+		glEnd();
+	}
+}
+
+void CRenderer::DrawVBO(CVBO *vbo, const GLenum mode) {
 	vbo->drawElements(mode);
 }
 
@@ -278,14 +300,12 @@ void CRenderer::DrawString(const int texIndex, CTextureFont *fontTex, const floa
 	DrawString(texIndex, fontTex, posX, posY, charHeight, text, textLen);
 }
 
-void CRenderer::Flip()
-{
+void CRenderer::Flip() {
 	glFinish();
-	glutSwapBuffers();
+	fplVideoFlip();
 }
 
-void CRenderer::EnableTexture(const int index, CTexture* texture)
-{
+void CRenderer::EnableTexture(const int index, CTexture *texture) {
 	assert(texture != nullptr);
 	assert(!textureStates[index].active);
 	assert(textureStates[index].texture == nullptr);
@@ -296,8 +316,7 @@ void CRenderer::EnableTexture(const int index, CTexture* texture)
 	textureStates[index].texture = texture;
 }
 
-void CRenderer::DisableTexture(const int index, CTexture* texture)
-{
+void CRenderer::DisableTexture(const int index, CTexture *texture) {
 	assert(textureStates[index].active);
 	assert(textureStates[index].texture == texture);
 	glActiveTexture(GL_TEXTURE0 + index);

@@ -89,14 +89,14 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>$(SolutionDir)Libraries\PhysX\physx\include\;$(SolutionDir)Libraries\PhysX\pxshared\include\;$(SolutionDir)Libraries\glew\include\;$(SolutionDir)Libraries\glm\include\;$(SolutionDir)Libraries\freeglut\include\;$(SolutionDir)Libraries\rapidxml\include\;$(SolutionDir)Libraries\freeimage\include\;$(SolutionDir)Libraries\stb\include\;$(SolutionDir)Libraries\final\include\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Libraries\PhysX\physx\include\;$(SolutionDir)Libraries\PhysX\pxshared\include\;$(SolutionDir)Libraries\glm\include\;$(SolutionDir)Libraries\rapidxml\include\;$(SolutionDir)Libraries\freeimage\include\;$(SolutionDir)Libraries\stb\include\;$(SolutionDir)Libraries\final\include\;$(SolutionDir)Libraries\glad\include\</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <IgnoreSpecificDefaultLibraries>mcvcrtd.lib;libcmt.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
-      <AdditionalLibraryDirectories>$(SolutionDir)Libraries\PhysX\physx\lib\$(Platform)\;$(SolutionDir)Libraries\PhysX\pxshared\lib\$(Platform)\;$(SolutionDir)Libraries\glew\lib\$(Platform)\;$(SolutionDir)Libraries\freeglut\lib\$(Platform)\;$(SolutionDir)Libraries\freeimage\lib\$(Platform)\</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)Libraries\PhysX\physx\lib\$(Platform)\;$(SolutionDir)Libraries\PhysX\pxshared\lib\$(Platform)\;$(SolutionDir)Libraries\freeimage\lib\$(Platform)\</AdditionalLibraryDirectories>
       <AdditionalDependencies>PhysX3DEBUG_x64.lib;PhysX3CommonDEBUG_x64.lib;PhysX3ExtensionsDEBUG.lib;PxFoundationDEBUG_x64.lib;PxTaskDEBUG_x64.lib;PxPvdSDKDEBUG_x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
@@ -111,9 +111,7 @@ Copy "$(ProjectDir)scene.xml" "$(OutDir)"
 Copy "$(ProjectDir)textures\*.*" "$(OutDir)textures"
 Copy "$(SolutionDir)Libraries\PhysX\physx\bin\$(Platform)\*.dll" "$(OutDir)"
 Copy "$(SolutionDir)Libraries\PhysX\pxshared\bin\$(Platform)\*.dll" "$(OutDir)"
-Copy "$(SolutionDir)Libraries\freeglut\bin\$(Platform)\freeglut.dll" "$(OutDir)"
-Copy "$(SolutionDir)Libraries\freeimage\bin\$(Platform)\freeimage.dll" "$(OutDir)"
-Copy "$(SolutionDir)Libraries\glew\bin\$(Platform)\glew32.dll" "$(OutDir)"</Command>
+Copy "$(SolutionDir)Libraries\freeimage\bin\$(Platform)\freeimage.dll" "$(OutDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -126,15 +124,15 @@ Copy "$(SolutionDir)Libraries\glew\bin\$(Platform)\glew32.dll" "$(OutDir)"</Comm
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>$(SolutionDir)Libraries\PhysX\physx\include\;$(SolutionDir)Libraries\PhysX\pxshared\include\;$(SolutionDir)Libraries\glew\include\;$(SolutionDir)Libraries\glm\include\;$(SolutionDir)Libraries\freeglut\include\;$(SolutionDir)Libraries\rapidxml\include\;$(SolutionDir)Libraries\freeimage\include\;$(SolutionDir)Libraries\stb\include\;$(SolutionDir)Libraries\final\include\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Libraries\PhysX\physx\include\;$(SolutionDir)Libraries\PhysX\pxshared\include\;$(SolutionDir)Libraries\glm\include\;$(SolutionDir)Libraries\rapidxml\include\;$(SolutionDir)Libraries\freeimage\include\;$(SolutionDir)Libraries\stb\include\;$(SolutionDir)Libraries\final\include\;$(SolutionDir)Libraries\glad\include\</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <IgnoreSpecificDefaultLibraries>mcvcrtd.lib;libcmt.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
-      <AdditionalLibraryDirectories>$(SolutionDir)Libraries\PhysX\physx\lib\$(Platform)\;$(SolutionDir)Libraries\PhysX\pxshared\lib\$(Platform)\;$(SolutionDir)Libraries\glew\lib\$(Platform)\;$(SolutionDir)Libraries\freeglut\lib\$(Platform)\;$(SolutionDir)Libraries\freeimage\lib\$(Platform)\</AdditionalLibraryDirectories>
-      <AdditionalDependencies>PhysX3DEBUG_x86.lib;PhysX3CommonDEBUG_x86.lib;PhysX3ExtensionsDEBUG.lib;PxFoundationDEBUG_x86.lib;PxTaskDEBUG_x86.lib;PxPvdSDKDEBUG_x86.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)Libraries\PhysX\physx\lib\$(Platform)\;$(SolutionDir)Libraries\PhysX\pxshared\lib\$(Platform)\;$(SolutionDir)Libraries\freeimage\lib\$(Platform)\</AdditionalLibraryDirectories>
+      <AdditionalDependencies>opengl32.lib;PhysX3DEBUG_x86.lib;PhysX3CommonDEBUG_x86.lib;PhysX3ExtensionsDEBUG.lib;PxFoundationDEBUG_x86.lib;PxTaskDEBUG_x86.lib;PxPvdSDKDEBUG_x86.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>REM Copy shader files
@@ -148,9 +146,7 @@ Copy "$(ProjectDir)scene.xml" "$(OutDir)"
 Copy "$(ProjectDir)textures\*.*" "$(OutDir)textures"
 Copy "$(SolutionDir)Libraries\PhysX\physx\bin\$(Platform)\*.dll" "$(OutDir)"
 Copy "$(SolutionDir)Libraries\PhysX\pxshared\bin\$(Platform)\*.dll" "$(OutDir)"
-Copy "$(SolutionDir)Libraries\freeglut\bin\$(Platform)\freeglut.dll" "$(OutDir)"
-Copy "$(SolutionDir)Libraries\freeimage\bin\$(Platform)\freeimage.dll" "$(OutDir)"
-Copy "$(SolutionDir)Libraries\glew\bin\$(Platform)\glew32.dll" "$(OutDir)"</Command>
+Copy "$(SolutionDir)Libraries\freeimage\bin\$(Platform)\freeimage.dll" "$(OutDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -164,7 +160,7 @@ Copy "$(SolutionDir)Libraries\glew\bin\$(Platform)\glew32.dll" "$(OutDir)"</Comm
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>$(SolutionDir)Libraries\PhysX\physx\include\;$(SolutionDir)Libraries\PhysX\pxshared\include\;$(SolutionDir)Libraries\glew\include\;$(SolutionDir)Libraries\glm\include\;$(SolutionDir)Libraries\freeglut\include\;$(SolutionDir)Libraries\rapidxml\include\;$(SolutionDir)Libraries\freeimage\include\;$(SolutionDir)Libraries\stb\include\;$(SolutionDir)Libraries\final\include\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Libraries\PhysX\physx\include\;$(SolutionDir)Libraries\PhysX\pxshared\include\;$(SolutionDir)Libraries\glm\include\;$(SolutionDir)Libraries\rapidxml\include\;$(SolutionDir)Libraries\freeimage\include\;$(SolutionDir)Libraries\stb\include\;$(SolutionDir)Libraries\final\include\;$(SolutionDir)Libraries\glad\include\</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -173,7 +169,7 @@ Copy "$(SolutionDir)Libraries\glew\bin\$(Platform)\glew32.dll" "$(OutDir)"</Comm
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <IgnoreSpecificDefaultLibraries>mcvcrtd.lib;libcmt.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
-      <AdditionalLibraryDirectories>$(SolutionDir)Libraries\PhysX\physx\lib\$(Platform)\;$(SolutionDir)Libraries\PhysX\pxshared\lib\$(Platform)\;$(SolutionDir)Libraries\glew\lib\$(Platform)\;$(SolutionDir)Libraries\freeglut\lib\$(Platform)\;$(SolutionDir)Libraries\freeimage\lib\$(Platform)\</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)Libraries\PhysX\physx\lib\$(Platform)\;$(SolutionDir)Libraries\PhysX\pxshared\lib\$(Platform)\;$(SolutionDir)Libraries\freeimage\lib\$(Platform)\</AdditionalLibraryDirectories>
       <AdditionalDependencies>PhysX3_x64.lib;PhysX3Common_x64.lib;PhysX3Extensions.lib;PxFoundation_x64.lib;PxTask_x64.lib;PxPvdSDK_x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
@@ -188,9 +184,7 @@ Copy "$(ProjectDir)scene.xml" "$(OutDir)"
 Copy "$(ProjectDir)textures\*.*" "$(OutDir)textures"
 Copy "$(SolutionDir)Libraries\PhysX\physx\bin\$(Platform)\*.dll" "$(OutDir)"
 Copy "$(SolutionDir)Libraries\PhysX\pxshared\bin\$(Platform)\*.dll" "$(OutDir)"
-Copy "$(SolutionDir)Libraries\freeglut\bin\$(Platform)\freeglut.dll" "$(OutDir)"
-Copy "$(SolutionDir)Libraries\freeimage\bin\$(Platform)\freeimage.dll" "$(OutDir)"
-Copy "$(SolutionDir)Libraries\glew\bin\$(Platform)\glew32.dll" "$(OutDir)"</Command>
+Copy "$(SolutionDir)Libraries\freeimage\bin\$(Platform)\freeimage.dll" "$(OutDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -204,7 +198,7 @@ Copy "$(SolutionDir)Libraries\glew\bin\$(Platform)\glew32.dll" "$(OutDir)"</Comm
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>$(SolutionDir)Libraries\PhysX\physx\include\;$(SolutionDir)Libraries\PhysX\pxshared\include\;$(SolutionDir)Libraries\glew\include\;$(SolutionDir)Libraries\glm\include\;$(SolutionDir)Libraries\freeglut\include\;$(SolutionDir)Libraries\rapidxml\include\;$(SolutionDir)Libraries\freeimage\include\;$(SolutionDir)Libraries\stb\include\;$(SolutionDir)Libraries\final\include\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Libraries\PhysX\physx\include\;$(SolutionDir)Libraries\PhysX\pxshared\include\;$(SolutionDir)Libraries\glm\include\;$(SolutionDir)Libraries\rapidxml\include\;$(SolutionDir)Libraries\freeimage\include\;$(SolutionDir)Libraries\stb\include\;$(SolutionDir)Libraries\final\include\;$(SolutionDir)Libraries\glad\include\</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -213,7 +207,7 @@ Copy "$(SolutionDir)Libraries\glew\bin\$(Platform)\glew32.dll" "$(OutDir)"</Comm
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <IgnoreSpecificDefaultLibraries>mcvcrtd.lib;libcmt.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
-      <AdditionalLibraryDirectories>$(SolutionDir)Libraries\PhysX\physx\lib\$(Platform)\;$(SolutionDir)Libraries\PhysX\pxshared\lib\$(Platform)\;$(SolutionDir)Libraries\glew\lib\$(Platform)\;$(SolutionDir)Libraries\freeglut\lib\$(Platform)\;$(SolutionDir)Libraries\freeimage\lib\$(Platform)\</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)Libraries\PhysX\physx\lib\$(Platform)\;$(SolutionDir)Libraries\PhysX\pxshared\lib\$(Platform)\;$(SolutionDir)Libraries\freeimage\lib\$(Platform)\</AdditionalLibraryDirectories>
       <AdditionalDependencies>PhysX3_x86.lib;PhysX3Common_x86.lib;PhysX3Extensions.lib;PxFoundation_x86.lib;PxTask_x86.lib;PxPvdSDK_x86.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
@@ -228,13 +222,13 @@ Copy "$(ProjectDir)scene.xml" "$(OutDir)"
 Copy "$(ProjectDir)textures\*.*" "$(OutDir)textures"
 Copy "$(SolutionDir)Libraries\PhysX\physx\bin\$(Platform)\*.dll" "$(OutDir)"
 Copy "$(SolutionDir)Libraries\PhysX\pxshared\bin\$(Platform)\*.dll" "$(OutDir)"
-Copy "$(SolutionDir)Libraries\freeglut\bin\$(Platform)\freeglut.dll" "$(OutDir)"
-Copy "$(SolutionDir)Libraries\freeimage\bin\$(Platform)\freeimage.dll" "$(OutDir)"
-Copy "$(SolutionDir)Libraries\glew\bin\$(Platform)\glew32.dll" "$(OutDir)"</Command>
+Copy "$(SolutionDir)Libraries\freeimage\bin\$(Platform)\freeimage.dll" "$(OutDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\Libraries\glad\src\glad.c" />
     <ClCompile Include="FBO.cpp" />
+    <ClCompile Include="final_platform_layer.cpp" />
     <ClCompile Include="Scenario.cpp" />
     <ClCompile Include="FluidSystem.cpp" />
     <ClCompile Include="FontAtlas.cpp" />

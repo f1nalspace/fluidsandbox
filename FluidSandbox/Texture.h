@@ -2,7 +2,7 @@
 
 #include <assert.h>
 
-#include <GL/glew.h>
+#include <glad/glad.h>
 
 class CTexture
 {

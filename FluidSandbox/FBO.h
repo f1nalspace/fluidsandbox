@@ -4,7 +4,7 @@
 #include <malloc.h>
 #include <cstdint>
 
-#include <GL/glew.h>
+#include <glad/glad.h>
 
 #include "Texture2D.h"
 

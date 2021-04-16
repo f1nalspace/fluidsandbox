@@ -1,5 +1,8 @@
 #include "FBO.h"
 
+#define GL_EXT_framebuffer_object 1
+#include <glad/glad.h>
+
 #include <iostream>
 
 CFBO::CFBO(const int width, const int height):
@@ -40,31 +43,23 @@ bool StatusFBO() {
 		return true;
 	else {
 		switch(error) {
-			case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT_EXT:
+			case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
 				printf("    Incomplete attachment!\n");
 				break;
 
-			case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT_EXT:
+			case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
 				printf("    Missing attachment!\n");
 				break;
 
-			case GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS_EXT:
-				printf("    Incomplete dimensions!\n");
-				break;
-
-			case GL_FRAMEBUFFER_INCOMPLETE_FORMATS_EXT:
-				printf("    Incomplete formats!\n");
-				break;
-
-			case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER_EXT:
+			case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER:
 				printf("    Incomplete draw buffer!\n");
 				break;
 
-			case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER_EXT:
+			case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER:
 				printf("    Incomplete read buffer!\n");
 				break;
 
-			case GL_FRAMEBUFFER_UNSUPPORTED_EXT:
+			case GL_FRAMEBUFFER_UNSUPPORTED:
 				printf("    Framebufferobjects unsupported!\n");
 				break;
 		}

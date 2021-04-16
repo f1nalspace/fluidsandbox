@@ -2,8 +2,10 @@
 
 #include <assert.h>
 
-#include <GL/glew.h>
-#include <GL/freeglut.h>
+#include <cstdint>
+
+#include <glad/glad.h>
+
 #include <glm/glm.hpp>
 
 #include "VBO.h"
@@ -25,8 +27,6 @@ static const char *glErrorToString(GLuint code) {
 		case GL_STACK_UNDERFLOW: return "GL_STACK_UNDERFLOW";
 
 		case GL_OUT_OF_MEMORY: return "GL_OUT_OF_MEMORY";
-
-		case GL_TABLE_TOO_LARGE: return "GL_TABLE_TOO_LARGE";
 
 		default: return "GL_NO_ERROR";
 	}
@@ -103,6 +103,7 @@ public:
 	void EnableTexture(const int index, CTexture *texture);
 	void DisableTexture(const int index, CTexture *texture);
 
+	void DrawSphere(const float radius, const uint32_t N);
 	void DrawTexturedQuad(const float posX, const float posY, const float scaleW, const float scaleH);
 	void DrawTexturedRect(const float left, const float top, const float right, const float bottom);
 	void DrawSimpleRect(const float left, const float top, const float right, const float bottom);
