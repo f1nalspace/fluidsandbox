@@ -1019,7 +1019,7 @@ void UpdatePhysX(const float frametime) {
 	// Update water external direction if required
 	if(gFluidLatestExternalAccelerationTime > -1) {
 		uint64_t current = fplGetTimeInMillisecondsLP();
-		if(current > gFluidLatestExternalAccelerationTime) {
+		if((int64_t)current > gFluidLatestExternalAccelerationTime) {
 			gFluidSystem->setExternalAcceleration(physx::PxVec3(0.0f, 0.0f, 0.0f));
 			gFluidLatestExternalAccelerationTime = -1;
 		}
@@ -2388,7 +2388,7 @@ void initResources() {
 	Primitives::Primitive boxPrim = Primitives::createBox(glm::vec3(100.0f));
 	gSkyboxVBO = new CVBO();
 	gSkyboxVBO->bufferVertices(&boxPrim.positions[0][0], boxPrim.sizeOfPositions, GL_STATIC_DRAW);
-	gSkyboxVBO->bufferIndices(&boxPrim.indices[0], boxPrim.indexCount, GL_STATIC_DRAW);
+	gSkyboxVBO->bufferIndices(&boxPrim.indices[0], (GLuint)boxPrim.indexCount, GL_STATIC_DRAW);
 	gSkyboxShader = new CSkyboxShader();
 	Utils::attachShaderFromFile(gSkyboxShader, GL_VERTEX_SHADER, "shaders\\Skybox.vertex", "    ");
 	Utils::attachShaderFromFile(gSkyboxShader, GL_FRAGMENT_SHADER, "shaders\\Skybox.fragment", "    ");

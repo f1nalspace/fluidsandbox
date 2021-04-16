@@ -23,7 +23,7 @@ void CVBO::clear() {
 	indexCount = 0;
 }
 
-void CVBO::bufferVertices(const GLfloat *vertices, GLuint vertexSize, GLenum usage) {
+void CVBO::bufferVertices(const GLfloat *vertices, GLsizeiptr vertexSize, GLenum usage) {
 	if(vboId == 0) {
 		glGenBuffers(1, &vboId);
 	}
