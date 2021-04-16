@@ -2,8 +2,7 @@
 
 CVBO::CVBO(void):
 	iboId(0),
-	vboId(0),
-	indexCount(0) {
+	vboId(0) {
 }
 
 CVBO::~CVBO(void) {
@@ -20,7 +19,6 @@ void CVBO::clear() {
 		glDeleteBuffers(1, &vboId);
 
 	vboId = 0;
-	indexCount = 0;
 }
 
 void CVBO::bufferVertices(const GLfloat *vertices, GLsizeiptr vertexSize, GLenum usage) {
@@ -33,17 +31,30 @@ void CVBO::bufferVertices(const GLfloat *vertices, GLsizeiptr vertexSize, GLenum
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-void CVBO::bufferIndices(const GLuint *indices, GLuint indexCount, GLenum usage) {
+void CVBO::bufferIndices(const GLuint *indices, GLuint count, GLenum usage) {
 	if(iboId == 0) {
 		glGenBuffers(1, &iboId);
 	}
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, iboId);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexCount * sizeof(GLuint), indices, usage);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, count * sizeof(GLuint), indices, usage);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-	this->indexCount = indexCount;
 }
 
+void CVBO::reserveIndices(const GLuint count, const GLenum usage) {
+	if(iboId == 0) {
+		glGenBuffers(1, &iboId);
+	}
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, iboId);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, count * sizeof(GLuint), nullptr, usage);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+}
+
+void CVBO::subbufferIndices(const GLuint *indices, const GLuint start, const GLuint count) {
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, iboId);
+	glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GL_UNSIGNED_INT) * start, sizeof(GL_UNSIGNED_INT) * count, indices);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+}
 
 void CVBO::bind() {
 	glBindBuffer(GL_ARRAY_BUFFER, vboId);
@@ -58,8 +69,8 @@ void CVBO::bind() {
 	*/
 }
 
-void CVBO::drawElements(const GLenum mode, const GLuint count) {
-	glDrawElements(mode, count, GL_UNSIGNED_INT, nullptr);
+void CVBO::drawElements(const GLenum mode, const GLuint count, const GLsizeiptr offset) {
+	glDrawElements(mode, count, GL_UNSIGNED_INT, (void *)(offset));
 }
 
 void CVBO::unbind() {

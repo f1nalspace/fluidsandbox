@@ -161,8 +161,8 @@ void CRenderer::DrawSimpleRect(const float left, const float top, const float ri
 	glEnd();
 }
 
-void CRenderer::DrawVBO(CVBO *vbo, const GLenum mode, const GLuint count) {
-	vbo->drawElements(mode, count);
+void CRenderer::DrawVBO(CVBO *vbo, const GLenum mode, const GLuint count, const GLsizeiptr offset) {
+	vbo->drawElements(mode, count, offset);
 }
 
 glm::vec2 CRenderer::GetStringSize(const CTextureFont *fontTex, const char *text, const size_t textLen, const float charHeight) {

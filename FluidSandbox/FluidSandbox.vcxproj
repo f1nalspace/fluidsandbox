@@ -229,6 +229,7 @@ Copy "$(SolutionDir)Libraries\freeimage\bin\$(Platform)\freeimage.dll" "$(OutDir
     <ClCompile Include="..\Libraries\glad\src\glad.c" />
     <ClCompile Include="FBO.cpp" />
     <ClCompile Include="final_platform_layer.cpp" />
+    <ClCompile Include="GeometryVBO.cpp" />
     <ClCompile Include="Scenario.cpp" />
     <ClCompile Include="FluidSystem.cpp" />
     <ClCompile Include="FontAtlas.cpp" />
@@ -258,6 +259,7 @@ Copy "$(SolutionDir)Libraries\freeimage\bin\$(Platform)\freeimage.dll" "$(OutDir
     <ClInclude Include="Camera.hpp" />
     <ClInclude Include="FBO.h" />
     <ClInclude Include="FluidProperties.h" />
+    <ClInclude Include="GeometryVBO.h" />
     <ClInclude Include="Scenario.h" />
     <ClInclude Include="FluidSystem.h" />
     <ClInclude Include="FontAtlas.h" />

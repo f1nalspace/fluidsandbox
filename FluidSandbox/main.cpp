@@ -102,6 +102,7 @@ License:
 #include "TextureManager.h"
 #include "FluidProperties.h"
 #include "Light.h"
+#include "GeometryVBO.h"
 
 // Font
 #include "TextureFont.h"
@@ -317,13 +318,13 @@ static CCamera gCamera;
 // Non fluid rendering
 static CSceneFBO *gSceneFBO = nullptr;
 static CGLSL *gSceneShader = nullptr;
-static CVBO *gSkyboxVBO = nullptr;
+static GeometryVBO *gSkyboxVBO = nullptr;
 static CSkyboxShader *gSkyboxShader = nullptr;
 static CTexture *gSkyboxCubemap = nullptr;
 
-static CVBO *gBoxVBO = nullptr;
-static CVBO *gSphereVBO = nullptr;
-static CVBO *gCylinderVBO = nullptr;
+static GeometryVBO *gBoxVBO = nullptr;
+static GeometryVBO *gSphereVBO = nullptr;
+static GeometryVBO *gCylinderVBO = nullptr;
 
 static FontAtlas *gFontAtlas16 = nullptr;
 static FontAtlas *gFontAtlas32 = nullptr;
@@ -1006,21 +1007,30 @@ glm::vec4 getColor(physx::PxActor *actor, const glm::vec4 &defaultColor) {
 	}
 }
 
-void DrawPrimitive(CVBO *vbo) {
+void DrawPrimitive(GeometryVBO *vbo, const bool asLines) {
 	// Ensure that the matrix has correct transform for scale, position, rotation
 
 	// Vertex (vec3, vec3, vec2)
 	vbo->bind();
-	glEnableClientState(GL_VERTEX_ARRAY);
-	glEnableClientState(GL_NORMAL_ARRAY);
-	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-	glVertexPointer(3, GL_FLOAT, sizeof(Primitives::Vertex), (void *)(offsetof(Primitives::Vertex, pos)));
-	glNormalPointer(GL_FLOAT, sizeof(Primitives::Vertex), (void *)(offsetof(Primitives::Vertex, normal)));
-	glTexCoordPointer(2, GL_FLOAT, sizeof(Primitives::Vertex), (void *)(offsetof(Primitives::Vertex, texcoord)));
-	gRenderer->DrawVBO(vbo, GL_TRIANGLES, vbo->indexCount);
-	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-	glDisableClientState(GL_NORMAL_ARRAY);
-	glDisableClientState(GL_VERTEX_ARRAY);
+
+	if(!asLines || vbo->lineIndexCount == 0) {
+		glEnableClientState(GL_VERTEX_ARRAY);
+		glEnableClientState(GL_NORMAL_ARRAY);
+		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+		glVertexPointer(3, GL_FLOAT, sizeof(Primitives::Vertex), (void *)(offsetof(Primitives::Vertex, pos)));
+		glNormalPointer(GL_FLOAT, sizeof(Primitives::Vertex), (void *)(offsetof(Primitives::Vertex, normal)));
+		glTexCoordPointer(2, GL_FLOAT, sizeof(Primitives::Vertex), (void *)(offsetof(Primitives::Vertex, texcoord)));
+		gRenderer->DrawVBO(vbo, GL_TRIANGLES, vbo->triangleIndexCount, 0);
+		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+		glDisableClientState(GL_NORMAL_ARRAY);
+		glDisableClientState(GL_VERTEX_ARRAY);
+	} else {
+		glEnableClientState(GL_VERTEX_ARRAY);
+		glVertexPointer(3, GL_FLOAT, sizeof(Primitives::Vertex), (void *)(offsetof(Primitives::Vertex, pos)));
+		gRenderer->DrawVBO(vbo, GL_LINES, vbo->lineIndexCount, sizeof(GLuint) * vbo->triangleIndexCount);
+		glDisableClientState(GL_VERTEX_ARRAY);
+	}
+
 	vbo->unbind();
 }
 
@@ -1039,7 +1049,7 @@ void DrawBoxShape(physx::PxShape *pShape) {
 
 	gLightingShader->enable();
 	gLightingShader->uniform4f(gLightingShader->ulocColor, &color[0]);
-	DrawPrimitive(gBoxVBO);
+	DrawPrimitive(gBoxVBO, false);
 	gLightingShader->disable();
 }
 
@@ -1058,7 +1068,7 @@ void DrawSphereShape(physx::PxShape *pShape) {
 
 	gLightingShader->enable();
 	gLightingShader->uniform4f(gLightingShader->ulocColor, &color[0]);
-	DrawPrimitive(gSphereVBO);
+	DrawPrimitive(gSphereVBO, false);
 	gLightingShader->disable();
 }
 
@@ -1076,19 +1086,22 @@ void DrawCapsuleShape(physx::PxShape *pShape) {
 	gLightingShader->enable();
 	gLightingShader->uniform4f(gLightingShader->ulocColor, &color[0]);
 
-	glm::mat4 rotation = glm::rotate(multm, 90.0f, glm::vec3(0.0f, 1.0f, 0.0f));
-	glm::mat4 translation = glm::translate(rotation, glm::vec3(0.0f, 0.0f, -cg.halfHeight));
-	gRenderer->LoadMatrix(translation);
-	//glutSolidCylinder(cg.radius, 2 * cg.halfHeight, 16, 16);
+	glm::mat4 rotation = glm::rotate(multm, Deg2Rad(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 
-	glm::mat4 scaled = glm::scale(translation, glm::vec3(cg.radius));
-	gRenderer->LoadMatrix(scaled);
-	DrawPrimitive(gSphereVBO);
+	glm::mat4 translation0 = glm::translate(rotation, glm::vec3(0.0f, 0.0f, 0.0f));
+	glm::mat4 scaled0 = glm::scale(translation0, glm::vec3(cg.radius, cg.radius, 2.0f * cg.halfHeight));
+	gRenderer->LoadMatrix(scaled0);
+	DrawPrimitive(gCylinderVBO, false);
 
-	glm::mat4 trans2 = glm::translate(translation, glm::vec3(0.0f, 0.0f, 2.0f * cg.halfHeight));
-	glm::mat4 scaled2 = glm::scale(trans2, glm::vec3(cg.radius));
+	glm::mat4 translation1 = glm::translate(rotation, glm::vec3(0.0f, 0.0f, -cg.halfHeight));
+	glm::mat4 scaled1 = glm::scale(translation1, glm::vec3(cg.radius));
+	gRenderer->LoadMatrix(scaled1);
+	DrawPrimitive(gSphereVBO, false);
+
+	glm::mat4 translation2 = glm::translate(rotation, glm::vec3(0.0f, 0.0f, cg.halfHeight));
+	glm::mat4 scaled2 = glm::scale(translation2, glm::vec3(cg.radius));
 	gRenderer->LoadMatrix(scaled2);
-	DrawPrimitive(gSphereVBO);
+	DrawPrimitive(gSphereVBO, false);
 
 	gLightingShader->disable();
 }
@@ -1122,7 +1135,7 @@ void DrawBounds(const physx::PxBounds3 &bounds) {
 	glm::mat4 scaled = glm::scale(translation, glm::vec3(scale.x * 0.5f, scale.y * 0.5f, scale.z * 0.5f));
 	glm::mat4 mvp = gCamera.mvp * scaled;
 	gRenderer->LoadMatrix(mvp);
-	DrawPrimitive(gBoxVBO);
+	DrawPrimitive(gBoxVBO, true);
 }
 
 void DrawActorBounding(physx::PxActor *actor) {
@@ -1217,7 +1230,7 @@ void ShutdownPhysX() {
 		if(gPhysXVisualDebugger->isConnected())
 			gPhysXVisualDebugger->disconnect();
 		gPhysXVisualDebugger->release();
-}
+	}
 #endif
 
 	gPhysicsSDK->release();
@@ -1637,7 +1650,7 @@ void RenderSkybox(const glm::mat4 &mvp) {
 	gSkyboxShader->enable();
 	gSkyboxShader->uniformMatrix4(gSkyboxShader->ulocMVP, &mvp[0][0]);
 	gSkyboxShader->uniform1i(gSkyboxShader->ulocCubemap, 0);
-	DrawPrimitive(gSkyboxVBO);
+	DrawPrimitive(gSkyboxVBO, false);
 	gSkyboxShader->disable();
 
 	gRenderer->DisableTexture(0, gSkyboxCubemap);
@@ -2270,7 +2283,7 @@ void printOpenGLInfos() {
 		printf("  OpenGL FBO Max Color Attachments: %d\n", temp);
 		glGetIntegerv(GL_MAX_RENDERBUFFER_SIZE, &temp);
 		printf("  OpenGL FBO Max Render Buffer Size: %d\n", temp);
-}
+	}
 #endif
 }
 
@@ -2352,11 +2365,12 @@ void initResources() {
 
 	// Create skybox vbo and shader
 	printf("  Create skybox\n");
-	gSkyboxVBO = new CVBO();
+	gSkyboxVBO = new GeometryVBO();
 	{
 		Primitives::Primitive skyboxPrim = Primitives::CreateBox(glm::vec3(100.0f), true);
 		gSkyboxVBO->bufferVertices(skyboxPrim.verts[0].data(), skyboxPrim.sizeOfVertices, GL_STATIC_DRAW);
 		gSkyboxVBO->bufferIndices(&skyboxPrim.indices[0], (GLuint)skyboxPrim.indexCount, GL_STATIC_DRAW);
+		gSkyboxVBO->triangleIndexCount = skyboxPrim.indexCount;
 	}
 	gSkyboxShader = new CSkyboxShader();
 	Utils::attachShaderFromFile(gSkyboxShader, GL_VERTEX_SHADER, "shaders\\Skybox.vertex", "    ");
@@ -2364,23 +2378,37 @@ void initResources() {
 
 	// Create geometry buffers
 	printf("  Create geometry buffers\n");
-	gBoxVBO = new CVBO();
+	gBoxVBO = new GeometryVBO();
 	{
-		Primitives::Primitive geoBoxPrim = Primitives::CreateBox(glm::vec3(1.0f), false);
-		gBoxVBO->bufferVertices(geoBoxPrim.verts[0].data(), geoBoxPrim.sizeOfVertices, GL_STATIC_DRAW);
-		gBoxVBO->bufferIndices(&geoBoxPrim.indices[0], (GLuint)geoBoxPrim.indexCount, GL_STATIC_DRAW);
+		Primitives::Primitive prim = Primitives::CreateBox(glm::vec3(1.0f), false);
+		gBoxVBO->bufferVertices(prim.verts[0].data(), prim.sizeOfVertices, GL_STATIC_DRAW);
+		//gBoxVBO->bufferIndices(&geoBoxPrim.indices[0], (GLuint)geoBoxPrim.indexCount, GL_STATIC_DRAW);
+		gBoxVBO->reserveIndices(prim.indexCount + prim.lineIndexCount, GL_STATIC_DRAW);
+		gBoxVBO->subbufferIndices(&prim.indices[0], 0, prim.indexCount);
+		gBoxVBO->subbufferIndices(&prim.lineIndices[0], prim.indexCount, prim.lineIndexCount);
+		gBoxVBO->triangleIndexCount = prim.indexCount;
+		gBoxVBO->lineIndexCount = prim.lineIndexCount;
 	}
-	gSphereVBO = new CVBO();
+	gSphereVBO = new GeometryVBO();
 	{
-		Primitives::Primitive geoSpherePrim = Primitives::CreateSphere(1.0f, 16, 16);
-		gSphereVBO->bufferVertices(geoSpherePrim.verts[0].data(), geoSpherePrim.sizeOfVertices, GL_STATIC_DRAW);
-		gSphereVBO->bufferIndices(&geoSpherePrim.indices[0], (GLuint)geoSpherePrim.indexCount, GL_STATIC_DRAW);
+		Primitives::Primitive prim = Primitives::CreateSphere(1.0f, 16, 16);
+		gSphereVBO->bufferVertices(prim.verts[0].data(), prim.sizeOfVertices, GL_STATIC_DRAW);
+		gSphereVBO->reserveIndices(prim.indexCount + prim.lineIndexCount, GL_STATIC_DRAW);
+		gSphereVBO->subbufferIndices(&prim.indices[0], 0, prim.indexCount);
+		gSphereVBO->subbufferIndices(&prim.lineIndices[0], prim.indexCount, prim.lineIndexCount);
+		gSphereVBO->triangleIndexCount = prim.indexCount;
+		gSphereVBO->lineIndexCount = prim.lineIndexCount;
+
 	}
-	gCylinderVBO = new CVBO();
+	gCylinderVBO = new GeometryVBO();
 	{
-		Primitives::Primitive geoCylinderPrim = Primitives::CreateCylinder(1.0f, 1.0f, 1.0f, 16, 16);
-		gCylinderVBO->bufferVertices(geoCylinderPrim.verts[0].data(), geoCylinderPrim.sizeOfVertices, GL_STATIC_DRAW);
-		gCylinderVBO->bufferIndices(&geoCylinderPrim.indices[0], (GLuint)geoCylinderPrim.indexCount, GL_STATIC_DRAW);
+		Primitives::Primitive prim = Primitives::CreateCylinder(1.0f, 1.0f, 1.0f, 16, 16);
+		gCylinderVBO->bufferVertices(prim.verts[0].data(), prim.sizeOfVertices, GL_STATIC_DRAW);
+		gCylinderVBO->reserveIndices(prim.indexCount + prim.lineIndexCount, GL_STATIC_DRAW);
+		gCylinderVBO->subbufferIndices(&prim.indices[0], 0, prim.indexCount);
+		gCylinderVBO->subbufferIndices(&prim.lineIndices[0], prim.indexCount, prim.lineIndexCount);
+		gCylinderVBO->triangleIndexCount = prim.indexCount;
+		gCylinderVBO->lineIndexCount = prim.lineIndexCount;
 	}
 }
 

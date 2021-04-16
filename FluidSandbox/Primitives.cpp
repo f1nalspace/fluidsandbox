@@ -13,86 +13,18 @@ namespace Primitives {
 		float h = extends.y;
 		float d = extends.z;
 
-#if 0
-		glColor4f(1, 1, 1, 1);
-		glBegin(GL_TRIANGLES);
-
-		// front faces
-		glNormal3f(0, 0, 1);
-		// face v0-v1-v2
-		glTexCoord2f(1, 1);  glVertex3f(1, 1, 1);
-		glTexCoord2f(0, 1);  glVertex3f(-1, 1, 1);
-		glTexCoord2f(0, 0);  glVertex3f(-1, -1, 1);
-		// face v2-v3-v0
-		glTexCoord2f(0, 0);  glVertex3f(-1, -1, 1);
-		glTexCoord2f(1, 0);  glVertex3f(1, -1, 1);
-		glTexCoord2f(1, 1);  glVertex3f(1, 1, 1);
-
-		// right faces
-		glNormal3f(1, 0, 0);
-		// face v0-v3-v4
-		glTexCoord2f(0, 1);  glVertex3f(1, 1, 1);
-		glTexCoord2f(0, 0);  glVertex3f(1, -1, 1);
-		glTexCoord2f(1, 0);  glVertex3f(1, -1, -1);
-		// face v4-v5-v0
-		glTexCoord2f(1, 0);  glVertex3f(1, -1, -1);
-		glTexCoord2f(1, 1);  glVertex3f(1, 1, -1);
-		glTexCoord2f(0, 1);  glVertex3f(1, 1, 1);
-
-		// top faces
-		glNormal3f(0, 1, 0);
-		// face v0-v5-v6
-		glTexCoord2f(1, 0);  glVertex3f(1, 1, 1);
-		glTexCoord2f(1, 1);  glVertex3f(1, 1, -1);
-		glTexCoord2f(0, 1);  glVertex3f(-1, 1, -1);
-		// face v6-v1-v0
-		glTexCoord2f(0, 1);  glVertex3f(-1, 1, -1);
-		glTexCoord2f(0, 0);  glVertex3f(-1, 1, 1);
-		glTexCoord2f(1, 0);  glVertex3f(1, 1, 1);
-
-		// left faces
-		glNormal3f(-1, 0, 0);
-		// face  v1-v6-v7
-		glTexCoord2f(1, 1);  glVertex3f(-1, 1, 1);
-		glTexCoord2f(0, 1);  glVertex3f(-1, 1, -1);
-		glTexCoord2f(0, 0);  glVertex3f(-1, -1, -1);
-		// face v7-v2-v1
-		glTexCoord2f(0, 0);  glVertex3f(-1, -1, -1);
-		glTexCoord2f(1, 0);  glVertex3f(-1, -1, 1);
-		glTexCoord2f(1, 1);  glVertex3f(-1, 1, 1);
-
-		// bottom faces
-		glNormal3f(0, -1, 0);
-		// face v7-v4-v3
-		glTexCoord2f(0, 0);  glVertex3f(-1, -1, -1);
-		glTexCoord2f(1, 0);  glVertex3f(1, -1, -1);
-		glTexCoord2f(1, 1);  glVertex3f(1, -1, 1);
-		// face v3-v2-v7
-		glTexCoord2f(1, 1);  glVertex3f(1, -1, 1);
-		glTexCoord2f(0, 1);  glVertex3f(-1, -1, 1);
-		glTexCoord2f(0, 0);  glVertex3f(-1, -1, -1);
-
-		// back faces
-		glNormal3f(0, 0, -1);
-		// face v4-v7-v6
-		glTexCoord2f(0, 0);  glVertex3f(1, -1, -1);
-		glTexCoord2f(1, 0);  glVertex3f(-1, -1, -1);
-		glTexCoord2f(1, 1);  glVertex3f(-1, 1, -1);
-		// face v6-v5-v4
-		glTexCoord2f(1, 1);  glVertex3f(-1, 1, -1);
-		glTexCoord2f(0, 1);  glVertex3f(1, 1, -1);
-		glTexCoord2f(0, 0);  glVertex3f(1, -1, -1);
-		glEnd();
-#endif
-
 		Primitive result = Primitive();
 
-		// Front
-		size_t k = 0;
+		// Front (v0-v1-v2, v2-v3-v0)
+		GLuint k = 0;
 		result.AddVertex(glm::vec3(w, h, d), glm::vec3(0, 0, 1), glm::vec2(1.0f, 1.0f));
 		result.AddVertex(glm::vec3(-w, h, d), glm::vec3(0, 0, 1), glm::vec2(0.0f, 1.0f));
 		result.AddVertex(glm::vec3(-w, -h, d), glm::vec3(0, 0, 1), glm::vec2(0.0f, 0.0f));
 		result.AddVertex(glm::vec3(w, -h, d), glm::vec3(0, 0, 1), glm::vec2(1.0f, 0.0f));
+		result.AddLineIndices(k + 0, k + 1);
+		result.AddLineIndices(k + 1, k + 2);
+		result.AddLineIndices(k + 2, k + 3);
+		result.AddLineIndices(k + 3, k + 0);
 		if(invert) {
 			result.AddIndices(k + 2, k + 1, k + 0);
 			result.AddIndices(k + 0, k + 3, k + 2);
@@ -102,11 +34,15 @@ namespace Primitives {
 		}
 
 		// Right
-		k = result.verts.size();
+		k = (GLuint)result.verts.size();
 		result.AddVertex(glm::vec3(w, h, d), glm::vec3(1, 0, 0), glm::vec2(0.0f, 1.0f));
 		result.AddVertex(glm::vec3(w, -h, d), glm::vec3(1, 0, 0), glm::vec2(0.0f, 0.0f));
 		result.AddVertex(glm::vec3(w, -h, -d), glm::vec3(1, 0, 0), glm::vec2(1.0f, 0.0f));
 		result.AddVertex(glm::vec3(w, h, -d), glm::vec3(1, 0, 0), glm::vec2(1.0f, 1.0f));
+		result.AddLineIndices(k + 0, k + 1);
+		result.AddLineIndices(k + 1, k + 2);
+		result.AddLineIndices(k + 2, k + 3);
+		result.AddLineIndices(k + 3, k + 0);
 		if(invert) {
 			result.AddIndices(k + 2, k + 1, k + 0);
 			result.AddIndices(k + 0, k + 3, k + 2);
@@ -116,11 +52,15 @@ namespace Primitives {
 		}
 
 		// Top
-		k = result.verts.size();
+		k = (GLuint)result.verts.size();
 		result.AddVertex(glm::vec3(w, h, d), glm::vec3(0, 1, 0), glm::vec2(1.0f, 0.0f));
 		result.AddVertex(glm::vec3(w, h, -d), glm::vec3(0, 1, 0), glm::vec2(1.0f, 1.0f));
 		result.AddVertex(glm::vec3(-w, h, -d), glm::vec3(0, 1, 0), glm::vec2(0.0f, 1.0f));
 		result.AddVertex(glm::vec3(-w, h, d), glm::vec3(0, 1, 0), glm::vec2(0.0f, 0.0f));
+		result.AddLineIndices(k + 0, k + 1);
+		result.AddLineIndices(k + 1, k + 2);
+		result.AddLineIndices(k + 2, k + 3);
+		result.AddLineIndices(k + 3, k + 0);
 		if(invert) {
 			result.AddIndices(k + 2, k + 1, k + 0);
 			result.AddIndices(k + 0, k + 3, k + 2);
@@ -130,11 +70,15 @@ namespace Primitives {
 		}
 
 		// Left
-		k = result.verts.size();
+		k = (GLuint)result.verts.size();
 		result.AddVertex(glm::vec3(-w, h, d), glm::vec3(-1, 0, 0), glm::vec2(1.0f, 1.0f));
 		result.AddVertex(glm::vec3(-w, h, -d), glm::vec3(-1, 0, 0), glm::vec2(0.0f, 1.0f));
 		result.AddVertex(glm::vec3(-w, -h, -d), glm::vec3(-1, 0, 0), glm::vec2(0.0f, 0.0f));
 		result.AddVertex(glm::vec3(-w, -h, d), glm::vec3(-1, 0, 0), glm::vec2(1.0f, 0.0f));
+		result.AddLineIndices(k + 0, k + 1);
+		result.AddLineIndices(k + 1, k + 2);
+		result.AddLineIndices(k + 2, k + 3);
+		result.AddLineIndices(k + 3, k + 0);
 		if(invert) {
 			result.AddIndices(k + 2, k + 1, k + 0);
 			result.AddIndices(k + 0, k + 3, k + 2);
@@ -144,11 +88,15 @@ namespace Primitives {
 		}
 
 		// Bottom
-		k = result.verts.size();
+		k = (GLuint)result.verts.size();
 		result.AddVertex(glm::vec3(-w, -h, -d), glm::vec3(0, -1, 0), glm::vec2(0.0f, 0.0f));
 		result.AddVertex(glm::vec3(w, -h, -d), glm::vec3(0, -1, 0), glm::vec2(1.0f, 0.0f));
 		result.AddVertex(glm::vec3(w, -h, d), glm::vec3(0, -1, 0), glm::vec2(1.0f, 1.0f));
 		result.AddVertex(glm::vec3(-w, -h, d), glm::vec3(0, -1, 0), glm::vec2(0.0f, 1.0f));
+		result.AddLineIndices(k + 0, k + 1);
+		result.AddLineIndices(k + 1, k + 2);
+		result.AddLineIndices(k + 2, k + 3);
+		result.AddLineIndices(k + 3, k + 0);
 		if(invert) {
 			result.AddIndices(k + 2, k + 1, k + 0);
 			result.AddIndices(k + 0, k + 3, k + 2);
@@ -158,11 +106,15 @@ namespace Primitives {
 		}
 
 		// Back
-		k = result.verts.size();
+		k = (GLuint)result.verts.size();
 		result.AddVertex(glm::vec3(w, -h, -d), glm::vec3(0, 0, -1), glm::vec2(0.0f, 0.0f));
 		result.AddVertex(glm::vec3(-w, -h, -d), glm::vec3(0, 0, -1), glm::vec2(1.0f, 0.0f));
 		result.AddVertex(glm::vec3(-w, h, -d), glm::vec3(0, 0, -1), glm::vec2(1.0f, 1.0f));
 		result.AddVertex(glm::vec3(w, h, -d), glm::vec3(0, 0, -1), glm::vec2(0.0f, 1.0f));
+		result.AddLineIndices(k + 0, k + 1);
+		result.AddLineIndices(k + 1, k + 2);
+		result.AddLineIndices(k + 2, k + 3);
+		result.AddLineIndices(k + 3, k + 0);
 		if(invert) {
 			result.AddIndices(k + 2, k + 1, k + 0);
 			result.AddIndices(k + 0, k + 3, k + 2);
@@ -233,6 +185,7 @@ namespace Primitives {
 			k2 = k1 + sectorCount + 1;      // beginning of next stack
 
 			for(int j = 0; j < sectorCount; ++j, ++k1, ++k2) {
+
 				// 2 triangles per sector excluding first and last stacks
 				// k1 => k2 => k1+1
 				if(i != 0) {
@@ -244,17 +197,11 @@ namespace Primitives {
 					result.AddIndices(k1 + 1, k2, k2 + 1);
 				}
 
-#if 0
 				// store indices for lines
 				// vertical lines for all stacks, k1 => k2
-				lineIndices.push_back(k1);
-				lineIndices.push_back(k2);
+				result.AddLineIndices(k1, k2);
 				if(i != 0)  // horizontal lines except 1st stack, k1 => k+1
-				{
-					lineIndices.push_back(k1);
-					lineIndices.push_back(k1 + 1);
-				}
-#endif
+					result.AddLineIndices(k1, k1 + 1);
 			}
 		}
 
@@ -349,22 +296,17 @@ namespace Primitives {
 				result.AddIndices(k1, k1 + 1, k2);
 				result.AddIndices(k2, k1 + 1, k2 + 1);
 
-#if 0
 				// vertical lines for all stacks
-				lineIndices.push_back(k1);
-				lineIndices.push_back(k2);
+				result.AddLineIndices(k1, k2);
 				// horizontal lines
-				lineIndices.push_back(k2);
-				lineIndices.push_back(k2 + 1);
+				result.AddLineIndices(k2, k2 + 1);
 				if(i == 0) {
-					lineIndices.push_back(k1);
-					lineIndices.push_back(k1 + 1);
+					result.AddLineIndices(k1, k1 + 1);
 				}
-#endif
 	}
 }
 
-// remember where the base indices start
+		// remember where the base indices start
 		GLuint baseIndex = (GLuint)result.indices.size();
 
 		// put indices for base
