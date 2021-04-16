@@ -1930,9 +1930,6 @@ void SetFluidExternalAcceleration(const physx::PxVec3 &acc) {
 }
 
 void KeyUp(const fplKey key, const int x, const int y) {
-	const float accSpeed = 10.0f;
-	const physx::PxForceMode::Enum accMode = physx::PxForceMode::eACCELERATION;
-
 	switch(key) {
 		case fplKey_Escape: // Escape
 		{
@@ -1940,29 +1937,7 @@ void KeyUp(const fplKey key, const int x, const int y) {
 			break;
 		}
 
-		case fplKey_Right:
-		{
-			gFluidSystem->addForce(physx::PxVec3(1.0f * accSpeed, 0.0f, 0.0f), accMode);
-			break;
-		}
-
-		case fplKey_Left:
-		{
-			gFluidSystem->addForce(physx::PxVec3(-1.0f * accSpeed, 0.0f, 0.0f), accMode);
-			break;
-		}
-
-		case fplKey_Up:
-		{
-			gFluidSystem->addForce(physx::PxVec3(0.0f, 0.0f, -1.0f * accSpeed), accMode);
-			break;
-		}
-
-		case fplKey_Down:
-		{
-			gFluidSystem->addForce(physx::PxVec3(0.0f, 0.0f, 1.0f * accSpeed), accMode);
-			break;
-		}
+		
 
 		case fplKey_1: // 1 - 7
 		case fplKey_2:
@@ -2221,7 +2196,34 @@ void ChangeFluidProperty(float value) {
 }
 
 void KeyDown(unsigned char key, int x, int y) {
+	const float accSpeed = 10.0f;
+	const physx::PxForceMode::Enum accMode = physx::PxForceMode::eACCELERATION;
+
 	switch(key) {
+		case fplKey_Right:
+		{
+			gFluidSystem->addForce(physx::PxVec3(1.0f * accSpeed, 0.0f, 0.0f), accMode);
+			break;
+		}
+
+		case fplKey_Left:
+		{
+			gFluidSystem->addForce(physx::PxVec3(-1.0f * accSpeed, 0.0f, 0.0f), accMode);
+			break;
+		}
+
+		case fplKey_Up:
+		{
+			gFluidSystem->addForce(physx::PxVec3(0.0f, 0.0f, -1.0f * accSpeed), accMode);
+			break;
+		}
+
+		case fplKey_Down:
+		{
+			gFluidSystem->addForce(physx::PxVec3(0.0f, 0.0f, 1.0f * accSpeed), accMode);
+			break;
+		}
+
 		case 32: // Space
 		{
 			AddDynamicActor(*gScene, *gFluidSystem, gCurrentActorCreationKind);
