@@ -1883,7 +1883,7 @@ static void AddDynamicActor(physx::PxScene &scene, CFluidSystem &fluidSys, const
 
 		case ActorCreationKind::RigidCapsule:
 		{
-			CapsuleActor *capsule = new CapsuleActor(ActorMovementType::Dynamic, 0.5f, 1.0f);
+			CapsuleActor *capsule = new CapsuleActor(ActorMovementType::Dynamic, 0.5f, 0.5f);
 			capsule->color = glm::vec4(1.0f, 0.9f, 0.1f, 1.0f);
 			capsule->transform.position = pos;
 			capsule->transform.rotation = rotation;
