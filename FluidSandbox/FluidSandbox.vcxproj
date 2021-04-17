@@ -225,7 +225,6 @@ Copy "$(SolutionDir)Libraries\PhysX\pxshared\bin\$(Platform)\*.dll" "$(OutDir)"<
     <ClCompile Include="..\Libraries\glad\src\glad.c" />
     <ClCompile Include="FBO.cpp" />
     <ClCompile Include="final_platform_layer.cpp" />
-    <ClCompile Include="GeometryVBO.cpp" />
     <ClCompile Include="Scenario.cpp" />
     <ClCompile Include="FluidSystem.cpp" />
     <ClCompile Include="FontAtlas.cpp" />
@@ -264,7 +263,6 @@ Copy "$(SolutionDir)Libraries\PhysX\pxshared\bin\$(Platform)\*.dll" "$(OutDir)"<
     <ClInclude Include="TextureFont.h" />
     <ClInclude Include="Frustum.h" />
     <ClInclude Include="GLSL.h" />
-    <ClInclude Include="Light.h" />
     <ClInclude Include="OSLowLevel.h" />
     <ClInclude Include="AllShaders.hpp" />
     <ClInclude Include="Primitives.h" />

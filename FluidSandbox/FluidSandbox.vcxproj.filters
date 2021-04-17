@@ -25,7 +25,6 @@
     <ClCompile Include="Scenario.cpp" />
     <ClCompile Include="final_platform_layer.cpp" />
     <ClCompile Include="..\Libraries\glad\src\glad.c" />
-    <ClCompile Include="GeometryVBO.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.hpp" />
@@ -33,7 +32,6 @@
     <ClInclude Include="FluidSystem.h" />
     <ClInclude Include="Frustum.h" />
     <ClInclude Include="GLSL.h" />
-    <ClInclude Include="Light.h" />
     <ClInclude Include="OSLowLevel.h" />
     <ClInclude Include="Primitives.h" />
     <ClInclude Include="Renderer.h" />

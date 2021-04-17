@@ -1,5 +1,13 @@
-#include "TextureCubemap.h"
+/*
+======================================================================================================================
+	Fluid Sandbox - TextureCubemap.cpp
 
+	Copyright (C) Torsten Spaete 2011-2021. All rights reserved.
+	MPL v2 licensed. See LICENSE.txt for more details.
+======================================================================================================================
+*/
+
+#include "TextureCubemap.h"
 
 CTextureCubemap::CTextureCubemap(const int width, const int height)
 	:CTexture2D(GL_TEXTURE_CUBE_MAP, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, width, height)

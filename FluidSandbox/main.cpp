@@ -12,7 +12,7 @@
 	This is the main source file.
 
 	Copyright (C) Torsten Spaete 2011-2021. All rights reserved.
-	See license below.
+	MPL v.2 licensed. See LICENSE.txt for more details.
 ======================================================================================================================
 Dependencies:
 	- Windows 7 or higher

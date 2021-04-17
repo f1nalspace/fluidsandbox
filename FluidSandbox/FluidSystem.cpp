@@ -1,3 +1,12 @@
+/*
+======================================================================================================================
+	Fluid Sandbox - FluidSystem.cpp
+
+	Copyright (C) Torsten Spaete 2011-2021. All rights reserved.
+	MPL v2 licensed. See LICENSE.txt for more details.
+======================================================================================================================
+*/
+
 #include "FluidSystem.h"
 
 CFluidSystem::CFluidSystem(physx::PxPhysics* physics, const FluidSimulationProperties &desc, const uint32_t maxParticles)
