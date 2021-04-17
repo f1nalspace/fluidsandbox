@@ -297,7 +297,7 @@ CTextureCubemap *CTextureManager::loadCubemap(const char *filename) {
 		fplPathCombine(&savePath[0], savePathLen, 2, folderPath.c_str(), "cubemap");
 
 		std::string totalFilePath;
-		int totalFilePathLen = fplFormatString(nullptr, 0, "%s%d.png", savePath.c_str(), i) + 1;
+		size_t totalFilePathLen = fplFormatString(nullptr, 0, "%s%d.png", savePath.c_str(), i) + 1;
 		totalFilePath.reserve(totalFilePathLen);
 		fplFormatString(&totalFilePath[0], totalFilePathLen, "%s%d.png", savePath.c_str(), i);
 		tempBitmap.SaveToFile(totalFilePath.c_str(), STBBitmap::FileFormat::PNG);
