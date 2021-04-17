@@ -236,11 +236,12 @@ const std::string APPTITLE = APPLICATION_NAME + std::string(" v") + APPLICATION_
 // Math stuff
 const float DEG2RAD = (float)M_PI / 180.0f;
 
-// PhysX Debugger
-const char *PVD_Host = "localhost";
-const int PVD_Port = 5425;
+//
+// PhysX
+//
+//
 
-// PhysX SDK & Scene
+constexpr float PhysXSimulationDT = 1.0f / 60.0f;
 static physx::PxFoundation *gPhysXFoundation = nullptr;
 static physx::PxPhysics *gPhysicsSDK = nullptr;
 static physx::PxDefaultErrorCallback gDefaultErrorCallback;
@@ -248,31 +249,26 @@ static physx::PxDefaultAllocator gDefaultAllocatorCallback;
 static physx::PxSimulationFilterShader gDefaultFilterShader = physx::PxDefaultSimulationFilterShader;
 static physx::PxMaterial *gDefaultMaterial = nullptr;
 static physx::PxScene *gScene = nullptr;
+
 #ifdef PVD_ENABLED
+const char *PVD_Host = "localhost";
+const int PVD_Port = 5425;
 static physx::PxPvd *gPhysXVisualDebugger = nullptr;
 static physx::PxPvdTransport *gPhysXPvdTransport = nullptr;
 static bool gIsPhysXPvdConnected = false;
 #endif
 
-// For GPU Acceleration
 static physx::PxGpuDispatcher *gGPUDispatcher = nullptr;
 static physx::PxCudaContextManager *gCudaContextManager = nullptr;
 
 // Window vars
 constexpr int DefaultWindowWidth = 1280;
 constexpr int DefaultWindowHeight = 720;
-
-constexpr float defaultFov = 60.0;
-constexpr float defaultZNear = 0.1f;
-constexpr float defaultZFar = 1000.0f;
-// PhysX Simulation step 60 steps per second
-constexpr float gTimeSimulationStep = 1.0f / 60.0f;
-
-static bool gStoppedEmitter = false;
+constexpr float DefaultFov = 60.0;
+constexpr float DefaultZNear = 0.1f;
+constexpr float DefaultZFar = 1000.0f;
 
 // Rigid bodies settings
-constexpr float gDefaultRigidBodyDensity = 0.05f;
-constexpr static glm::vec3 gDefaultRigidBodyVelocity(0.0f, 0.0f, 0.0f);
 
 enum class ActorCreationKind: int {
 	RigidBox = 0,
@@ -293,33 +289,35 @@ constexpr int HideRigidBody_Blending = 1;
 constexpr int HideRigidBody_All = 2;
 constexpr int HideRigidBody_MAX = HideRigidBody_All;
 
-// Various drawing states
+// Render states
 static bool gDrawWireframe = false;
 static bool gDrawBoundBox = false;
 static int gHideRigidBodies = HideRigidBody_None;
-static bool showOSD = false;
+static bool gShowOSD = false;
 
 // Drawing statistics
 static size_t gTotalActors = 0;
 static size_t gDrawedActors = 0;
 static uint32_t gTotalFluidParticles = 0;
+static float gFps = 0;
+static int gTotalFrames = 0;
+static int gLastFrameTime = 0;
 
 // For simulation
-constexpr int MAX_FLUID_PARTICLES = 512000;
+constexpr float DefaultRigidBodyDensity = 0.05f;
+constexpr static glm::vec3 DefaultRigidBodyVelocity(0.0f, 0.0f, 0.0f);
 
-static glm::vec3 gRigidBodyFallPos(0.0f, 10.0f, 0.0f);
+// Fluid
+constexpr int MaxFluidParticleCount = 512000;
+
 static CFluidSystem *gFluidSystem = nullptr;
-
-// Debug types
-static FluidDebugType gFluidDebugType = FluidDebugType::Final;
-
 static CSphericalPointSprites *gPointSprites = nullptr;
 static CPointSpritesShader *gPointSpritesShader = nullptr;
-static CLightingShader *gLightingShader = nullptr;
 
 static bool gFluidUseGPUAcceleration = false;
+static FluidDebugType gFluidDebugType = FluidDebugType::Final;
 
-// 45 - 60 nvidia, 80 - 40 is better for this, 20 - 35 is a good value for water
+// Fluid properties
 static float gFluidViscosity = FluidSimulationProperties::DefaultViscosity;
 static float gFluidStiffness = FluidSimulationProperties::DefaultStiffness;
 static float gFluidRestOffset = 0.0f;
@@ -332,10 +330,6 @@ static float gFluidDynamicFriction = 0.0f;
 static float gFluidParticleMass = 0.0f;
 static float gFluidParticleRadius = 0.0f;
 static float gFluidParticleRenderFactor = 0.0f;
-
-static std::vector<Scenario *> gFluidScenarios;
-static Scenario *gActiveFluidScenario = nullptr;
-static int gActiveFluidScenarioIdx = -1;
 
 // Fluid modification
 static int64_t gFluidLatestExternalAccelerationTime = -1;
@@ -359,10 +353,13 @@ const unsigned int FLUID_PROPERTY_DEBUGTYPE = 14;
 const unsigned int MAX_FLUID_PROPERTY = FLUID_PROPERTY_DEBUGTYPE;
 static unsigned int gFluidCurrentProperty = FLUID_PROPERTY_NONE;
 
-// Stats
-static float gFps = 0;
-static int gTotalFrames = 0;
-static int gLastFrameTime = 0;
+// Scenario
+static bool gStoppedEmitter = false;
+static glm::vec3 gRigidBodyFallPos(0.0f, 10.0f, 0.0f);
+static std::vector<Scenario *> gFluidScenarios;
+static Scenario *gActiveFluidScenario = nullptr;
+static int gActiveFluidScenarioIdx = -1;
+static bool gWaterAddBySceneChange = true;
 
 // Renderer
 static CRenderer *gRenderer = nullptr;
@@ -373,15 +370,12 @@ static SSFRenderMode gSSFRenderMode = SSFRenderMode::Fluid;
 static float gSSFDetailFactor = 1.0f;
 static float gSSFBlurDepthScale = 0.0008f;
 static bool gSSFBlurActive = true;
-static bool gWaterAddBySceneChange = true;
+static int gSSFCurrentFluidIndex = 0; // // Current fluid color index
 
 // Managers
 static CTextureManager *gTexMng = nullptr;
 
-// Current fluid color index
-static int gSSFCurrentFluidIndex = 0;
-
-// Current scene
+// Scene
 static CScene *gActiveScene = nullptr;
 
 // Current camera
@@ -391,6 +385,8 @@ static CCamera gCamera;
 static Frustum gFrustum;
 
 // Non fluid rendering
+static CLightingShader *gLightingShader = nullptr;
+
 static CSceneFBO *gSceneFBO = nullptr;
 static CGLSL *gSceneShader = nullptr;
 static GeometryVBO *gSkyboxVBO = nullptr;
@@ -408,31 +404,13 @@ static CTextureFont *gFontTexture32 = nullptr;
 
 // Timing
 static float gTotalTimeElapsed = 0;
-static bool paused = false;
+static bool gPaused = false;
 
 // Default colors
 constexpr static glm::vec4 DefaultStaticRigidBodyColor(0.0f, 0.0f, 0.1f, 0.3f);
 constexpr static glm::vec4 DefaultDynamicRigidBodyCubeColor(0.85f, 0.0f, 0.0f, 1.0f);
 constexpr static glm::vec4 DefaultDynamicRigidBodySphereColor(0, 0.85f, 0.0f, 1.0f);
 constexpr static glm::vec4 DefaultDynamicRigidBodyCapsuleColor(0.85f, 0.85f, 0.0f, 1.0f);
-
-struct OSDRenderPosition {
-	float x;
-	float y;
-	float fontHeight;
-	float lineHeight;
-
-	OSDRenderPosition(const float fontHeight, const float lineHeight):
-		x(0),
-		y(0),
-		fontHeight(fontHeight),
-		lineHeight(lineHeight) {
-	}
-
-	void newLine() {
-		y += lineHeight;
-	}
-};
 
 // Deegree to radius
 float Deg2Rad(float degree) {
@@ -742,7 +720,7 @@ static CFluidSystem *CreateParticleFluidSystem() {
 
 	assert(particleSystemDesc.contactOffset >= particleSystemDesc.restOffset);
 
-	return new CFluidSystem(gPhysicsSDK, particleSystemDesc, MAX_FLUID_PARTICLES);
+	return new CFluidSystem(gPhysicsSDK, particleSystemDesc, MaxFluidParticleCount);
 }
 
 static void AddScenarioActor(physx::PxScene &scene, Actor *actor) {
@@ -1064,7 +1042,7 @@ void UpdatePhysX(const float frametime) {
 	}
 
 	// Update PhysX
-	if(!paused) {
+	if(!gPaused) {
 		SingleStepPhysX(frametime);
 	}
 }
@@ -1556,13 +1534,31 @@ void Update(const glm::mat4 &proj, const glm::mat4 &modl, const float frametime)
 	gFrustum.update(&proj[0][0], &modl[0][0]);
 
 	// Create actor based on time
-	if(!paused) {
+	if(!gPaused) {
 		CreateActorsBasedOnTime(frametime * 1000.0f);
 	}
 
 	// Update PhysX
 	UpdatePhysX(frametime);
 }
+
+struct OSDRenderPosition {
+	float x;
+	float y;
+	float fontHeight;
+	float lineHeight;
+
+	OSDRenderPosition(const float fontHeight, const float lineHeight):
+		x(0),
+		y(0),
+		fontHeight(fontHeight),
+		lineHeight(lineHeight) {
+	}
+
+	void newLine() {
+		y += lineHeight;
+	}
+}; 
 
 void RenderOSDLine(OSDRenderPosition &osdpos, char *value) {
 	CTextureFont *font;
@@ -1594,7 +1590,7 @@ void RenderOSD(const int windowWidth, const int windowHeight) {
 	// Enable blending
 	gRenderer->SetBlending(true);
 
-	if(showOSD) {
+	if(gShowOSD) {
 		// Draw background
 		gRenderer->SetColor(0.1f, 0.1f, 0.1f, 0.2f);
 		gRenderer->DrawSimpleRect(0.0f, 0.0f, (float)windowWidth * 0.25f, (float)windowHeight);
@@ -1612,17 +1608,17 @@ void RenderOSD(const int windowWidth, const int windowHeight) {
 	// Render text
 	sprintf_s(buffer, "FPS: %3.2f", gFps);
 	RenderOSDLine(osdPos, buffer);
-	sprintf_s(buffer, "Show osd: %s (T)", showOSD ? "yes" : "no");
+	sprintf_s(buffer, "Show osd: %s (T)", gShowOSD ? "yes" : "no");
 	RenderOSDLine(osdPos, buffer);
 
-	if(showOSD) {
+	if(gShowOSD) {
 		sprintf_s(buffer, "Drawed actors: %zu of %zu", gDrawedActors, gTotalActors);
 		RenderOSDLine(osdPos, buffer);
 		sprintf_s(buffer, "Total fluid particles: %lu", gTotalFluidParticles);
 		RenderOSDLine(osdPos, buffer);
 		sprintf_s(buffer, "Draw error: %s", drawingError.c_str());
 		RenderOSDLine(osdPos, buffer);
-		sprintf_s(buffer, "Simulation state (O): %s", paused ? "paused" : "running");
+		sprintf_s(buffer, "Simulation state (O): %s", gPaused ? "paused" : "running");
 		RenderOSDLine(osdPos, buffer);
 
 		// Empty line
@@ -1832,7 +1828,7 @@ void OnRender(const int windowWidth, const int windowHeight) {
 	glm::mat4 orthoMVP = glm::mat4(1.0f) * orthoProj;
 
 	// Create camera
-	gCamera = CCamera(0.0f, 4.0f, gCameraDistance, Deg2Rad(gCamRotation.x), Deg2Rad(gCamRotation.y), defaultZNear, defaultZFar, Deg2Rad(defaultFov), (float)windowWidth / (float)windowHeight);
+	gCamera = CCamera(0.0f, 4.0f, gCameraDistance, Deg2Rad(gCamRotation.x), Deg2Rad(gCamRotation.y), DefaultZNear, DefaultZFar, Deg2Rad(DefaultFov), (float)windowWidth / (float)windowHeight);
 	glm::mat4 mvp = gCamera.mvp;
 	glm::mat4 proj = gCamera.projection;
 	glm::mat4 mdlv = gCamera.modelview;
@@ -1928,8 +1924,8 @@ void OnMouseMove(const fplMouseButtonType button, const fplButtonState state, co
 
 static void AddDynamicActor(physx::PxScene &scene, CFluidSystem &fluidSys, const ActorCreationKind kind) {
 	glm::vec3 pos = gRigidBodyFallPos;
-	glm::vec3 vel = gDefaultRigidBodyVelocity;
-	float density = gDefaultRigidBodyDensity;
+	glm::vec3 vel = DefaultRigidBodyVelocity;
+	float density = DefaultRigidBodyDensity;
 	glm::quat rotation = toGLMQuat(physx::PxQuat(Deg2Rad(RandomRadius()), physx::PxVec3(0, 1, 0)));
 	switch(kind) {
 		case ActorCreationKind::RigidBox:
@@ -2041,7 +2037,7 @@ void KeyUp(const fplKey key, const int x, const int y) {
 
 		case fplKey_T: // t
 		{
-			showOSD = !showOSD;
+			gShowOSD = !gShowOSD;
 			break;
 		}
 
@@ -2139,7 +2135,7 @@ void KeyUp(const fplKey key, const int x, const int y) {
 
 		case fplKey_O: // o
 		{
-			paused = !paused;
+			gPaused = !gPaused;
 			break;
 		}
 
@@ -2395,7 +2391,7 @@ void initResources() {
 		FluidSimulationProperties::DefaultParticleRestDistanceFactor,
 		FluidRenderProperties::DefaultParticleRenderFactor,
 		FluidRenderProperties::DefaultMinDensity,
-		gDefaultRigidBodyDensity);
+		DefaultRigidBodyDensity);
 	gActiveScene->load("scene.xml");
 	gFluidParticleRadius = gActiveScene->sim.particleRadius;
 	gFluidParticleRenderFactor = gActiveScene->render.particleRenderFactor;
@@ -2404,7 +2400,7 @@ void initResources() {
 	// Create spherical point sprites
 	printf("  Allocate spherical point sprites\n");
 	gPointSprites = new CSphericalPointSprites();
-	gPointSprites->Allocate(MAX_FLUID_PARTICLES);
+	gPointSprites->Allocate(MaxFluidParticleCount);
 
 	// Create spherical point sprites shader
 	printf("  Load spherical point sprites shader\n");

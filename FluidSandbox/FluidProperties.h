@@ -12,6 +12,7 @@
 #include <assert.h>
 
 struct FluidSimulationProperties {
+	// 45 - 60 nvidia, 80 - 40 is better for this, 20 - 35 is a good value for water
 	constexpr static float DefaultViscosity = 10.0f;
 	constexpr static float DefaultStiffness = 50.0f;
 	constexpr static float DefaultRestitution = 0.3f;
