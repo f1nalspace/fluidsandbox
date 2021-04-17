@@ -45,10 +45,10 @@ Scenario::~Scenario(void) {
 }
 
 Scenario *Scenario::load(const char *filename, CScene *scene) {
-	if(COSLowLevel::getInstance()->fileExists(filename)) {
+	if(COSLowLevel::fileExists(filename)) {
 		std::cout << "  Load scenario from file '" << filename << "'" << std::endl;
 
-		std::string xml = COSLowLevel::getInstance()->getTextFileContent(filename);
+		std::string xml = COSLowLevel::getTextFileContent(filename);
 		std::vector<char> xml_copy = Utils::toCharVector(xml);
 
 		std::map<std::string, std::string> variables;

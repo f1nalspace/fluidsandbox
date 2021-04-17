@@ -149,7 +149,7 @@ FontAtlas *FontAtlas::LoadFromMemory(const uint8_t *fontData, const int fontInde
 
 FontAtlas *FontAtlas::LoadFromFile(const std::string &filePath, const int fontIndex, const float fontSize, const uint32_t minChar, const uint32_t maxChar, const uint32_t minBitmapSize, const uint32_t maxBitmapSize) {
 	FontAtlas *result = nullptr;
-	const uint8_t *data = COSLowLevel::getInstance()->getBinaryFileContent(filePath);
+	const uint8_t *data = COSLowLevel::getBinaryFileContent(filePath);
 	if(data != nullptr) {
 		result = LoadFromMemory(data, fontIndex, fontSize, minChar, maxChar, minBitmapSize, maxBitmapSize);
 	}

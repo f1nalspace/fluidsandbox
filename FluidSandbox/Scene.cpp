@@ -49,14 +49,14 @@ void CScene::resetFluidColors()
 
 void CScene::load(const char* filename)
 {
-	if (COSLowLevel::getInstance()->fileExists(filename))
+	if (COSLowLevel::fileExists(filename))
 	{
 		std::cout << "  Load scene from file '" << filename << "'" << std::endl;
 
 		fluidColors.clear();
 		fluidColorDefaultIndex = 0;
 
-		std::string xml = COSLowLevel::getInstance()->getTextFileContent(filename);
+		std::string xml = COSLowLevel::getTextFileContent(filename);
 		std::vector<char> xml_copy = Utils::toCharVector(xml);
 
 		rapidxml::xml_document<> doc;

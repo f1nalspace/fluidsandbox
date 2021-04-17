@@ -69,7 +69,7 @@ namespace Utils {
 	void attachShaderFromFile(CGLSL *shader, const GLuint what, const std::string &filename, const char *indent) {
 		const char *whatName = getShaderTypeToString(what);
 		printf("%sLoad %s shader from file '%s'\n", indent, whatName, filename.c_str());
-		std::string temp = COSLowLevel::getInstance()->getTextFileContent(filename);
+		std::string temp = COSLowLevel::getTextFileContent(filename);
 		shader->attachShader(what, temp.c_str());
 	}
 

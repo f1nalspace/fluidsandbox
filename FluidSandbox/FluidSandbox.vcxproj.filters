@@ -37,7 +37,6 @@
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="Scene.h" />
     <ClInclude Include="ScreenSpaceFluidRendering.h" />
-    <ClInclude Include="Singleton.hpp" />
     <ClInclude Include="SphericalPointSprites.h" />
     <ClInclude Include="Texture.h" />
     <ClInclude Include="Texture2D.h" />

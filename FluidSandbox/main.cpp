@@ -359,15 +359,10 @@ const unsigned int FLUID_PROPERTY_DEBUGTYPE = 14;
 const unsigned int MAX_FLUID_PROPERTY = FLUID_PROPERTY_DEBUGTYPE;
 static unsigned int gFluidCurrentProperty = FLUID_PROPERTY_NONE;
 
-// For mouse dragging
-static int oldX = 0, oldY = 0;
-static float rX = 15, rY = 0;
-static float fps = 0;
-//int startTime=0;
-static int totalFrames = 0;
-static int state = 1;
-static float dist = 15;
-static int lastFrameTime = 0;
+// Stats
+static float gFps = 0;
+static int gTotalFrames = 0;
+static int gLastFrameTime = 0;
 
 // Renderer
 static CRenderer *gRenderer = nullptr;
@@ -390,7 +385,10 @@ static int gSSFCurrentFluidIndex = 0;
 static CScene *gActiveScene = nullptr;
 
 // Current camera
+static glm::vec2 gCamRotation = glm::vec2(15, 0);
+static float gCameraDistance = 15;
 static CCamera gCamera;
+static Frustum gFrustum;
 
 // Non fluid rendering
 static CSceneFBO *gSceneFBO = nullptr;
@@ -976,7 +974,7 @@ void InitializePhysX() {
 	sceneDesc.filterShader = gDefaultFilterShader;
 
 	// CPU Dispatcher based on number of cpu cores
-	uint32_t coreCount = COSLowLevel::getInstance()->getNumCPUCores();
+	uint32_t coreCount = COSLowLevel::getNumCPUCores();
 	uint32_t numThreads = std::min(gActiveScene->numCPUThreads, coreCount);
 	printf("  CPU core count: %lu\n", coreCount);
 	printf("  CPU acceleration supported (%d threads)\n", numThreads);
@@ -1219,7 +1217,7 @@ void DrawActorBounding(physx::PxActor *actor) {
 	physx::PxBounds3 bounds = actor->getWorldBounds();
 	glm::vec3 min = toGLMVec3(bounds.minimum);
 	glm::vec3 max = toGLMVec3(bounds.maximum);
-	if(CFrustum::getInstance()->containsBounds(min, max)) {
+	if(gFrustum.containsBounds(min, max)) {
 		gDrawedActors++;
 		DrawBounds(bounds);
 	}
@@ -1229,7 +1227,7 @@ void DrawActor(physx::PxActor *actor) {
 	physx::PxBounds3 bounds = actor->getWorldBounds();
 	glm::vec3 min = toGLMVec3(bounds.minimum);
 	glm::vec3 max = toGLMVec3(bounds.maximum);
-	if(CFrustum::getInstance()->containsBounds(min, max)) {
+	if(gFrustum.containsBounds(min, max)) {
 		bool isVisible = true;
 		bool blending = false;
 
@@ -1555,7 +1553,7 @@ void CreateActorsBasedOnTime(const float frametime) {
 
 void Update(const glm::mat4 &proj, const glm::mat4 &modl, const float frametime) {
 	// Update frustum
-	CFrustum::getInstance()->update(&proj[0][0], &modl[0][0]);
+	gFrustum.update(&proj[0][0], &modl[0][0]);
 
 	// Create actor based on time
 	if(!paused) {
@@ -1612,7 +1610,7 @@ void RenderOSD(const int windowWidth, const int windowHeight) {
 	osdPos.y = 20;
 
 	// Render text
-	sprintf_s(buffer, "FPS: %3.2f", fps);
+	sprintf_s(buffer, "FPS: %3.2f", gFps);
 	RenderOSDLine(osdPos, buffer);
 	sprintf_s(buffer, "Show osd: %s (T)", showOSD ? "yes" : "no");
 	RenderOSDLine(osdPos, buffer);
@@ -1799,16 +1797,16 @@ float fixedFrametime = 1.0f / 60.0f;
 void OnRender(const int windowWidth, const int windowHeight) {
 	if(!gScene) return;
 
-	float realFrametimeStart = (float)COSLowLevel::getInstance()->getTimeMilliSeconds();
+	float realFrametimeStart = (float)COSLowLevel::getTimeMilliSeconds();
 
 	// Calculate fps
-	totalFrames++;
+	gTotalFrames++;
 
 	if((realFrametimeStart - appStartTime) > 1000.0f) {
 		float elapsedTime = float(realFrametimeStart - appStartTime);
-		fps = (((float)totalFrames * 1000.0f) / elapsedTime);
+		gFps = (((float)gTotalFrames * 1000.0f) / elapsedTime);
 		appStartTime = realFrametimeStart;
-		totalFrames = 0;
+		gTotalFrames = 0;
 	}
 
 	// Update counters
@@ -1834,7 +1832,7 @@ void OnRender(const int windowWidth, const int windowHeight) {
 	glm::mat4 orthoMVP = glm::mat4(1.0f) * orthoProj;
 
 	// Create camera
-	gCamera = CCamera(0.0f, 4.0f, dist, Deg2Rad(rX), Deg2Rad(rY), defaultZNear, defaultZFar, Deg2Rad(defaultFov), (float)windowWidth / (float)windowHeight);
+	gCamera = CCamera(0.0f, 4.0f, gCameraDistance, Deg2Rad(gCamRotation.x), Deg2Rad(gCamRotation.y), defaultZNear, defaultZFar, Deg2Rad(defaultFov), (float)windowWidth / (float)windowHeight);
 	glm::mat4 mvp = gCamera.mvp;
 	glm::mat4 proj = gCamera.projection;
 	glm::mat4 mdlv = gCamera.modelview;
@@ -1877,7 +1875,7 @@ void OnRender(const int windowWidth, const int windowHeight) {
 	// Draw frame
 	gRenderer->Flip();
 
-	float curTime = (float)COSLowLevel::getInstance()->getTimeMilliSeconds();
+	float curTime = (float)COSLowLevel::getTimeMilliSeconds();
 	float frametime = curTime - realFrametimeStart;
 	realLatestFrameTime = frametime;
 	gTotalTimeElapsed += (curTime - realFrametimeStart);
@@ -1918,10 +1916,10 @@ static void OnMouseButton(const fplMouseButtonType button, fplButtonState s, int
 void OnMouseMove(const fplMouseButtonType button, const fplButtonState state, const int x, const int y) {
 	if(gMouseDown) {
 		if(gMouseAction == MouseAction::Zoom) {
-			dist *= (1 + (y - gMouseOldY) / 60.0f);
+			gCameraDistance *= (1 + (y - gMouseOldY) / 60.0f);
 		} else if(gMouseAction == MouseAction::Rotate) {
-			rY += (x - gMouseOldX) / 5.0f;
-			rX += (y - gMouseOldY) / 5.0f;
+			gCamRotation.y += (x - gMouseOldX) / 5.0f;
+			gCamRotation.x += (y - gMouseOldY) / 5.0f;
 		}
 		gMouseOldX = x;
 		gMouseOldY = y;
@@ -2328,7 +2326,7 @@ void KeyDown(unsigned char key, int x, int y) {
 
 void LoadFluidScenarios() {
 	// Load scenarios
-	std::vector<std::string> scenFiles = COSLowLevel::getInstance()->getFilesInDirectory("scenarios\\*.xml");
+	std::vector<std::string> scenFiles = COSLowLevel::getFilesInDirectory("scenarios\\*.xml");
 
 	for(unsigned int i = 0; i < scenFiles.size(); i++) {
 		std::string filename = "scenarios\\";
@@ -2575,10 +2573,6 @@ void OnShutdown() {
 
 	if(gRenderer)
 		delete gRenderer;
-
-	// Release singletons
-	CFrustum::releaseInstance();
-	COSLowLevel::releaseInstance();
 }
 
 int main(int argc, char **argv) {
@@ -2587,7 +2581,7 @@ int main(int argc, char **argv) {
 	fplConsoleFormatOut("\n");
 
 	// Get application path
-	appPath = COSLowLevel::getInstance()->getAppPath(argc, argv);
+	appPath = COSLowLevel::getAppPath(argc, argv);
 
 	// Initialize random generator
 	srand((unsigned int)time(nullptr));

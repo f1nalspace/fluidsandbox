@@ -13,13 +13,8 @@
 #include <vector>
 #include <cstdint>
 
-#include "Singleton.hpp"
-
-class COSLowLevel : public CSingleton<COSLowLevel>
+namespace COSLowLevel
 {
-friend CSingleton<COSLowLevel>;
-public:
-	COSLowLevel(void);
 	uint32_t getNumCPUCores();
 	const std::string getTextFileContent(const std::string &filename);
 	const uint8_t *getBinaryFileContent(const std::string &filename);

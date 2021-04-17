@@ -9,28 +9,21 @@
 
 #include "Frustum.h"
 
-CFrustum::CFrustum(void) {
-}
-
-
-CFrustum::~CFrustum(void) {
-}
-
-bool CFrustum::containsPoint(const glm::vec3 &pos) {
+bool Frustum::containsPoint(const glm::vec3 &pos) {
 	for(int p = 0; p < 6; p++)
 		if(frustum[p][0] * pos.x + frustum[p][1] * pos.y + frustum[p][2] * pos.z + frustum[p][3] <= 0)
 			return false;
 	return true;
 }
 
-bool CFrustum::containsSphere(const glm::vec3 &pos, const float radius) {
+bool Frustum::containsSphere(const glm::vec3 &pos, const float radius) {
 	for(int p = 0; p < 6; p++)
 		if(frustum[p][0] * pos.x + frustum[p][1] * pos.y + frustum[p][2] * pos.z + frustum[p][3] <= -radius)
 			return false;
 	return true;
 }
 
-bool CFrustum::containsBounds(const glm::vec3 &minimum, const glm::vec3 &maximum) {
+bool Frustum::containsBounds(const glm::vec3 &minimum, const glm::vec3 &maximum) {
 	for(int p = 0; p < 6; p++) {
 		if(frustum[p][0] * (minimum.x) + frustum[p][1] * (minimum.y) + frustum[p][2] * (minimum.z) + frustum[p][3] > 0)
 			continue;
@@ -53,7 +46,7 @@ bool CFrustum::containsBounds(const glm::vec3 &minimum, const glm::vec3 &maximum
 	return true;
 }
 
-void CFrustum::update(const float *proj, const float *modl) {
+void Frustum::update(const float *proj, const float *modl) {
 	float   clip[16];
 	float   t;
 

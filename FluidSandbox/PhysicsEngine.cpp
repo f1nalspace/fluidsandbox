@@ -480,7 +480,7 @@ public:
 		sceneDesc.filterShader = defaultFilterShader;
 
 		// CPU Dispatcher based on number of cpu cores
-		uint32_t coreCount = COSLowLevel::getInstance()->getNumCPUCores();
+		uint32_t coreCount = COSLowLevel::getNumCPUCores();
 		uint32_t numThreads = std::min(config.threadCount, coreCount);
 		printf("  CPU core count: %lu\n", coreCount);
 		printf("  CPU acceleration supported (%d threads)\n", numThreads);
