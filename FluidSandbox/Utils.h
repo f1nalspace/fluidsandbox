@@ -11,13 +11,13 @@
 
 #include <string>
 #include <vector>
+#include <cstdint>
 
 #include <glm/glm.hpp>
 
 #include "GLSL.h"
 #include "OSLowLevel.h"
 #include "Actor.hpp"
-
 #include "AllActors.hpp"
 
 namespace Utils {
@@ -29,8 +29,8 @@ namespace Utils {
 	
 	std::vector<char> toCharVector(const std::string &source);
 	float toFloat(const std::string &str);
-	int toInt(const std::string &str);
-	unsigned int toUInt(const std::string &str);
+	int32_t toS32(const std::string &str);
+	uint32_t toU32(const std::string &str);
 	bool toBool(const std::string &str);
 	glm::vec3 toVec3(const std::string &str, const glm::vec3 &def = glm::vec3(0));
 	glm::vec4 toVec4(const std::string &str, const glm::vec4 &def = glm::vec4(0));

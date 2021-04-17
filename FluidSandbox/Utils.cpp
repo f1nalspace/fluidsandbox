@@ -87,17 +87,17 @@ namespace Utils {
 		return f;
 	}
 
-	int toInt(const std::string &str) {
+	int32_t toS32(const std::string &str) {
 		std::stringstream sstr;
-		int i;
+		int32_t i;
 		sstr << str;
 		sstr >> i;
 		return i;
 	}
 
-	unsigned int toUInt(const std::string &str) {
+	uint32_t toU32(const std::string &str) {
 		std::stringstream sstr;
-		unsigned int i;
+		uint32_t i;
 		sstr << str;
 		sstr >> i;
 		return i;
