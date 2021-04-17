@@ -10,7 +10,7 @@ CTextureCubemap::~CTextureCubemap(void)
 {
 }
 
-void CTextureCubemap::Upload(const char* pixels)
+void CTextureCubemap::Upload(const uint8_t *pixels)
 {
 	GLuint newid = create();
 	bind();
@@ -21,7 +21,7 @@ void CTextureCubemap::Upload(const char* pixels)
     glTexParameteri(getTarget(), GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 	for (int i = 0; i < 6; i++) 
 	{
-		const char* facePixels = &pixels[(getWidth() * getHeight() * 4) * i];
+		const uint8_t* facePixels = &pixels[(getWidth() * getHeight() * 4) * i];
 		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, getInternalFormat(), getWidth(), getHeight(), 0, getFormat(), getType(), (const GLvoid*)facePixels);
 	}
 	unbind();

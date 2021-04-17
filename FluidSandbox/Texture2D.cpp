@@ -13,7 +13,7 @@ CTexture2D::~CTexture2D(void)
 {
 }
 
-void CTexture2D::upload(const char* pixels)
+void CTexture2D::upload(const uint8_t* pixels)
 {
 	GLuint newid = create();
 	bind();

@@ -1,46 +1,127 @@
 ﻿/*
-=======================================================================================
+======================================================================================================================
 	Fluid Sandbox
 
 	A realtime application for playing around with 3D fluids and rigid bodies.
 	Features
 	- Fluid and rigid body simulation based on NVidia PhysX
-	- Screen Space Fluid Rendering
-	- Customizable Scenes/Scenarios
-	- Custom OpenGL Rendering Engine
+	- Screen Space Fluid Rendering with clear and colored rendering
+	- Customizable Scene & Scenarios
+	- Custom Rendering Engine
 
 	This is the main source file.
 
 	Copyright (C) Torsten Spaete 2011-2021. All rights reserved.
 	See license below.
-=======================================================================================
+======================================================================================================================
 Dependencies:
-
+	- Windows 7 or higher
 	- Visual Studio 2019
-	- PhysX SDK 3.4.2 (Multithreaded DLL, x64/win32)
-	- FreeImage (Multithreaded DLL, x64/win32)
-	- Final Platform Layer
-	- Glad
-	- glm
-	- rapidxml
-=======================================================================================
+
+	- PhysX SDK 3.4.2 (Multithreaded DLL, x64/win32, Headers are included)
+
+	- STB image (included)
+	- STB freetype (included)
+	- Final Platform Layer (included)
+	- Glad (included)
+	- glm (included)
+	- rapidxml (included)
+======================================================================================================================
+How to compile:
+	PhysX SDK:
+		- Compile the PhysX SDK as Multithreaded DLLs for x64 and x64 platform with the configurations Debug/Release
+			NOTE: Do not compile with static CRT library, change to (Multithreaded DLL and Multithreaded Debug DLL).
+
+		- Copy all 10 resulting PhysX DLL files into the folders for each platform:
+			- /Libraries/PhysX/physx/bin/win32/
+				- nvToolsExt32_1.dll
+				- PhysX3_x86.dll
+				- PhysX3Common_x86.dll
+				- PhysX3CommonDEBUG_x86.dll
+				- PhysX3Cooking_x86.dll
+				- PhysX3CookingDEBUG_x86.dll
+				- PhysX3DEBUG_x86.dll
+				- PhysX3Gpu_x86.dll
+				- PhysX3GpuDEBUG_x86.dll
+				- PhysXDevice.dll
+
+			- /Libraries/PhysX/physx/bin/x64/
+				- nvToolsExt32_1.dll
+				- PhysX3_x64.dll
+				- PhysX3Common_x64.dll
+				- PhysX3CommonDEBUG_x64.dll
+				- PhysX3Cooking_x64.dll
+				- PhysX3CookingDEBUG_x64.dll
+				- PhysX3DEBUG_x64.dll
+				- PhysX3Gpu_x64.dll
+				- PhysX3GpuDEBUG_x64.dll
+				- PhysXDevice.dll
+
+		- Copy all 8 resulting PhysX LIB files into the folders respectively:
+			- /Libraries/PhysX/physx/lib/win32/
+				- PhysX3_x86.lib
+				- PhysX3Common_x86.lib
+				- PhysX3CommonDEBUG_x86.lib
+				- PhysX3Cooking_x86.lib
+				- PhysX3CookingDEBUG_x86.lib
+				- PhysX3DEBUG_x86.lib
+				- PhysX3Extensions.lib
+				- PhysX3ExtensionsDEBUG.lib
+
+			- /Libraries/PhysX/physx/lib/x64/
+				- PhysX3_x64.lib
+				- PhysX3Common_x64.lib
+				- PhysX3CommonDEBUG_x64.lib
+				- PhysX3Cooking_x64.lib
+				- PhysX3CookingDEBUG_x64.lib
+				- PhysX3DEBUG_x64.lib
+				- PhysX3Extensions.lib
+				- PhysX3ExtensionsDEBUG.lib
+
+		- Copy the include files for PhysX SDK in the folder:
+			- /Libraries/PhysX/pxshared/include/ (~160 files)
+			- /Libraries/PhysX/physx/include/ (~60 files)
+
+	- All other libraries are already included
+
+	- Build and run the FluidSandbox Solution
+======================================================================================================================
 Todo:
 
-	- Replace FreeImage with stb_image.h
 	- Replace Glad with final_dynamic_opengl.h
 	- Replace rapidxml with final_xml.h
-	- Add proper OSD rendering using stb_freetype.h
 
-	- Move all physics code into its own class, so we can swap physics engine any time
-
-	- More cameras (Free, Rotate around point, Fixed)
-
-	- More scenarios
+	- Move all physics code into its own class, so we can swap physics engine any time (Allmost done)
 
 	- Migrate to OpenGL 3.x
 
 	- Abstract rendering so we can support multiple renderer (GL 3.x, Vulkan)
-=======================================================================================
+
+	- More cameras (Free, Rotate around point, Fixed)
+
+	- Fix fluid simulation properties: 
+		Right now the fluid  works but its not very stable.
+		Need to revisit that soon and find a configuration which works good for water, without weirdness movement.
+
+	- Add actor animations (Useful for simulating waves):
+		- Rotation
+		- Simple movement
+
+	- Support for kinematic bodies
+
+	- Support for joints
+
+	- Generate tubes (http://www.songho.ca/opengl/gl_cylinder.html)
+
+	- More scenarios:
+		- Use custom gravity
+		- Tubes
+		- Water slides
+		- Rube Goldberg machine
+
+	- Transform the sandbox in a real sandbox, by making it a real editor (ImGUI)
+
+======================================================================================================================
 License:
 
 	This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0
@@ -48,7 +129,7 @@ License:
 	If a copy of the MPL was not distributed with this file, You can obtain one at https://www.mozilla.org/MPL/2.0/.
 
 	Copyright (C) Torsten Spaete 2011-2021. All rights reserved.
-=======================================================================================
+======================================================================================================================
 */
 
 // Enable this to activate support for PhysX Visual Debugger
@@ -81,9 +162,6 @@ License:
 
 // XML
 #include "rapidxml/rapidxml.hpp"
-
-// Free image
-#pragma comment(lib, "FreeImage.lib")
 
 // Classes
 #include "Frustum.h"
