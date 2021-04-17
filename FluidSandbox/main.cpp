@@ -179,7 +179,6 @@ License:
 #include "Primitives.h"
 #include "TextureManager.h"
 #include "FluidProperties.h"
-#include "Light.h"
 #include "GeometryVBO.h"
 
 // Font
