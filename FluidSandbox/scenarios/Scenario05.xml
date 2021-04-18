@@ -1,30 +1,30 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <Scenario xmlns:fs="http://www.finalspace.org/FluidSimulation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.finalspace.org/FluidSimulation FluidScenarioSchema.xsd ">
-	<Name>Test scenario 6</Name>
-	<ActorProperties>
-		<CreatePosition>0.0, 8.0, 0.0</CreatePosition>
-	</ActorProperties>
-	<Variables>
-		<PoolColor>0.0, 0.0, 0.2, 0.25</PoolColor>
-		<WallColor>1.0, 0.0, 0.0, 0.75</WallColor>
-		<KillColor>0.0, 0.0, 0.0, 1.0</KillColor>
-		<PoolHeight>6.0</PoolHeight>
-		<PoolDepth>2.0</PoolDepth>
-		<PoolWidth>5.0</PoolWidth>
-		<PoolLeftRight>4.975000</PoolLeftRight>
-		<PoolTopBottom>1.975000</PoolTopBottom>
-	</Variables>
-	<Actors>
-		<Actor type="static" primitive="cube" pos="{%PoolLeftRight}, {%PoolHeight}, 0.000000" size="0.025000, {%PoolHeight}, {%PoolDepth}" color="{%PoolColor}" time="-1" />
-		<Actor type="static" primitive="cube" pos="-{%PoolLeftRight}, {%PoolHeight}, 0.000000" size="0.025000, {%PoolHeight}, {%PoolDepth}" color="{%PoolColor}" time="-1" />
-		<Actor type="static" primitive="cube" pos="0.000000, {%PoolHeight}, -{%PoolTopBottom}" size="{%PoolWidth}, {%PoolHeight}, 0.025000" color="{%PoolColor}" time="-1" />
-		<Actor type="static" primitive="cube" pos="0.000000, {%PoolHeight}, {%PoolTopBottom}" size="{%PoolWidth}, {%PoolHeight}, 0.025000" color="{%PoolColor}" time="-1" />
-		<Actor blending="false" type="static" rot="0.0, 0.0, 0.02" primitive="cube" pos="2.000000, 6.000000, 0.000000" size="3.000000, 0.250000, 1.975" color="{%WallColor}" time="-1" />
-		<Actor blending="false" type="static" rot="0.0, 0.0, -0.02" primitive="cube" pos="-2.000000, 4.000000, 0.000000" size="3.000000, 0.250000, 1.975" color="{%WallColor}" time="-1" />
-		<Actor blending="false" type="static" rot="0.0, 0.0, 0.02" primitive="cube" pos="2.000000, 2.000000, 0.000000" size="3.000000, 0.250000, 1.975" color="{%WallColor}" time="-1" />
-		<Actor particleDrain="true" blending="false" type="static" primitive="cube" pos="4.50000, 0.500000, 0.000000" size="0.5, 0.50000, {%PoolDepth}" color="{%KillColor}" time="-1" />
-	</Actors>
-	<Fluids>
-		<Fluid isEmitter="true" emitterRate="20.0" emitterDuration="500" emitterCoolDown="5000" type="blob" pos="4.0, 8.0, 0.0" size="1.0, 1.0, 1.5" vel="0.0, -10.0, 0.0" time="-1" />
-	</Fluids>
+  <Name>Test scenario 6</Name>
+  <ActorProperties>
+    <CreatePosition>0.0, 8.0, 0.0</CreatePosition>
+  </ActorProperties>
+  <Variables>
+    <PoolColor>0.0, 0.0, 0.2, 0.25</PoolColor>
+    <WallColor>1.0, 0.0, 0.0, 0.75</WallColor>
+    <KillColor>0.0, 0.0, 0.0, 1.0</KillColor>
+    <PoolHeight>6.0</PoolHeight>
+    <PoolDepth>2.0</PoolDepth>
+    <PoolWidth>5.0</PoolWidth>
+    <PoolLeftRight>4.975000</PoolLeftRight>
+    <PoolTopBottom>1.975000</PoolTopBottom>
+  </Variables>
+  <Actors>
+    <Actor type="static" primitive="cube" pos="{%PoolLeftRight}, {%PoolHeight}, 0.000000" extents="0.025000, {%PoolHeight}, {%PoolDepth}" color="{%PoolColor}" time="-1" />
+    <Actor type="static" primitive="cube" pos="-{%PoolLeftRight}, {%PoolHeight}, 0.000000" extents="0.025000, {%PoolHeight}, {%PoolDepth}" color="{%PoolColor}" time="-1" />
+    <Actor type="static" primitive="cube" pos="0.000000, {%PoolHeight}, -{%PoolTopBottom}" extents="{%PoolWidth}, {%PoolHeight}, 0.025000" color="{%PoolColor}" time="-1" />
+    <Actor type="static" primitive="cube" pos="0.000000, {%PoolHeight}, {%PoolTopBottom}" extents="{%PoolWidth}, {%PoolHeight}, 0.025000" color="{%PoolColor}" time="-1" />
+    <Actor blending="false" type="static" rot="0.0, 0.0, 0.02" primitive="cube" pos="2.000000, 6.000000, 0.000000" extents="3.000000, 0.250000, 1.975" color="{%WallColor}" time="-1" />
+    <Actor blending="false" type="static" rot="0.0, 0.0, -0.02" primitive="cube" pos="-2.000000, 4.000000, 0.000000" extents="3.000000, 0.250000, 1.975" color="{%WallColor}" time="-1" />
+    <Actor blending="false" type="static" rot="0.0, 0.0, 0.02" primitive="cube" pos="2.000000, 2.000000, 0.000000" extents="3.000000, 0.250000, 1.975" color="{%WallColor}" time="-1" />
+    <Actor particleDrain="true" blending="false" type="static" primitive="cube" pos="4.50000, 0.500000, 0.000000" extents="0.5, 0.50000, {%PoolDepth}" color="{%KillColor}" time="-1" />
+  </Actors>
+  <Fluids>
+    <Fluid isEmitter="true" emitterRate="20.0" emitterDuration="500" emitterCoolDown="5000" type="blob" pos="4.0, 8.0, 0.0" size="1.0, 1.0, 1.5" vel="0.0, -10.0, 0.0" time="-1" />
+  </Fluids>
 </Scenario>

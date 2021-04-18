@@ -1,35 +1,35 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <Scenario xmlns:fs="http://www.finalspace.org/FluidSimulation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.finalspace.org/FluidSimulation FluidScenarioSchema.xsd ">
-	<Name>Test scenario 10</Name>
-	<Gravity>0.0, -4.8, 0.0</Gravity>
-	<ActorProperties>
-		<CreatePosition>0.0, 6.0, 0.0</CreatePosition>
-	</ActorProperties>
-	<Variables>
-		<PoolColor>0.0, 0.0, 0.2, 0.25</PoolColor>
-		<WallColor>1.0, 0.0, 0.0, 0.75</WallColor>
-		<KillColor>1.0, 0.0, 1.0, 0.75</KillColor>
-		<PoolHeight>4.0</PoolHeight>
-		<PoolDepth>4.0</PoolDepth>
-		<PoolWidth>4.0</PoolWidth>
-		<PoolLeftRight>3.975000</PoolLeftRight>
-		<PoolTopBottom>3.975000</PoolTopBottom>
-	</Variables>
-	<FluidProperties>
-		<Viscosity>60.0</Viscosity>
-		<Stiffness>5.0</Stiffness>
-		<Damping>0.99</Damping>
-	</FluidProperties>
-	<Actors>
-		<Actor type="static" primitive="cube" pos="{%PoolLeftRight}, {%PoolHeight}, 0.000000" size="0.025000, {%PoolHeight}, {%PoolDepth}" color="{%PoolColor}" time="-1" />
-		<Actor type="static" primitive="cube" pos="-{%PoolLeftRight}, {%PoolHeight}, 0.000000" size="0.025000, {%PoolHeight}, {%PoolDepth}" color="{%PoolColor}" time="-1" />
-		<Actor type="static" primitive="cube" pos="0.000000, {%PoolHeight}, -{%PoolTopBottom}" size="{%PoolWidth}, {%PoolHeight}, 0.025000" color="{%PoolColor}" time="-1" />
-		<Actor type="static" primitive="cube" pos="0.000000, {%PoolHeight}, {%PoolTopBottom}" size="{%PoolWidth}, {%PoolHeight}, 0.025000" color="{%PoolColor}" time="-1" />
-		<Actor blending="false" type="static" primitive="sphere" pos="0.0, 2.0, 0.0" radius="2.0" color="1.0, 0.0, 0.0, 1.0" time="-1" />
-	</Actors>
-	<Fluids>
-		<Fluid isEmitter="true" emitterRate="20.0" emitterDuration="30000" type="sphere" pos="0, 4.25, 0.0" size="0.4, 0.4, 0.4" vel="0.0, 2.0, 0.0" time="-1"></Fluid>
-		<!--<Fluid isEmitter="true" emitterRate="25.0" emitterDuration="30000" type="sphere" pos="-3.5, 1.5, 0.0" size="0.5, 0.5, 0.5" vel="4.0, 5.0, 0.0" time="-1"></Fluid>-->
-		<!--<Fluid isEmitter="true" emitterRate="25.0" emitterDuration="30000" type="sphere" pos="3.5, 1.5, 0.0" size="0.5, 0.5, 0.5" vel="-4.0, 5.0, 0.0" time="-1"></Fluid>-->
-	</Fluids>
+  <Name>Test scenario 10</Name>
+  <Gravity>0.0, -4.8, 0.0</Gravity>
+  <ActorProperties>
+    <CreatePosition>0.0, 6.0, 0.0</CreatePosition>
+  </ActorProperties>
+  <Variables>
+    <PoolColor>0.0, 0.0, 0.2, 0.25</PoolColor>
+    <WallColor>1.0, 0.0, 0.0, 0.75</WallColor>
+    <KillColor>1.0, 0.0, 1.0, 0.75</KillColor>
+    <PoolHeight>4.0</PoolHeight>
+    <PoolDepth>4.0</PoolDepth>
+    <PoolWidth>4.0</PoolWidth>
+    <PoolLeftRight>3.975000</PoolLeftRight>
+    <PoolTopBottom>3.975000</PoolTopBottom>
+  </Variables>
+  <FluidProperties>
+    <Viscosity>60.0</Viscosity>
+    <Stiffness>5.0</Stiffness>
+    <Damping>0.99</Damping>
+  </FluidProperties>
+  <Actors>
+    <Actor type="static" primitive="cube" pos="{%PoolLeftRight}, {%PoolHeight}, 0.000000" extents="0.025000, {%PoolHeight}, {%PoolDepth}" color="{%PoolColor}" time="-1" />
+    <Actor type="static" primitive="cube" pos="-{%PoolLeftRight}, {%PoolHeight}, 0.000000" extents="0.025000, {%PoolHeight}, {%PoolDepth}" color="{%PoolColor}" time="-1" />
+    <Actor type="static" primitive="cube" pos="0.000000, {%PoolHeight}, -{%PoolTopBottom}" extents="{%PoolWidth}, {%PoolHeight}, 0.025000" color="{%PoolColor}" time="-1" />
+    <Actor type="static" primitive="cube" pos="0.000000, {%PoolHeight}, {%PoolTopBottom}" extents="{%PoolWidth}, {%PoolHeight}, 0.025000" color="{%PoolColor}" time="-1" />
+    <Actor blending="false" type="static" primitive="sphere" pos="0.0, 2.0, 0.0" radius="2.0" color="1.0, 0.0, 0.0, 1.0" time="-1" />
+  </Actors>
+  <Fluids>
+    <Fluid isEmitter="true" emitterRate="20.0" emitterDuration="30000" type="sphere" pos="0, 4.25, 0.0" size="0.4, 0.4, 0.4" vel="0.0, 2.0, 0.0" time="-1"></Fluid>
+    <!--<Fluid isEmitter="true" emitterRate="25.0" emitterDuration="30000" type="sphere" pos="-3.5, 1.5, 0.0" size="0.5, 0.5, 0.5" vel="4.0, 5.0, 0.0" time="-1"></Fluid>-->
+    <!--<Fluid isEmitter="true" emitterRate="25.0" emitterDuration="30000" type="sphere" pos="3.5, 1.5, 0.0" size="0.5, 0.5, 0.5" vel="-4.0, 5.0, 0.0" time="-1"></Fluid>-->
+  </Fluids>
 </Scenario>

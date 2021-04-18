@@ -1,29 +1,29 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <Scenario xmlns:fs="http://www.finalspace.org/FluidSimulation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.finalspace.org/FluidSimulation FluidScenarioSchema.xsd ">
-	<Name>Test scenario 4</Name>
-	<ActorProperties>
-		<CreatePosition>0.0, 8.0, 0.0</CreatePosition>
-	</ActorProperties>
-	<Variables>
-		<PoolColor>0.1, 0.1, 0.1, 0.5</PoolColor>
-		<WallColor>1.0, 0.0, 0.0, 0.75</WallColor>
-		<PoolHeight>8.1</PoolHeight>
-		<PoolDepth>2.1</PoolDepth>
-		<PoolWidth>2.1</PoolWidth>
-		<PoolLeftRight>2.025000</PoolLeftRight>
-		<PoolTopBottom>2.025000</PoolTopBottom>
-	</Variables>
-	<FluidProperties>
-	<Viscosity>10.0</Viscosity>
-	<Stiffness>10.0</Stiffness>
-	</FluidProperties>
-	<Actors>
-		<Actor type="static" primitive="cube" pos="{%PoolLeftRight}, {%PoolHeight}, 0.000000" size="0.025000, {%PoolHeight}, {%PoolDepth}" color="{%PoolColor}" alpha="{%PoolAlpha}" time="-1" />
-		<Actor type="static" primitive="cube" pos="-{%PoolLeftRight}, {%PoolHeight}, 0.000000" size="0.025000, {%PoolHeight}, {%PoolDepth}" color="{%PoolColor}" alpha="{%PoolAlpha}" time="-1" />
-		<Actor type="static" primitive="cube" pos="0.000000, {%PoolHeight}, -{%PoolTopBottom}" size="{%PoolWidth}, {%PoolHeight}, 0.025000" color="{%PoolColor}" alpha="{%PoolAlpha}" time="-1" />
-		<Actor type="static" primitive="cube" pos="0.000000, {%PoolHeight}, {%PoolTopBottom}" size="{%PoolWidth}, {%PoolHeight}, 0.025000" color="{%PoolColor}" alpha="{%PoolAlpha}" time="-1" />
-	</Actors>
-	<Fluids>
-		<Fluid isEmitter="true" emitterRate="70.0" emitterDuration="10000"  type="sphere" pos="-1.8, 9.0, 0.0" size="0.2, 2.0, 2.0" vel="8.0, 0.0, 0.0" time="-1"></Fluid>
-	</Fluids>
+  <Name>Test scenario 4</Name>
+  <ActorProperties>
+    <CreatePosition>0.0, 8.0, 0.0</CreatePosition>
+  </ActorProperties>
+  <Variables>
+    <PoolColor>0.1, 0.1, 0.1, 0.5</PoolColor>
+    <WallColor>1.0, 0.0, 0.0, 0.75</WallColor>
+    <PoolHeight>8.1</PoolHeight>
+    <PoolDepth>2.1</PoolDepth>
+    <PoolWidth>2.1</PoolWidth>
+    <PoolLeftRight>2.025000</PoolLeftRight>
+    <PoolTopBottom>2.025000</PoolTopBottom>
+  </Variables>
+  <FluidProperties>
+    <Viscosity>10.0</Viscosity>
+    <Stiffness>10.0</Stiffness>
+  </FluidProperties>
+  <Actors>
+    <Actor type="static" primitive="cube" pos="{%PoolLeftRight}, {%PoolHeight}, 0.000000" extents="0.025000, {%PoolHeight}, {%PoolDepth}" color="{%PoolColor}" alpha="{%PoolAlpha}" time="-1" />
+    <Actor type="static" primitive="cube" pos="-{%PoolLeftRight}, {%PoolHeight}, 0.000000" extents="0.025000, {%PoolHeight}, {%PoolDepth}" color="{%PoolColor}" alpha="{%PoolAlpha}" time="-1" />
+    <Actor type="static" primitive="cube" pos="0.000000, {%PoolHeight}, -{%PoolTopBottom}" extents="{%PoolWidth}, {%PoolHeight}, 0.025000" color="{%PoolColor}" alpha="{%PoolAlpha}" time="-1" />
+    <Actor type="static" primitive="cube" pos="0.000000, {%PoolHeight}, {%PoolTopBottom}" extents="{%PoolWidth}, {%PoolHeight}, 0.025000" color="{%PoolColor}" alpha="{%PoolAlpha}" time="-1" />
+  </Actors>
+  <Fluids>
+    <Fluid isEmitter="true" emitterRate="70.0" emitterDuration="10000"  type="sphere" pos="-1.8, 9.0, 0.0" size="0.2, 2.0, 2.0" vel="8.0, 0.0, 0.0" time="-1"></Fluid>
+  </Fluids>
 </Scenario>
