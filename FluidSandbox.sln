@@ -5,6 +5,21 @@ VisualStudioVersion = 16.0.30804.86
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FluidSandbox", "FluidSandbox\FluidSandbox.vcxproj", "{8EE0D0E5-0F7A-44A0-8B6E-EDCDB9F90A22}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Scenarios", "Scenarios", "{E17A42E4-072D-498B-9E54-903C5F1C3561}"
+	ProjectSection(SolutionItems) = preProject
+		FluidSandbox\scenarios\Scenario00.xml = FluidSandbox\scenarios\Scenario00.xml
+		FluidSandbox\scenarios\Scenario01.xml = FluidSandbox\scenarios\Scenario01.xml
+		FluidSandbox\scenarios\Scenario02.xml = FluidSandbox\scenarios\Scenario02.xml
+		FluidSandbox\scenarios\Scenario03.xml = FluidSandbox\scenarios\Scenario03.xml
+		FluidSandbox\scenarios\Scenario04.xml = FluidSandbox\scenarios\Scenario04.xml
+		FluidSandbox\scenarios\Scenario05.xml = FluidSandbox\scenarios\Scenario05.xml
+		FluidSandbox\scenarios\Scenario06.xml = FluidSandbox\scenarios\Scenario06.xml
+		FluidSandbox\scenarios\Scenario07.xml = FluidSandbox\scenarios\Scenario07.xml
+		FluidSandbox\scenarios\Scenario08.xml = FluidSandbox\scenarios\Scenario08.xml
+		FluidSandbox\scenarios\Scenario09.xml = FluidSandbox\scenarios\Scenario09.xml
+		FluidSandbox\scenarios\Scenario10.xml = FluidSandbox\scenarios\Scenario10.xml
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
