@@ -404,7 +404,7 @@ static Variable *ParseVariable(rapidxml::xml_node<> *rootNode) {
 		}
 	} else if(type == rapidxml::node_data) {
 		if(vtype == ValueType::None) {
-			vtype = ValueType::Float;
+			vtype = ValueType::String;
 		}
 		std::string str = rootNode->value();
 		VariableValue stringValue = VariableValue::fromString(str);
