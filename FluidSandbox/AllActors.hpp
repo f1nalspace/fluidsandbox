@@ -29,6 +29,7 @@ struct CubeActor: public Actor {
 	CubeActor(const ActorMovementType movementType, const glm::vec3 &halfExtents):
 		Actor(ActorType::Cube, movementType),
 		halfExtents(halfExtents) {
+		assert(halfExtents.x > 0 && halfExtents.y > 0 && halfExtents.z > 0);
 	}
 
 	void Assign(const CubeActor *source) {
@@ -43,6 +44,7 @@ struct SphereActor: public Actor {
 	SphereActor(const ActorMovementType movementType, const float radius):
 		Actor(ActorType::Sphere, movementType),
 		radius(radius) {
+		assert(radius > 0);
 	}
 
 	void Assign(const SphereActor *source) {
@@ -59,6 +61,8 @@ struct CapsuleActor: public Actor {
 		Actor(ActorType::Capsule, movementType),
 		radius(radius),
 		halfHeight(halfHeight) {
+		assert(radius > 0);
+		assert(halfHeight > 0);
 	}
 
 	void Assign(const CapsuleActor *source) {

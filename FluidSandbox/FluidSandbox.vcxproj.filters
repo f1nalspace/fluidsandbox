@@ -26,6 +26,7 @@
     <ClCompile Include="final_platform_layer.cpp" />
     <ClCompile Include="..\Libraries\glad\src\glad.c" />
     <ClCompile Include="VariableManager.cpp" />
+    <ClCompile Include="ValueTypes.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.hpp" />
@@ -58,6 +59,7 @@
     <ClInclude Include="Scenario.h" />
     <ClInclude Include="GeometryVBO.h" />
     <ClInclude Include="VariableManager.h" />
+    <ClInclude Include="ValueTypes.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="LICENSE.txt" />

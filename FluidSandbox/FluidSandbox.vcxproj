@@ -244,6 +244,7 @@ Copy "$(SolutionDir)Libraries\PhysX\pxshared\bin\$(Platform)\*.dll" "$(OutDir)"<
     <ClCompile Include="TextureFont.cpp" />
     <ClCompile Include="TextureManager.cpp" />
     <ClCompile Include="Utils.cpp" />
+    <ClCompile Include="ValueTypes.cpp" />
     <ClCompile Include="VariableManager.cpp" />
     <ClCompile Include="VBO.cpp" />
     <ClCompile Include="XMLUtils.cpp" />
@@ -276,6 +277,7 @@ Copy "$(SolutionDir)Libraries\PhysX\pxshared\bin\$(Platform)\*.dll" "$(OutDir)"<
     <ClInclude Include="TextureCubemap.h" />
     <ClInclude Include="TextureManager.h" />
     <ClInclude Include="Utils.h" />
+    <ClInclude Include="ValueTypes.h" />
     <ClInclude Include="VariableManager.h" />
     <ClInclude Include="VBO.h" />
     <ClInclude Include="XMLUtils.h" />

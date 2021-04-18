@@ -79,6 +79,36 @@ namespace Utils {
 		return arr;
 	}
 
+	int compareString(const std::string &a, const std::string &b, const EqualityMode mode) {
+		int r;
+		if(mode == EqualityMode::CaseSensitive) {
+			r = a.compare(b);
+		} else if(mode == EqualityMode::CaseInsensitive) {
+			size_t sizeA = a.size();
+			size_t sizeB = b.size();
+			if(sizeA < sizeB) {
+				r = -1;
+			} else if(sizeA > sizeB) {
+				r = 1;
+			} else {
+				r = 0;
+				for(size_t i = 0; i < sizeA; ++i) {
+					if(tolower(a[i]) != tolower(b[i])) {
+						r = 1;
+						break;
+					}
+				}
+			}
+		}
+		return(r);
+	}
+
+	bool isEqual(const std::string &a, const std::string &b, const EqualityMode mode) {
+		int r = compareString(a, b, mode);
+		bool result = r == 0;
+		return(result);
+	}
+
 	float toFloat(const std::string &str) {
 		std::stringstream sstr;
 		float f;
@@ -103,9 +133,30 @@ namespace Utils {
 		return i;
 	}
 
-	const std::string toString(const float value) {
+	const std::string toString(const BoolValue &value) {
+		if(value.value)
+			return "true";
+		else
+			return "false";
+	}
+	const std::string toString(const FloatValue &value) {
 		std::ostringstream out;
-		out << value;
+		out << value.value;
+		return std::string(out.str());
+	}
+	const std::string toString(const S32Value &value) {
+		std::ostringstream out;
+		out << value.value;
+		return std::string(out.str());
+	}
+	const std::string toString(const Vec3Value &value) {
+		std::ostringstream out;
+		out << value.value.x << "," << value.value.y << "," << value.value.z;
+		return std::string(out.str());
+	}
+	const std::string toString(const Vec4Value &value) {
+		std::ostringstream out;
+		out << value.value.x << "," << value.value.y << "," << value.value.z << "," << value.value.w;
 		return std::string(out.str());
 	}
 

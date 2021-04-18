@@ -637,10 +637,10 @@ public:
 
 		if(actor->type == PhysicsActor::Type::RigidBody) {
 			NativeRigidBody *nRigidBody = static_cast<NativeRigidBody *>(nativeActor);
-			std::remove(rigidbodies.begin(), rigidbodies.end(), nRigidBody);
+			rigidbodies.erase(std::remove(rigidbodies.begin(), rigidbodies.end(), nRigidBody), rigidbodies.end());
 		} else if(actor->type == PhysicsActor::Type::ParticleSystem) {
 			NativeParticleSystem *nParticleSystem = static_cast<NativeParticleSystem *>(actor);
-			std::remove(particleSystems.begin(), particleSystems.end(), nParticleSystem);
+			particleSystems.erase(std::remove(particleSystems.begin(), particleSystems.end(), nParticleSystem), particleSystems.end());
 		}
 	}
 
@@ -722,7 +722,7 @@ PhysicsParticleSystem *PhysicsEngine::AddParticleSystem(const FluidSimulationPro
 void PhysicsEngine::RemoveParticleSystem(PhysicsParticleSystem *particleSystem) {
 	if(particleSystem != nullptr) {
 		RemoveActor(particleSystem);
-		std::remove(actors.begin(), actors.end(), particleSystem);
+		actors.erase(std::remove(actors.begin(), actors.end(), particleSystem), actors.end());
 		delete particleSystem;
 	}
 }
@@ -739,7 +739,7 @@ PhysicsRigidBody *PhysicsEngine::AddRigidBody(const PhysicsRigidBody::MotionKind
 void PhysicsEngine::RemoveRigidBody(PhysicsRigidBody *body) {
 	if(body != nullptr) {
 		RemoveActor(body);
-		std::remove(actors.begin(), actors.end(), body);
+		actors.erase(std::remove(actors.begin(), actors.end(), body), actors.end());
 		delete body;
 	}
 }
