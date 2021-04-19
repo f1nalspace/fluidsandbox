@@ -12,33 +12,42 @@
 #include <assert.h>
 
 struct FluidSimulationProperties {
+	constexpr static float DefaultContactOffsetFactor = 2.0f;
+	// The factor for computing the restParticleDistance based on the particle radius
+	constexpr static float DefaultParticleRestDistanceFactor = 2.0f;
+	// The factor how cell sizes are computed based on the particle radius
+	constexpr static float DefaultCellSizeFactor = 1.0f;
+
 	// 45 - 60 nvidia, 80 - 40 is better for this, 20 - 35 is a good value for water
 	constexpr static float DefaultViscosity = 10.0f;
 	constexpr static float DefaultStiffness = 50.0f;
 	constexpr static float DefaultRestitution = 0.3f;
 	constexpr static float DefaultDamping = 0.001f;
 	constexpr static float DefaultDynamicFriction = 0.001f;
+	constexpr static float DefaultStaticFriction = 0.0f;
 	constexpr static float DefaultMaxMotionDistance = 0.3f;
 	constexpr static float DefaultRestOffset = 0.12f;
-	constexpr static float DefaultContactOffset = 0.12f;
+	constexpr static float DefaultContactOffset = 0.24f;
 	constexpr static float DefaultParticleMass = 0.005f;
 	constexpr static float DefaultParticleRadius = 0.05f;
-	constexpr static float DefaultParticleRestDistanceFactor = 2.0f;
-	constexpr static float DefaultParticleGridFactor = 6.0f;
 
-	float viscosity;
-	float stiffness;
-	float restitution;
-	float damping;
-	float dynamicFriction;
-	float maxMotionDistance;
-	float restOffset;
-	float contactOffset;
-	float particleMass;
-	float particleRadius;
-	float particleDistanceFactor;
-	float restParticleDistance;
-	float gridSize;
+	float viscosity;				// Thickness [5-300]
+	float stiffness;				// Gas-constant [1-200], 1 = Compressed, 200 = Less compressed, more unstable
+	float restitution;				// How fluids bounces of surfaces [0-1]
+	float damping;					// Destroying of energy to increase stability
+	float dynamicFriction;			// Friction used when interacting with dynamic rigid bodies [0-1]
+	float staticFriction;			// Friction used when interacting with static rigid bodies [0-1]
+	float maxMotionDistance;		// Much much particles can move for one timestep
+	float restOffset;				// Distance of particles how interacting with with each other
+	float contactOffset;			// Smallest distance a collision contact gets generated
+	float particleMass;				// The mass of the particle
+	float particleRadius;			// The radius of the particle, used for computing the grid size and the rest particle distance
+
+	// TODO(final): Remove the particle distance factor!
+	float particleDistanceFactor;	// The distance factor used for multiplying the radius with. Used for create particles which touches each other.
+
+	float restParticleDistance;		// The ideal distance when particles touch each other
+	float cellSize;					// The size of a one grid cell, must be equal or greater than the particle radius (h)
 
 	static FluidSimulationProperties Compute(const float particleRadius, const float particleDistanceFactor) {
 		FluidSimulationProperties result = {};
@@ -47,19 +56,35 @@ struct FluidSimulationProperties {
 		result.restitution = DefaultRestitution;
 		result.damping = DefaultDamping;
 		result.dynamicFriction = DefaultDynamicFriction;
+		result.staticFriction = DefaultStaticFriction;
 		result.maxMotionDistance = DefaultMaxMotionDistance;
 		result.restOffset = DefaultRestOffset;
-		result.contactOffset = DefaultContactOffset;
+		result.contactOffset = result.restOffset * DefaultContactOffsetFactor;
 		result.particleMass = DefaultParticleMass;
 
 		result.particleRadius = particleRadius;
 		result.particleDistanceFactor = particleDistanceFactor;
 		result.restParticleDistance = particleRadius * particleDistanceFactor;
-		result.gridSize = particleRadius * DefaultParticleGridFactor;
+		result.cellSize = particleRadius * DefaultCellSizeFactor;
 
-		assert(result.contactOffset >= result.restOffset);
+		result.Validate();
 
 		return(result);
+	}
+
+	void Validate() {
+		// Range validation
+		assert(particleRadius > 0);
+		assert(restitution >= 0 && restitution <= 1.0f);
+		assert(dynamicFriction >= 0 && dynamicFriction <= 1.0f);
+		assert(staticFriction >= 0 && staticFriction <= 1.0f);
+
+		// PhysX restrictions
+		assert(viscosity >= 5 && viscosity <= 300.0f);
+		assert(stiffness >= 1 && stiffness <= 200.0f);
+		assert(contactOffset >= restOffset);
+		assert(restParticleDistance >= 0.05f);
+		assert(cellSize >= particleRadius);
 	}
 };
 
