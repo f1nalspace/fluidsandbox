@@ -31,7 +31,7 @@ struct CScene
 	int fluidColorDefaultIndex;
 	uint32_t numCPUThreads;
 
-	CScene(const float fluidParticleRadius, const float fluidViscosity, const float fluidStiffness, const float fluidParticleDistanceFactor, const float fluidParticleRenderFactor, const float fluidParticleMinDensity, const float defaultActorDensity);
+	CScene(const float defaultActorDensity);
 	~CScene(void);
 
 	inline size_t getFluidColorCount() const { return fluidColors.size(); };

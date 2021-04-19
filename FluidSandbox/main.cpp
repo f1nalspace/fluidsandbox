@@ -331,7 +331,7 @@ static float gFluidCellSize = 0.0f;
 static int64_t gFluidLatestExternalAccelerationTime = -1;
 
 // Fluid property realtime change
-enum class FluidProperty : int {
+enum class FluidProperty: int {
 	None = 0,
 	Viscosity,
 	Stiffness,
@@ -716,7 +716,7 @@ static CFluidSystem *CreateParticleFluidSystem() {
 	particleSystemDesc.particleMass = gFluidParticleMass;
 	particleSystemDesc.particleRadius = gFluidParticleRadius,
 
-	particleSystemDesc.maxMotionDistance = gFluidMaxMotionDistance;
+		particleSystemDesc.maxMotionDistance = gFluidMaxMotionDistance;
 	particleSystemDesc.restParticleDistance = gFluidRestParticleDistance;
 	particleSystemDesc.restOffset = gFluidRestOffset;
 	particleSystemDesc.contactOffset = gFluidContactOffset;
@@ -2385,14 +2385,7 @@ static void InitResources(const char *appPath) {
 
 	// Create scene
 	printf("  Load scene\n");
-	gActiveScene = new CScene(
-		FluidSimulationProperties::DefaultParticleRadius,
-		FluidSimulationProperties::DefaultViscosity,
-		FluidSimulationProperties::DefaultStiffness,
-		FluidSimulationProperties::DefaultParticleRestDistanceFactor,
-		FluidRenderProperties::DefaultParticleRenderFactor,
-		FluidRenderProperties::DefaultMinDensity,
-		DefaultRigidBodyDensity);
+	gActiveScene = new CScene(DefaultRigidBodyDensity);
 	gActiveScene->load("scene.xml");
 	gFluidParticleRadius = gActiveScene->sim.particleRadius;
 	gFluidCellSize = gActiveScene->sim.cellSize;

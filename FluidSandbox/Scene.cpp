@@ -13,14 +13,14 @@
 
 #include <rapidxml/rapidxml.hpp>
 
-CScene::CScene(const float fluidParticleRadius, const float fluidViscosity, const float fluidStiffness, const float fluidParticleDistanceFactor, const float fluidParticleRenderFactor, const float fluidParticleMinDensity, const float defaultActorDensity) {
-	sim = FluidSimulationProperties::Compute(fluidParticleRadius, fluidParticleDistanceFactor);
-	sim.viscosity = fluidViscosity;
-	sim.stiffness = fluidStiffness;
+#include "OSLowLevel.h"
+
+CScene::CScene(const float defaultActorDensity) {
+	sim = FluidSimulationProperties::Compute(FluidSimulationProperties::DefaultParticleRadius, FluidSimulationProperties::DefaultParticleRestDistanceFactor);
 
 	render = FluidRenderProperties();
-	render.particleRenderFactor = fluidParticleRenderFactor;
-	render.minDensity = fluidParticleMinDensity;
+	render.particleRenderFactor = FluidRenderProperties::DefaultParticleRenderFactor;
+	render.minDensity = FluidRenderProperties::DefaultMinDensity;
 
 	this->defaultActorDensity = defaultActorDensity;
 
@@ -64,7 +64,7 @@ void CScene::load(const char *filename) {
 			// System
 			rapidxml::xml_node<> *systemNode = rootNode->first_node("System");
 			if(systemNode) {
-				numCPUThreads = xmlUtils.getNodeS32(systemNode, "CPUThreads", 1);
+				numCPUThreads = xmlUtils.getNodeS32(systemNode, "CPUThreads", COSLowLevel::getNumCPUCores());
 			}
 
 			// Fluid colors
