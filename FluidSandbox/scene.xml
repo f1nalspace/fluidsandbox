@@ -18,17 +18,17 @@
 		<!-- Particle distance = Particle radius * Particle Distance Factor (Default: 2.0) -->
 		<ParticleDistanceFactor>2.0</ParticleDistanceFactor>
 		<!-- Max distance the particles will move (Default: 0.3) -->
-		<MaxMotionDistance>0.24</MaxMotionDistance>
+		<MaxMotionDistance>0.3</MaxMotionDistance>
 		<!-- RestOffset(Default: 0.12) -->
 		<RestOffset>0.12</RestOffset>
-		<!-- ContactOffset (Default: 0.036) -->
-		<ContactOffset>0.12</ContactOffset>
+		<!-- ContactOffset (Default: 0.24) -->
+		<ContactOffset>0.24</ContactOffset>
 
-		<Viscosity>100.0</Viscosity>
-		<Stiffness>100.0</Stiffness>
+		<Viscosity>30.0</Viscosity>
+		<Stiffness>50.0</Stiffness>
 
 		<Restitution>0.2</Restitution>
-		<Damping>0.001</Damping>
+		<Damping>0.1</Damping>
 		<DynamicFriction>0.001</DynamicFriction>
 		<ParticleMass>0.0001</ParticleMass>
 		
