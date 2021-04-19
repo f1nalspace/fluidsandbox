@@ -46,6 +46,7 @@ public:
 	inline void setRestitution(const float value) { particleFluid->setRestitution(value); };
 	inline void setDamping(const float value) { particleFluid->setDamping(value); };
 	inline void setDynamicFriction(const float value) { particleFluid->setDynamicFriction(value); };
+	inline void setStaticFriction(const float value) { particleFluid->setStaticFriction(value); };
 	inline void setParticleMass(const float value) { particleFluid->setParticleMass(value); };
 	inline uint32_t getCurrentParticles() { return currentParticles; };
 };

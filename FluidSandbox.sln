@@ -20,6 +20,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Scenarios", "Scenarios", "{
 		FluidSandbox\scenarios\Scenario10.xml = FluidSandbox\scenarios\Scenario10.xml
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Scene", "Scene", "{ED287FEC-8EBB-4BFF-904A-E6CB42D50416}"
+	ProjectSection(SolutionItems) = preProject
+		FluidSandbox\scene.xml = FluidSandbox\scene.xml
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32

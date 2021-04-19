@@ -189,7 +189,7 @@ struct NativeParticleSystem: public PhysicsParticleSystem {
 			fluid->setContactOffset(desc.contactOffset);
 			fluid->setRestParticleDistance(desc.restParticleDistance);
 			fluid->setParticleMass(desc.particleMass);
-			fluid->setGridSize(desc.gridSize);
+			fluid->setGridSize(desc.cellSize);
 
 			fluid->setParticleBaseFlag(physx::PxParticleBaseFlag::eCOLLISION_TWOWAY, true);
 

@@ -12,24 +12,21 @@
 #include <fstream>
 #include <iostream>
 
-#ifdef WIN32
-#define NOMINMAX
-#include <Windows.h>
-#endif
+#include "final_platform_layer.h"
+
+#include "Utils.h"
 
 namespace COSLowLevel {
 
 	uint32_t COSLowLevel::getNumCPUCores() {
-		SYSTEM_INFO sysinfo;
-		GetSystemInfo(&sysinfo);
-		uint32_t result = sysinfo.dwNumberOfProcessors;
+		uint32_t result = (uint32_t)fplCPUGetCoreCount();
 		return result;
 	}
 
 
-	const std::string COSLowLevel::getTextFileContent(const std::string &filename) {
+	std::string COSLowLevel::getTextFileContent(const std::string &filePath) {
 		std::string result = "";
-		std::ifstream myfile(filename);
+		std::ifstream myfile(filePath);
 		if(myfile && myfile.is_open()) {
 			std::string line;
 			while(myfile.good()) {
@@ -41,65 +38,58 @@ namespace COSLowLevel {
 		return result;
 	}
 
-	const uint8_t *COSLowLevel::getBinaryFileContent(const std::string &filename) {
-		std::ifstream myfile(filename, std::ios::binary | std::ios::ate);
-		if(myfile && myfile.is_open()) {
-			size_t size = (size_t)myfile.tellg();
-			uint8_t *result = new uint8_t[size];
-			myfile.seekg(0, std::ios::beg);
-			myfile.read((char *)result, size);
-			myfile.close();
+	uint8_t *COSLowLevel::getBinaryFileContent(const std::string &filePath) {
+		fplFileHandle file;
+		if(fplOpenBinaryFile(filePath.c_str(), &file)) {
+			size_t len = fplGetFileSizeFromHandle(&file);
+			uint8_t *result = new uint8_t[len];
+			fplReadFileBlock(&file, len, &result[0], len);
+			return(result);
+		} else {
+			return(nullptr);
 		}
-		return nullptr;
 	}
 
-	bool COSLowLevel::fileExists(const char *filename) {
-		std::ifstream myfile(filename);
-		return !myfile.fail();
+	bool COSLowLevel::fileExists(const char *filePath) {
+		bool result = fplFileExists(filePath);
+		return(result);
 	}
 
-	std::vector<std::string> COSLowLevel::getFilesInDirectory(const std::string &str) {
-		std::vector<std::string> r;
-
-		WIN32_FIND_DATAA FindFileData;
-		HANDLE hFind;
-
-		hFind = FindFirstFileA(str.c_str(), &FindFileData);
-		if(hFind != INVALID_HANDLE_VALUE) {
-			r.push_back(FindFileData.cFileName);
-			while(FindNextFileA(hFind, &FindFileData)) {
-				r.push_back(FindFileData.cFileName);
+	std::vector<std::string> COSLowLevel::getFilesInDirectory(const std::string &folderPath, const std::string &filter) {
+		std::vector<std::string> result;
+		fplFileEntry entry;
+		for(bool isValid = fplListDirBegin(folderPath.c_str(), filter.c_str(), &entry); isValid; isValid = fplListDirNext(&entry)) {
+			if(entry.type == fplFileEntryType_File) {
+				result.push_back(std::string(entry.name));
 			}
-			FindClose(hFind);
 		}
-
-		return r;
+		fplListDirEnd(&entry);
+		return(result);
 	}
 
 	double COSLowLevel::getTimeMilliSeconds() {
-		LARGE_INTEGER freq, cur;
-		QueryPerformanceFrequency((LARGE_INTEGER *)&freq);
-		QueryPerformanceCounter((LARGE_INTEGER *)&cur);
-		return (double)(cur.QuadPart * 1000.0 / freq.QuadPart);
+		double result = fplGetTimeInMillisecondsHP();
+		return(result);
 	}
 
-	const std::string COSLowLevel::getAppPath(const int argc, char **argv) {
-		char buffer[MAX_PATH];
-		GetModuleFileNameA(nullptr, buffer, MAX_PATH);
-		std::string fullpath = buffer;
-		return std::string(fullpath, 0, fullpath.rfind("\\"));
+	std::string COSLowLevel::getAppPath(const int argc, char **argv) {
+		size_t pathLen = fplGetExecutableFilePath(nullptr, 0) + 1;
+		std::string fullPath;
+		fullPath.reserve(pathLen);
+		fplGetExecutableFilePath(&fullPath[0], pathLen);
+		size_t appPathLen = fplExtractFilePath(fullPath.c_str(), nullptr, 0) + 1;
+		std::string result;
+		result.reserve(appPathLen);
+		fplExtractFilePath(fullPath.c_str(), &result[0], appPathLen);
+		return(result);
 	}
 
-	const std::string COSLowLevel::pathCombine(const std::string p1, const std::string p2) {
-		std::string s = p1;
-		if(s.length() > 0 && s.compare(s.length() - 1, 1, "\\") != 0) {
-			s += "\\";
-		}
-		std::string a = p2;
-		if(a.length() > 0 && a.compare(0, 1, "\\") == 0) {
-			a = "\\" + a;
-		}
-		return s + a;
+	std::string COSLowLevel::pathCombine(const std::string &p1, const std::string &p2) {
+		size_t len = fplPathCombine(nullptr, 0, 2, p1.c_str(), p2.c_str()) + 1;
+		std::string result;
+		result.reserve(len);
+		fplPathCombine(&result[0], len, 2, p1.c_str(), p2.c_str());
+		return(result);
 	}
 
 };

@@ -22,7 +22,8 @@
 #include "VariableManager.h"
 
 Scenario::Scenario() {
-	this->name[0] = 0;
+	this->fileName[0] = 0;
+	this->displayName[0] = 0;
 	this->actorCreatePosition = glm::vec3(0.0f, 0.0f, 0.0f);
 	this->sim = FluidSimulationProperties();
 	this->render = FluidRenderProperties();
@@ -44,11 +45,11 @@ Scenario::~Scenario(void) {
 	bodies.clear();
 }
 
-Scenario *Scenario::load(const char *filename, CScene *scene) {
-	if(COSLowLevel::fileExists(filename)) {
-		std::cout << "  Load scenario from file '" << filename << "'" << std::endl;
+Scenario *Scenario::load(const char *filePath, CScene *scene) {
+	if(COSLowLevel::fileExists(filePath)) {
+		std::cout << "  Load scenario from file '" << filePath << "'" << std::endl;
 
-		std::string xml = COSLowLevel::getTextFileContent(filename);
+		std::string xml = COSLowLevel::getTextFileContent(filePath);
 		std::vector<char> xml_copy = Utils::toCharVector(xml);
 
 		// First get variables
@@ -79,7 +80,7 @@ Scenario *Scenario::load(const char *filename, CScene *scene) {
 		// Name
 		rapidxml::xml_node<> *nameNode = rootNode->first_node("Name");
 		if(nameNode) {
-			strcpy_s(newScenario->name, sizeof(newScenario->name), nameNode->value());
+			strcpy_s(newScenario->displayName, sizeof(newScenario->displayName), nameNode->value());
 		}
 
 		// Gravity

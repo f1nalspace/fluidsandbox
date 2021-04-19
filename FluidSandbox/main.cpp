@@ -93,21 +93,21 @@ Todo:
 
 	- Move all physics code into its own class, so we can swap physics engine any time (Allmost done)
 
+	- Use ImGUI for OSD, so we dont have to use keyboard to modify the scene
+
 	- Migrate to OpenGL 3.x
 
 	- Abstract rendering so we can support multiple renderer (GL 3.x, Vulkan)
 
 	- More cameras (Free, Rotate around point, Fixed)
 
-	- Fix fluid simulation properties: 
-		Right now the fluid  works but its not very stable.
-		Need to revisit that soon and find a configuration which works good for water, without weirdness movement.
+	- Transform the sandbox in a real sandbox, by making it a 3D editor (ImGUI)
 
 	- Add actor animations (Useful for simulating waves):
 		- Rotation
 		- Simple movement
 
-	- Support for kinematic bodies
+	- Support for kinematic bodies (Moveable static bodies)
 
 	- Support for joints
 
@@ -118,8 +118,6 @@ Todo:
 		- Tubes
 		- Water slides
 		- Rube Goldberg machine
-
-	- Transform the sandbox in a real sandbox, by making it a real editor (ImGUI)
 
 ======================================================================================================================
 License:
@@ -149,19 +147,16 @@ License:
 #include <math.h>
 #include <typeinfo>
 
-// OpenGL (Glad)
+// OpenGL
 #include <glad/glad.h>
 
-// OpenGL mathmatics
+// Vector math
 #include <glm/glm.hpp>
 #include <glm/gtc\matrix_transform.hpp>
 #include <glm/gtc\quaternion.hpp>
 
 // PhysX API
 #include <PxPhysicsAPI.h>
-
-// XML
-#include "rapidxml/rapidxml.hpp"
 
 // Classes
 #include "Frustum.h"
@@ -208,9 +203,6 @@ inline glm::vec4 toGLMVec4(const physx::PxVec4 &input) {
 inline glm::quat toGLMQuat(const physx::PxQuat &input) {
 	return glm::quat(input.x, input.y, input.z, input.w);
 }
-
-// App path
-std::string appPath = "";
 
 // Application
 const char *APPLICATION_NAME = "Fluid Sandbox";
@@ -301,11 +293,12 @@ static size_t gDrawedActors = 0;
 static uint32_t gTotalFluidParticles = 0;
 static float gFps = 0;
 static int gTotalFrames = 0;
-static int gLastFrameTime = 0;
+static float gAppStartTime = 0.0f;
 
 // For simulation
 constexpr float DefaultRigidBodyDensity = 0.05f;
 constexpr static glm::vec3 DefaultRigidBodyVelocity(0.0f, 0.0f, 0.0f);
+constexpr float InitPhysicsDT = 0.000001f;
 
 // Fluid
 constexpr int MaxFluidParticleCount = 512000;
@@ -318,8 +311,9 @@ static bool gFluidUseGPUAcceleration = false;
 static FluidDebugType gFluidDebugType = FluidDebugType::Final;
 
 // Fluid properties
-static float gFluidViscosity = FluidSimulationProperties::DefaultViscosity;
-static float gFluidStiffness = FluidSimulationProperties::DefaultStiffness;
+// TODO(final): Use FluidProperties instead here!
+static float gFluidViscosity = 0.0f;
+static float gFluidStiffness = 0.0f;
 static float gFluidRestOffset = 0.0f;
 static float gFluidContactOffset = 0.0f;
 static float gFluidRestParticleDistance = 0.0f;
@@ -327,31 +321,38 @@ static float gFluidMaxMotionDistance = 0.0f;
 static float gFluidRestitution = 0.0f;
 static float gFluidDamping = 0.0f;
 static float gFluidDynamicFriction = 0.0f;
+static float gFluidStaticFriction = 0.0f;
 static float gFluidParticleMass = 0.0f;
 static float gFluidParticleRadius = 0.0f;
 static float gFluidParticleRenderFactor = 0.0f;
+static float gFluidCellSize = 0.0f;
 
 // Fluid modification
 static int64_t gFluidLatestExternalAccelerationTime = -1;
 
 // Fluid property realtime change
-const unsigned int FLUID_PROPERTY_NONE = 0;
-const unsigned int FLUID_PROPERTY_VISCOSITY = 1;
-const unsigned int FLUID_PROPERTY_STIFFNESS = 2;
-const unsigned int FLUID_PROPERTY_MAXMOTIONDISTANCE = 3;
-const unsigned int FLUID_PROPERTY_CONTACTOFFSET = 4;
-const unsigned int FLUID_PROPERTY_RESTOFFSET = 5;
-const unsigned int FLUID_PROPERTY_RESTITUTION = 6;
-const unsigned int FLUID_PROPERTY_DAMPING = 7;
-const unsigned int FLUID_PROPERTY_DYNAMICFRICTION = 8;
-const unsigned int FLUID_PROPERTY_PARTICLEMASS = 9;
-const unsigned int FLUID_PROPERTY_DEPTH_BLUR_SCALE = 10;
-const unsigned int FLUID_PROPERTY_PARTICLE_RENDER_FACTOR = 11;
-const unsigned int FLUID_PROPERTY_COLOR_FALLOFF_SCALE = 12;
-const unsigned int FLUID_PROPERTY_COLOR_FALLOFF_ALPHA = 13;
-const unsigned int FLUID_PROPERTY_DEBUGTYPE = 14;
-const unsigned int MAX_FLUID_PROPERTY = FLUID_PROPERTY_DEBUGTYPE;
-static unsigned int gFluidCurrentProperty = FLUID_PROPERTY_NONE;
+enum class FluidProperty : int {
+	None = 0,
+	Viscosity,
+	Stiffness,
+	MaxMotionDistance,
+	ContactOffset,
+	RestOffset,
+	Restitution,
+	Damping,
+	DynamicFriction,
+	StaticFriction,
+	ParticleMass,
+	DepthBlurScale,
+	ParticleRenderFactor,
+	ColorFalloffScale,
+	ColorFalloffAlpha,
+	DebugType,
+	First = Viscosity,
+	Last = DebugType
+};
+
+static FluidProperty gFluidCurrentProperty = FluidProperty::None;
 
 // Scenario
 static bool gStoppedEmitter = false;
@@ -404,6 +405,7 @@ static CTextureFont *gFontTexture32 = nullptr;
 
 // Timing
 static float gTotalTimeElapsed = 0;
+static float gPhysicsAccumulator = 0;
 static bool gPaused = false;
 
 // Default colors
@@ -710,15 +712,17 @@ static CFluidSystem *CreateParticleFluidSystem() {
 	particleSystemDesc.restitution = gFluidRestitution;
 	particleSystemDesc.damping = gFluidDamping;
 	particleSystemDesc.dynamicFriction = gFluidDynamicFriction;
+	particleSystemDesc.staticFriction = gFluidStaticFriction;
 	particleSystemDesc.particleMass = gFluidParticleMass;
+	particleSystemDesc.particleRadius = gFluidParticleRadius,
 
 	particleSystemDesc.maxMotionDistance = gFluidMaxMotionDistance;
 	particleSystemDesc.restParticleDistance = gFluidRestParticleDistance;
 	particleSystemDesc.restOffset = gFluidRestOffset;
 	particleSystemDesc.contactOffset = gFluidContactOffset;
-	particleSystemDesc.gridSize = gFluidParticleRadius * 6;
+	particleSystemDesc.cellSize = gFluidCellSize;
 
-	assert(particleSystemDesc.contactOffset >= particleSystemDesc.restOffset);
+	particleSystemDesc.Validate();
 
 	return new CFluidSystem(gPhysicsSDK, particleSystemDesc, MaxFluidParticleCount);
 }
@@ -749,18 +753,19 @@ static void SaveFluidPositions() {
 	gPointSprites->UnMap();
 }
 
-static void advanceSimulation(float dtime) {
+static void AdvanceSimulation(float &accumulator, float dt) {
 	const physx::PxReal timestep = 1.0f / 60.0f;
-	while(dtime > 0.0f) {
+	accumulator += dt;
+	while(accumulator > 0.0f) {
 		gScene->simulate(timestep);
 		gScene->fetchResults(true);
-		dtime -= timestep;
+		accumulator -= timestep;
 	}
 }
 
-static void SingleStepPhysX(const float frametime) {
+static void SingleStepPhysX(float &accumulator, const float frametime) {
 	// Advance simulation
-	advanceSimulation(frametime);
+	AdvanceSimulation(accumulator, frametime);
 
 	// Save fluid positions
 	if(gSSFRenderMode != SSFRenderMode::Disabled)
@@ -829,14 +834,14 @@ static Actor *CloneBodyActor(const Actor *actor) {
 static void ResetScene(physx::PxScene &scene) {
 	assert(gActiveFluidScenario != nullptr);
 
-	printf("Load/Reload scene: %s\n", gActiveFluidScenario->name);
+	printf("Load/Reload scene: %s\n", gActiveFluidScenario->displayName);
 
 	ClearScene(scene);
 
 	// Set scene properties
 	scene.setGravity(toPxVec3(gActiveFluidScenario->gravity));
 
-	// Set global fluid properties
+	// Set particle properties
 	gFluidMaxMotionDistance = gActiveFluidScenario->sim.maxMotionDistance;
 	gFluidContactOffset = gActiveFluidScenario->sim.contactOffset;
 	gFluidRestOffset = gActiveFluidScenario->sim.restOffset;
@@ -846,6 +851,7 @@ static void ResetScene(physx::PxScene &scene) {
 	gFluidParticleMass = gActiveFluidScenario->sim.particleMass;
 
 	gFluidParticleRadius = gActiveFluidScenario->sim.particleRadius;
+	gFluidCellSize = gActiveFluidScenario->sim.cellSize;
 	gFluidViscosity = gActiveFluidScenario->sim.viscosity;
 	gFluidStiffness = gActiveFluidScenario->sim.stiffness;
 	gFluidRestParticleDistance = gActiveFluidScenario->sim.restParticleDistance;
@@ -898,9 +904,10 @@ static void ResetScene(physx::PxScene &scene) {
 	}
 
 	gTotalTimeElapsed = 0;
+	gPhysicsAccumulator = 0;
 
 	// Simulate physx one time
-	SingleStepPhysX(0.000001f);
+	SingleStepPhysX(gPhysicsAccumulator, InitPhysicsDT);
 }
 
 void InitializePhysX() {
@@ -1043,7 +1050,7 @@ void UpdatePhysX(const float frametime) {
 
 	// Update PhysX
 	if(!gPaused) {
-		SingleStepPhysX(frametime);
+		SingleStepPhysX(gPhysicsAccumulator, frametime);
 	}
 }
 
@@ -1334,48 +1341,48 @@ const char *GetDrawRigidbodyStr(unsigned int value) {
 	}
 }
 
-const char *GetFluidProperty(unsigned int prop) {
+const char *GetFluidProperty(const FluidProperty prop) {
 	switch(prop) {
-		case FLUID_PROPERTY_VISCOSITY:
+		case FluidProperty::Viscosity:
 			return "Viscosity\0";
 
-		case FLUID_PROPERTY_STIFFNESS:
+		case FluidProperty::Stiffness:
 			return "Stiffness\0";
 
-		case FLUID_PROPERTY_MAXMOTIONDISTANCE:
-			return "Particle max motion distance\0";
+		case FluidProperty::MaxMotionDistance:
+			return "Max motion distance\0";
 
-		case FLUID_PROPERTY_CONTACTOFFSET:
-			return "Particle contact offset\0";
+		case FluidProperty::ContactOffset:
+			return "Contact offset\0";
 
-		case FLUID_PROPERTY_RESTOFFSET:
-			return "Particle rest offset\0";
+		case FluidProperty::RestOffset:
+			return "Rest offset\0";
 
-		case FLUID_PROPERTY_RESTITUTION:
+		case FluidProperty::Restitution:
 			return "Restitution\0";
 
-		case FLUID_PROPERTY_DAMPING:
+		case FluidProperty::Damping:
 			return "Damping\0";
 
-		case FLUID_PROPERTY_DYNAMICFRICTION:
+		case FluidProperty::DynamicFriction:
 			return "Dynamic friction\0";
 
-		case FLUID_PROPERTY_PARTICLEMASS:
+		case FluidProperty::ParticleMass:
 			return "Particle mass\0";
 
-		case FLUID_PROPERTY_DEPTH_BLUR_SCALE:
+		case FluidProperty::DepthBlurScale:
 			return "Depth blur scale\0";
 
-		case FLUID_PROPERTY_PARTICLE_RENDER_FACTOR:
+		case FluidProperty::ParticleRenderFactor:
 			return "Particle render factor\0";
 
-		case FLUID_PROPERTY_DEBUGTYPE:
+		case FluidProperty::DebugType:
 			return "Debug type\0";
 
-		case FLUID_PROPERTY_COLOR_FALLOFF_SCALE:
+		case FluidProperty::ColorFalloffScale:
 			return "Color falloff scale\0";
 
-		case FLUID_PROPERTY_COLOR_FALLOFF_ALPHA:
+		case FluidProperty::ColorFalloffAlpha:
 			return "Color falloff alpha\0";
 
 		default:
@@ -1558,7 +1565,7 @@ struct OSDRenderPosition {
 	void newLine() {
 		y += lineHeight;
 	}
-}; 
+};
 
 void RenderOSDLine(OSDRenderPosition &osdpos, char *value) {
 	CTextureFont *font;
@@ -1674,7 +1681,7 @@ void RenderOSD(const int windowWidth, const int windowHeight) {
 		RenderOSDLine(osdPos, buffer);
 		sprintf_s(buffer, "    Fluid color falloff alpha: %f", activeFluidColor.falloff.w);
 		RenderOSDLine(osdPos, buffer);
-		sprintf_s(buffer, "Fluid scenario (L): %d / %zu - %s", gActiveFluidScenarioIdx + 1, gFluidScenarios.size(), gActiveFluidScenario ? gActiveFluidScenario->name : "No scenario loaded!");
+		sprintf_s(buffer, "Fluid scenario (L): %d / %zu - %s", gActiveFluidScenarioIdx + 1, gFluidScenarios.size(), gActiveFluidScenario ? gActiveFluidScenario->displayName : "No scenario loaded!");
 		RenderOSDLine(osdPos, buffer);
 		sprintf_s(buffer, "New actor (Space)");
 		RenderOSDLine(osdPos, buffer);
@@ -1682,7 +1689,7 @@ void RenderOSD(const int windowWidth, const int windowHeight) {
 		RenderOSDLine(osdPos, buffer);
 		sprintf_s(buffer, "Fluid add acceleration (Arrow Keys)");
 		RenderOSDLine(osdPos, buffer);
-		sprintf_s(buffer, "Fluid using gpu acceleration (H): %s", gFluidUseGPUAcceleration ? "yes" : "no");
+		sprintf_s(buffer, "Fluid using GPU acceleration (H): %s", gFluidUseGPUAcceleration ? "yes" : "no");
 		RenderOSDLine(osdPos, buffer);
 		sprintf_s(buffer, "Fluid emitter active (K): %s", !gStoppedEmitter ? "yes" : "no");
 		RenderOSDLine(osdPos, buffer);
@@ -1695,6 +1702,8 @@ void RenderOSD(const int windowWidth, const int windowHeight) {
 		sprintf_s(buffer, "Fluid particle radius: %f", gFluidParticleRadius);
 		RenderOSDLine(osdPos, buffer);
 		sprintf_s(buffer, "Fluid rest particle distance: %f", gFluidRestParticleDistance);
+		RenderOSDLine(osdPos, buffer);
+		sprintf_s(buffer, "Fluid cell size: %f", gFluidCellSize);
 		RenderOSDLine(osdPos, buffer);
 		sprintf_s(buffer, "Fluid min density: %f", gActiveFluidScenario ? gActiveFluidScenario->render.minDensity : gActiveScene->render.minDensity);
 		RenderOSDLine(osdPos, buffer);
@@ -1787,21 +1796,17 @@ void RenderSceneFBO(const glm::mat4 &mvp, const int windowWidth, const int windo
 	gRenderer->LoadMatrix(mvp);
 }
 
-float appStartTime = 0.0f;
-float realLatestFrameTime = 0.0f;
-float fixedFrametime = 1.0f / 60.0f;
-void OnRender(const int windowWidth, const int windowHeight) {
+void OnRender(const int windowWidth, const int windowHeight, const float frametime) {
 	if(!gScene) return;
 
-	float realFrametimeStart = (float)COSLowLevel::getTimeMilliSeconds();
+	float realFrametimeStart = (float)fplGetTimeInMillisecondsHP();
 
-	// Calculate fps
+	// TODO(final): Revisit any time / delta computation, because its not correct
 	gTotalFrames++;
-
-	if((realFrametimeStart - appStartTime) > 1000.0f) {
-		float elapsedTime = float(realFrametimeStart - appStartTime);
+	if((realFrametimeStart - gAppStartTime) > 1000.0f) {
+		float elapsedTime = float(realFrametimeStart - gAppStartTime);
 		gFps = (((float)gTotalFrames * 1000.0f) / elapsedTime);
-		appStartTime = realFrametimeStart;
+		gAppStartTime = realFrametimeStart;
 		gTotalFrames = 0;
 	}
 
@@ -1835,7 +1840,7 @@ void OnRender(const int windowWidth, const int windowHeight) {
 	gRenderer->LoadMatrix(mvp);
 
 	// Update (Frustum and PhysX)
-	Update(proj, mdlv, 1.0f / 60.0f);
+	Update(proj, mdlv, frametime);
 
 	// Clear back buffer
 	glm::vec3 backcolor = gActiveScene->backgroundColor;
@@ -1871,9 +1876,7 @@ void OnRender(const int windowWidth, const int windowHeight) {
 	// Draw frame
 	gRenderer->Flip();
 
-	float curTime = (float)COSLowLevel::getTimeMilliSeconds();
-	float frametime = curTime - realFrametimeStart;
-	realLatestFrameTime = frametime;
+	float curTime = (float)fplGetTimeInMillisecondsHP();
 	gTotalTimeElapsed += (curTime - realFrametimeStart);
 }
 
@@ -2008,7 +2011,7 @@ void KeyUp(const fplKey key, const int x, const int y) {
 			break;
 		}
 
-		
+
 
 		case fplKey_1: // 1 - 7
 		case fplKey_2:
@@ -2065,9 +2068,10 @@ void KeyUp(const fplKey key, const int x, const int y) {
 
 		case fplKey_V: // v
 		{
-			gFluidCurrentProperty++;
-
-			if(gFluidCurrentProperty > MAX_FLUID_PROPERTY) gFluidCurrentProperty = FLUID_PROPERTY_NONE;
+			int index = (int)gFluidCurrentProperty;
+			index++;
+			if(index > (int)FluidProperty::Last) index = (int)FluidProperty::None;
+			gFluidCurrentProperty = (FluidProperty)index;
 
 			break;
 		}
@@ -2120,7 +2124,7 @@ void KeyUp(const fplKey key, const int x, const int y) {
 			if(mode > (int)SSFRenderMode::Disabled) mode = (int)SSFRenderMode::Fluid;
 			gSSFRenderMode = (SSFRenderMode)mode;
 
-			SingleStepPhysX(0.000001f);
+			SingleStepPhysX(gPhysicsAccumulator, InitPhysicsDT);
 			break;
 		}
 
@@ -2165,81 +2169,88 @@ void ChangeFluidProperty(float value) {
 	if(!gActiveFluidScenario) return;
 
 	switch(gFluidCurrentProperty) {
-		case FLUID_PROPERTY_VISCOSITY:
+		case FluidProperty::Viscosity:
 		{
 			gFluidViscosity += value;
 			gFluidSystem->setViscosity(gFluidViscosity);
 			gActiveFluidScenario->sim.viscosity = gFluidViscosity;
 		} break;
 
-		case FLUID_PROPERTY_STIFFNESS:
+		case FluidProperty::Stiffness:
 		{
 			gFluidStiffness += value;
 			gFluidSystem->setStiffness(gFluidStiffness);
 			gActiveFluidScenario->sim.stiffness = gFluidStiffness;
 		} break;
 
-		case FLUID_PROPERTY_MAXMOTIONDISTANCE:
+		case FluidProperty::MaxMotionDistance:
 		{
 			gFluidMaxMotionDistance += value / 1000.0f;
 			gFluidSystem->setMaxMotionDistance(gFluidMaxMotionDistance);
 			gActiveScene->sim.maxMotionDistance = gFluidMaxMotionDistance;
 		} break;
 
-		case FLUID_PROPERTY_CONTACTOFFSET:
+		case FluidProperty::ContactOffset:
 		{
 			gFluidContactOffset += value / 1000.0f;
 			gFluidSystem->setContactOffset(gFluidContactOffset);
 			gActiveScene->sim.contactOffset = gFluidContactOffset;
 		} break;
 
-		case FLUID_PROPERTY_RESTOFFSET:
+		case FluidProperty::RestOffset:
 		{
 			gFluidRestOffset += value / 1000.0f;
 			gFluidSystem->setRestOffset(gFluidRestOffset);
 			gActiveScene->sim.restOffset = gFluidRestOffset;
 		} break;
 
-		case FLUID_PROPERTY_RESTITUTION:
+		case FluidProperty::Restitution:
 		{
 			gFluidRestitution += value / 1000.0f;
 			gFluidSystem->setRestitution(gFluidRestitution);
 			gActiveScene->sim.restitution = gFluidRestitution;
 		} break;
 
-		case FLUID_PROPERTY_DAMPING:
+		case FluidProperty::Damping:
 		{
 			gFluidDamping += value / 1000.0f;
 			gFluidSystem->setDamping(gFluidDamping);
 			gActiveScene->sim.damping = gFluidDamping;
 		} break;
 
-		case FLUID_PROPERTY_DYNAMICFRICTION:
+		case FluidProperty::DynamicFriction:
 		{
 			gFluidDynamicFriction += value / 1000.0f;
 			gFluidSystem->setDynamicFriction(gFluidDynamicFriction);
 			gActiveScene->sim.dynamicFriction = gFluidDynamicFriction;
 		} break;
 
-		case FLUID_PROPERTY_PARTICLEMASS:
+		case FluidProperty::StaticFriction:
+		{
+			gFluidStaticFriction += value / 1000.0f;
+			gFluidSystem->setStaticFriction(gFluidStaticFriction);
+			gActiveScene->sim.staticFriction = gFluidStaticFriction;
+		} break;
+
+		case FluidProperty::ParticleMass:
 		{
 			gFluidParticleMass += value / 1000.0f;
 			gFluidSystem->setParticleMass(gFluidParticleMass);
 			gActiveScene->sim.particleMass = gFluidParticleMass;
 		} break;
 
-		case FLUID_PROPERTY_DEPTH_BLUR_SCALE:
+		case FluidProperty::DepthBlurScale:
 		{
 			gSSFBlurDepthScale += value / 10000.0f;
 		} break;
 
-		case FLUID_PROPERTY_PARTICLE_RENDER_FACTOR:
+		case FluidProperty::ParticleRenderFactor:
 		{
 			gFluidParticleRenderFactor += value / 10.0f;
 			gFluidParticleRenderFactor = roundFloat(gFluidParticleRenderFactor);
 		} break;
 
-		case FLUID_PROPERTY_DEBUGTYPE:
+		case FluidProperty::DebugType:
 		{
 			int inc = (int)value;
 
@@ -2252,13 +2263,13 @@ void ChangeFluidProperty(float value) {
 			gFluidDebugType = (FluidDebugType)debugType;
 		} break;
 
-		case FLUID_PROPERTY_COLOR_FALLOFF_SCALE:
+		case FluidProperty::ColorFalloffScale:
 		{
 			FluidColor &activeFluidColor = gActiveScene->getFluidColor(gSSFCurrentFluidIndex);
 			activeFluidColor.falloffScale += value / 100.0f;
 		} break;
 
-		case FLUID_PROPERTY_COLOR_FALLOFF_ALPHA:
+		case FluidProperty::ColorFalloffAlpha:
 		{
 			FluidColor &activeFluidColor = gActiveScene->getFluidColor(gSSFCurrentFluidIndex);
 			activeFluidColor.falloff.w += value / 100.0f;
@@ -2295,20 +2306,20 @@ void KeyDown(unsigned char key, int x, int y) {
 			break;
 		}
 
-		case 32: // Space
+		case fplKey_Space: // Space
 		{
 			AddDynamicActor(*gScene, *gFluidSystem, gCurrentActorCreationKind);
 			break;
 		}
 
-		case 43: // +
+		case fplKey_Add: // +
 		{
 			// Increase fluid property
 			ChangeFluidProperty(1.0f);
 			break;
 		}
 
-		case 45: // -
+		case fplKey_Substract: // -
 		{
 			// Decrease fluid property
 			ChangeFluidProperty(-1.0f);
@@ -2320,14 +2331,14 @@ void KeyDown(unsigned char key, int x, int y) {
 	}
 }
 
-void LoadFluidScenarios() {
+void LoadFluidScenarios(const char *appPath) {
 	// Load scenarios
-	std::vector<std::string> scenFiles = COSLowLevel::getFilesInDirectory("scenarios\\*.xml");
+	std::string scenariosPath = COSLowLevel::pathCombine(appPath, "scenarios");
+	std::vector<std::string> scenFiles = COSLowLevel::getFilesInDirectory(scenariosPath.c_str(), "*.xml");
 
 	for(unsigned int i = 0; i < scenFiles.size(); i++) {
-		std::string filename = "scenarios\\";
-		filename += scenFiles[i];
-		Scenario *scenario = Scenario::load(filename.c_str(), gActiveScene);
+		std::string filePath = COSLowLevel::pathCombine(scenariosPath, scenFiles[i]);
+		Scenario *scenario = Scenario::load(filePath.c_str(), gActiveScene);
 		gFluidScenarios.push_back(scenario);
 	}
 
@@ -2337,7 +2348,7 @@ void LoadFluidScenarios() {
 	} else {
 		gActiveFluidScenarioIdx = -1;
 		gActiveFluidScenario = nullptr;
-		std::cerr << "  No fluid scenario found, fluid cannot be used!" << std::endl;
+		std::cerr << "  No fluid scenario found!" << std::endl;
 	}
 }
 
@@ -2360,17 +2371,7 @@ void printOpenGLInfos() {
 #endif
 }
 
-void drawPlane(float size) {
-	float hs = size / 2.0f;
-	glBegin(GL_QUADS);
-	glNormal3f(0.0f, 1.0f, 0.0f); glTexCoord2f(1.0f, 0.0f); glVertex3f(hs, 0.0f, -hs);
-	glNormal3f(0.0f, 1.0f, 0.0f); glTexCoord2f(0.0f, 0.0f); glVertex3f(-hs, 0.0f, -hs);
-	glNormal3f(0.0f, 1.0f, 0.0f); glTexCoord2f(0.0f, 1.0f); glVertex3f(-hs, 0.0f, hs);
-	glNormal3f(0.0f, 1.0f, 0.0f); glTexCoord2f(1.0f, 1.0f); glVertex3f(hs, 0.0f, hs);
-	glEnd();
-}
-
-void initResources() {
+static void InitResources(const char *appPath) {
 	// Create texture manager
 	printf("  Create texture manager\n");
 	gTexMng = new CTextureManager();
@@ -2394,6 +2395,7 @@ void initResources() {
 		DefaultRigidBodyDensity);
 	gActiveScene->load("scene.xml");
 	gFluidParticleRadius = gActiveScene->sim.particleRadius;
+	gFluidCellSize = gActiveScene->sim.cellSize;
 	gFluidParticleRenderFactor = gActiveScene->render.particleRenderFactor;
 	gSSFCurrentFluidIndex = gActiveScene->fluidColorDefaultIndex;
 
@@ -2577,7 +2579,7 @@ int main(int argc, char **argv) {
 	fplConsoleFormatOut("\n");
 
 	// Get application path
-	appPath = COSLowLevel::getAppPath(argc, argv);
+	std::string appPath = COSLowLevel::getAppPath(argc, argv);
 
 	// Initialize random generator
 	srand((unsigned int)time(nullptr));
@@ -2635,19 +2637,21 @@ int main(int argc, char **argv) {
 		gRenderer = new CRenderer();
 
 		fplConsoleFormatOut("Initialize Resources\n");
-		initResources();
+		InitResources(appPath.c_str());
+
+		fplConsoleFormatOut("Load Fluid Scenarios\n");
+		LoadFluidScenarios(appPath.c_str());
 
 		fplConsoleFormatOut("Initialize PhysX\n");
 		InitializePhysX();
-
-		fplConsoleFormatOut("Load Fluid Scenarios\n");
-		LoadFluidScenarios();
 
 		fplConsoleFormatOut("Load Fluid Scenario\n");
 		ResetScene(*gScene);
 
 		fplEvent ev;
 
+		float frametime = 1.0f / 60.0f;
+		fplWallClock lastTime = fplGetWallClock();
 		fplConsoleFormatOut("Main loop\n\n");
 		while(fplWindowUpdate()) {
 			while(fplPollEvent(&ev)) {
@@ -2681,7 +2685,11 @@ int main(int argc, char **argv) {
 			fplWindowSize winSize;
 			fplGetWindowSize(&winSize);
 
-			OnRender(winSize.width, winSize.height);
+			OnRender(winSize.width, winSize.height, frametime);
+
+			fplWallClock endTime = fplGetWallClock();
+			double wallDelta = fplGetWallDelta(lastTime, endTime);
+			lastTime = endTime;
 		}
 
 		OnShutdown();

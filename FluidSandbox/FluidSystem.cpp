@@ -24,12 +24,13 @@ CFluidSystem::CFluidSystem(physx::PxPhysics* physics, const FluidSimulationPrope
 	this->particleFluid->setRestitution(desc.restitution);
 	this->particleFluid->setDamping(desc.damping);
 	this->particleFluid->setDynamicFriction(desc.dynamicFriction);
+	this->particleFluid->setStaticFriction(desc.staticFriction);
 	this->particleFluid->setMaxMotionDistance(desc.maxMotionDistance);
 	this->particleFluid->setRestOffset(desc.restOffset);
 	this->particleFluid->setContactOffset(desc.contactOffset);
 	this->particleFluid->setRestParticleDistance(desc.restParticleDistance);
 	this->particleFluid->setParticleMass(desc.particleMass);
-	this->particleFluid->setGridSize(desc.gridSize);
+	this->particleFluid->setGridSize(desc.cellSize);
 }
 
 CFluidSystem::~CFluidSystem(void)

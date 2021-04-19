@@ -22,13 +22,14 @@
 
 struct Scenario
 {
+	char fileName[256];
+	char displayName[128];
+
 	glm::vec3 actorCreatePosition;
 	glm::vec3 gravity;
 
 	std::vector<const Actor *> bodies;
 	std::vector<const FluidActor *> fluids;
-
-	char name[128];
 
 	FluidSimulationProperties sim;
 	FluidRenderProperties render;
@@ -36,6 +37,6 @@ struct Scenario
 	Scenario();
 	~Scenario(void);
 
-	static Scenario* load(const char* filename, CScene* scene);
+	static Scenario* load(const char* filePath, CScene* scene);
 };
 

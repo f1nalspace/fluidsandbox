@@ -16,12 +16,12 @@
 namespace COSLowLevel
 {
 	uint32_t getNumCPUCores();
-	const std::string getTextFileContent(const std::string &filename);
-	const uint8_t *getBinaryFileContent(const std::string &filename);
-	bool fileExists(const char* filename);
-	std::vector<std::string> getFilesInDirectory(const std::string &str);
+	std::string getTextFileContent(const std::string &filePath);
+	uint8_t *getBinaryFileContent(const std::string &filePath);
+	bool fileExists(const char* filePath);
+	std::vector<std::string> getFilesInDirectory(const std::string &folderPath, const std::string &filter);
 	double getTimeMilliSeconds();
-	const std::string getAppPath(const int argc, char** argv);
-	const std::string pathCombine(const std::string p1, const std::string p2);
+	std::string getAppPath(const int argc, char** argv);
+	std::string pathCombine(const std::string &p1, const std::string &p2);
 };
 
