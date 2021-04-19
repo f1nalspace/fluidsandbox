@@ -9,9 +9,8 @@
 
 #include "ScreenSpaceFluidRendering.h"
 
-CScreenSpaceFluidRendering::CScreenSpaceFluidRendering(const int width, const int height, const float particleRadius)
+CScreenSpaceFluidRendering::CScreenSpaceFluidRendering(const int width, const int height)
 {
-	this->particleRadius = particleRadius;
 	curWindowWidth = width;
 	curWindowHeight = height;
 	curFBOFactor = 1.0f;
@@ -112,7 +111,7 @@ CScreenSpaceFluidRendering::~CScreenSpaceFluidRendering(void)
 	renderer = nullptr;
 }
 
-void CScreenSpaceFluidRendering::DepthPass(const unsigned int numPointSprites, const glm::mat4 &proj, const glm::mat4 &view, const float zfar, const float znear, const int wH)
+void CScreenSpaceFluidRendering::DepthPass(const unsigned int numPointSprites, const glm::mat4 &proj, const glm::mat4 &view, const float zfar, const float znear, const int wH, const float particleRadius)
 {
 	depthShader->enable();
 	depthShader->uniform1f(depthShader->ulocPointScale, CSphericalPointSprites::GetPointScale(wH, 50.0f));
@@ -125,7 +124,7 @@ void CScreenSpaceFluidRendering::DepthPass(const unsigned int numPointSprites, c
 	depthShader->disable();
 }
 
-void CScreenSpaceFluidRendering::ThicknessPass(const unsigned int numPointSprites, const glm::mat4 &proj, const glm::mat4 &view, const float zfar, const float znear, const int wH)
+void CScreenSpaceFluidRendering::ThicknessPass(const unsigned int numPointSprites, const glm::mat4 &proj, const glm::mat4 &view, const float zfar, const float znear, const int wH, const float particleRadius)
 {
 	renderer->ClearColor(0,0,0,0);
 	renderer->Clear(ClearFlags::Color);
@@ -150,7 +149,7 @@ void CScreenSpaceFluidRendering::ThicknessPass(const unsigned int numPointSprite
 	renderer->SetBlending(false);
 }
 
-void CScreenSpaceFluidRendering::RenderPointSprites(const unsigned int numPointSprites, const glm::mat4 &proj, const glm::mat4 &view, const float zfar, const float znear, CPointSpritesShader* shader, const int wH)
+void CScreenSpaceFluidRendering::RenderPointSprites(const unsigned int numPointSprites, const glm::mat4 &proj, const glm::mat4 &view, const float zfar, const float znear, CPointSpritesShader* shader, const int wH, const float particleRadius)
 {
 	if (shader != nullptr){
 		shader->enable();
@@ -243,7 +242,7 @@ void CScreenSpaceFluidRendering::WaterPass(const glm::mat4 &mvp, CCamera &cam, C
 	renderer->SetBlending(false);
 }
 
-void CScreenSpaceFluidRendering::RenderSSF(CCamera &cam, const unsigned int numPointSprites, const SSFDrawingOptions &dstate, const int wW, const int wH)
+void CScreenSpaceFluidRendering::RenderSSF(CCamera &cam, const unsigned int numPointSprites, const SSFDrawingOptions &dstate, const int wW, const int wH, const float particleRadius)
 {
 	assert(fullFrameBuffer);
 	assert(depthFrameBuffer);
@@ -304,7 +303,7 @@ void CScreenSpaceFluidRendering::RenderSSF(CCamera &cam, const unsigned int numP
 	depthFrameBuffer->setDrawBuffer(GL_COLOR_ATTACHMENT0);
 	renderer->ClearColor(-10000.0f,0.0f,0.0f,0.0f);
 	renderer->Clear(ClearFlags::Color | ClearFlags::Depth);
-	DepthPass(numPointSprites, mproj, mview, far_depth, near_depth, curFBOHeight);
+	DepthPass(numPointSprites, mproj, mview, far_depth, near_depth, curFBOHeight, particleRadius);
 	depthFrameBuffer->disable();
 
 	// Enable FBO
@@ -313,7 +312,7 @@ void CScreenSpaceFluidRendering::RenderSSF(CCamera &cam, const unsigned int numP
 	// Pass 2: Render point sprites to thickness
 	// -------------------------------------
 	fullFrameBuffer->setDrawBuffer(GL_COLOR_ATTACHMENT0); // Draw to color attachment 0: Thickness
-	ThicknessPass(numPointSprites, mproj, mview, far_depth, near_depth, curFBOHeight);
+	ThicknessPass(numPointSprites, mproj, mview, far_depth, near_depth, curFBOHeight, particleRadius);
 
 	// Change to 2D mvp
 	renderer->LoadMatrix(orthoMVP);
@@ -346,7 +345,7 @@ void CScreenSpaceFluidRendering::RenderSSF(CCamera &cam, const unsigned int numP
 	WaterPass(orthoMVP, cam, depthSmoothBTexture, thicknessTexture, dstate.fluidColor, dstate.debugType);
 }
 
-void CScreenSpaceFluidRendering::Render(CCamera &cam, const unsigned int numPointSprites, const SSFDrawingOptions &dstate, const int wW, const int wH)
+void CScreenSpaceFluidRendering::Render(CCamera &cam, const unsigned int numPointSprites, const SSFDrawingOptions &dstate, const int wW, const int wH, const float particleRadius)
 {
 	assert(pointSpritesShader);
 	assert(pointSprites);
@@ -367,7 +366,7 @@ void CScreenSpaceFluidRendering::Render(CCamera &cam, const unsigned int numPoin
 				renderer->SetColor(&dstate.fluidColor.color[0]);
 			else
 				renderer->SetColor(1,1,1,1);
-			RenderPointSprites(numPointSprites, mproj, mview, cam.farClip, cam.nearClip, pointSpritesShader, wH);
+			RenderPointSprites(numPointSprites, mproj, mview, cam.farClip, cam.nearClip, pointSpritesShader, wH, particleRadius);
 			renderer->SetColor(1,1,1,1);
 			break;
 		}
@@ -378,13 +377,13 @@ void CScreenSpaceFluidRendering::Render(CCamera &cam, const unsigned int numPoin
 				renderer->SetColor(&dstate.fluidColor.color[0]);
 			else
 				renderer->SetColor(1,1,1,1);
-			RenderPointSprites(numPointSprites, mproj, mview, cam.farClip, cam.nearClip, nullptr, wH);
+			RenderPointSprites(numPointSprites, mproj, mview, cam.farClip, cam.nearClip, nullptr, wH, particleRadius);
 			renderer->SetColor(1,1,1,1);
 			break;
 		}
 	case SSFRenderMode::Fluid:
 		{
-			RenderSSF(cam, numPointSprites, dstate, wW, wH);
+			RenderSSF(cam, numPointSprites, dstate, wW, wH, particleRadius);
 			break;
 		}
 	}
