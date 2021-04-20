@@ -194,12 +194,27 @@ struct NativeParticleSystem: public PhysicsParticleSystem {
 			fluid->setRestitution(desc.restitution);
 			fluid->setDamping(desc.damping);
 			fluid->setDynamicFriction(desc.dynamicFriction);
+			fluid->setStaticFriction(desc.staticFriction);
 			fluid->setMaxMotionDistance(desc.maxMotionDistance);
 			fluid->setRestOffset(desc.restOffset);
 			fluid->setContactOffset(desc.contactOffset);
 			fluid->setRestParticleDistance(desc.restParticleDistance);
 			fluid->setParticleMass(desc.particleMass);
 			fluid->setGridSize(desc.cellSize);
+
+			FluidSimulationProperties actualProps = FluidSimulationProperties();
+			actualProps.stiffness = fluid->getStiffness();
+			actualProps.viscosity = fluid->getViscosity();
+			actualProps.restitution = fluid->getRestitution();
+			actualProps.damping = fluid->getDamping();
+			actualProps.dynamicFriction = fluid->getDynamicFriction();
+			actualProps.staticFriction = fluid->getStaticFriction();
+			actualProps.maxMotionDistance = fluid->getMaxMotionDistance();
+			actualProps.restOffset = fluid->getRestOffset();
+			actualProps.contactOffset = fluid->getContactOffset();
+			actualProps.restParticleDistance = fluid->getRestParticleDistance();
+			actualProps.particleMass = fluid->getParticleMass();
+			actualProps.cellSize = fluid->getGridSize();
 
 			fluid->setParticleBaseFlag(physx::PxParticleBaseFlag::eCOLLISION_TWOWAY, true);
 
