@@ -23,17 +23,22 @@ enum class ActorType {
 	Cube,
 	Sphere,
 	Capsule,
-	Fluid
+	Fluid,
+	ParticleSystem,
 };
 
 struct ActorTransform {
 	glm::quat rotation;
 	glm::vec3 position;
 
-	ActorTransform():
-		rotation(glm::quat()),
-		position(glm::vec3(0.0f)) {
+	ActorTransform(const glm::vec3 &pos, const glm::quat &rotation):
+		rotation(rotation),
+		position(pos) {
+	}
 
+	ActorTransform():
+		rotation(glm::quat(glm::vec3(0))),
+		position(glm::vec3(0)) {
 	}
 };
 

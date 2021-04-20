@@ -9,7 +9,7 @@
 
 #include "PhysicsEngine.h"
 
-#define PVD_ENABLED
+//#define PVD_ENABLED
 
 // PhysX API
 #include <PxPhysicsAPI.h>
@@ -50,116 +50,101 @@ namespace PhysicsUtils {
 		return glm::vec4(input.x, input.y, input.z, input.w);
 	}
 	inline glm::quat toGLMQuat(const physx::PxQuat &input) {
-		return glm::quat(input.x, input.y, input.z, input.w);
-	}
-	static glm::mat4 toGLMMat4(const physx::PxMat33 &m, const physx::PxVec3 &t) {
-		glm::mat4 mat = glm::mat4(1.0f);
-
-		mat[0][0] = m.column0[0];
-		mat[0][1] = m.column0[1];
-		mat[0][2] = m.column0[2];
-		mat[0][3] = 0;
-
-		mat[1][0] = m.column1[0];
-		mat[1][1] = m.column1[1];
-		mat[1][2] = m.column1[2];
-		mat[1][3] = 0;
-
-		mat[2][0] = m.column2[0];
-		mat[2][1] = m.column2[1];
-		mat[2][2] = m.column2[2];
-		mat[2][3] = 0;
-
-		mat[3][0] = t[0];
-		mat[3][1] = t[1];
-		mat[3][2] = t[2];
-		mat[3][3] = 1;
-
-		return mat;
+		return glm::quat(input.w, input.x, input.y, input.z);
 	}
 }
 
-struct NativePhysicsActor: public PhysicsActor {
-	physx::PxActor *nBaseActor;
-
-	NativePhysicsActor(Type type):
-		PhysicsActor(type),
-		nBaseActor(nullptr) {
+static physx::PxShape *CreateShape(physx::PxPhysics &physics, physx::PxMaterial &defaultMaterial, const PhysicsShape &shape) {
+	physx::PxGeometry *geometry = nullptr;
+	physx::PxBoxGeometry boxGeometry;
+	physx::PxSphereGeometry sphereGeometry;
+	physx::PxCapsuleGeometry capsuleGeometry;
+	physx::PxPlaneGeometry planeGeometry;
+	switch(shape.type) {
+		case PhysicsShape::Type::Box:
+			boxGeometry = physx::PxBoxGeometry(shape.box.halfExtents.x, shape.box.halfExtents.y, shape.box.halfExtents.z);
+			geometry = &boxGeometry;
+			break;
+		case PhysicsShape::Type::Sphere:
+			sphereGeometry = physx::PxSphereGeometry(shape.sphere.radius);
+			geometry = &sphereGeometry;
+			break;
+		case PhysicsShape::Type::Capsule:
+			capsuleGeometry = physx::PxCapsuleGeometry(shape.capsule.radius, shape.capsule.halfHeight);
+			geometry = &capsuleGeometry;
+			break;
+		case PhysicsShape::Type::Plane:
+			planeGeometry = physx::PxPlaneGeometry();
+			geometry = &planeGeometry;
+			break;
+		default:
+			assert(!"Shape type not supported!");
+			break;
 	}
-};
 
-struct NativeRigidBody: public PhysicsRigidBody, public NativePhysicsActor {
-	physx::PxRigidActor *nRigidActor;
+	physx::PxShapeFlags shapeFlags =
+		physx::PxShapeFlag::eVISUALIZATION |
+		physx::PxShapeFlag::eSCENE_QUERY_SHAPE |
+		physx::PxShapeFlag::eSIMULATION_SHAPE;
+	if(shape.isParticleDrain) {
+		shapeFlags |= physx::PxShapeFlag::ePARTICLE_DRAIN;
+	}
+
+	physx::PxShape *result = physics.createShape(*geometry, defaultMaterial, true, shapeFlags);
+	return(result);
+}
+
+struct NativeRigidBody: public PhysicsRigidBody {
+	physx::PxRigidActor *actor;
+	physx::PxScene *scene;
 	physx::PxPhysics *physics;
 	physx::PxMaterial *defaultMaterial;
 
-	physx::PxShape *CreateShape(const PhysicsShape &shape) {
-		physx::PxGeometry *geometry = nullptr;
-		physx::PxBoxGeometry boxGeometry;
-		physx::PxSphereGeometry sphereGeometry;
-		physx::PxCapsuleGeometry capsuleGeometry;
-		switch(shape.type) {
-			case PhysicsShape::Type::Box:
-				boxGeometry = physx::PxBoxGeometry(shape.box.halfExtents.x, shape.box.halfExtents.y, shape.box.halfExtents.z);
-				geometry = &boxGeometry;
-				break;
-			case PhysicsShape::Type::Sphere:
-				sphereGeometry = physx::PxSphereGeometry(shape.sphere.radius);
-				geometry = &sphereGeometry;
-				break;
-			case PhysicsShape::Type::Capsule:
-				capsuleGeometry = physx::PxCapsuleGeometry(shape.capsule.radius, shape.capsule.halfHeight);
-				geometry = &capsuleGeometry;
-				break;
-			default:
-				assert(!"Shape type not supported!");
-				break;
-		}
-
-		physx::PxShapeFlags shapeFlags =
-			physx::PxShapeFlag::eVISUALIZATION |
-			physx::PxShapeFlag::eSCENE_QUERY_SHAPE |
-			physx::PxShapeFlag::eSIMULATION_SHAPE;
-		if(shape.isParticleDrain) {
-			shapeFlags |= physx::PxShapeFlag::ePARTICLE_DRAIN;
-		}
-
-		physx::PxShape *result = physics->createShape(*geometry, *defaultMaterial, true, shapeFlags);
-		return(result);
-	}
-
-	NativeRigidBody(physx::PxPhysics *physics, physx::PxMaterial *defaultMaterial, const MotionKind motionKind, const glm::vec3 &pos, const glm::quat &rotation, const PhysicsShape &shape):
+	NativeRigidBody(physx::PxPhysics *physics, physx::PxScene *scene, physx::PxMaterial *defaultMaterial, const MotionKind motionKind, const glm::vec3 &pos, const glm::quat &rotation, const PhysicsShape &shape):
 		PhysicsRigidBody(motionKind),
-		NativePhysicsActor(PhysicsActor::Type::RigidBody),
-		nRigidActor(nullptr),
+		actor(nullptr),
 		physics(physics),
+		scene(scene),
 		defaultMaterial(defaultMaterial) {
-		this->position = position;
-		this->rotation = rotation;
-		physx::PxVec3 npos = PhysicsUtils::toPxVec3(position);
+
+		shapeCount = 1;
+		shapes[0] = shape;
+
+		this->transform = PhysicsTransform(pos, rotation);
+
+		physx::PxVec3 npos = PhysicsUtils::toPxVec3(pos);
 		physx::PxQuat nrot = PhysicsUtils::toPxQuat(rotation);
-		physx::PxTransform transform = physx::PxTransform(npos, nrot);
-		physx::PxShape *newShape = CreateShape(shape);
-		if(motionKind == PhysicsRigidBody::MotionKind::Static) {
-			nRigidActor = physx::PxCreateStatic(*physics, transform, *newShape);
+		physx::PxTransform ntransform = physx::PxTransform(npos, nrot);
+
+		if(shape.type == PhysicsShape::Type::Plane) {
+			npos = physx::PxVec3(0.0f, 0, 0.0f);
+			nrot = physx::PxQuat(physx::PxHalfPi, physx::PxVec3(0.0f, 0.0f, 1.0f));
+			ntransform = physx::PxTransform(npos, nrot);
+			this->actor = physx::PxCreateStatic(*physics, ntransform, physx::PxPlaneGeometry(), *defaultMaterial);
 		} else {
-			nRigidActor = physx::PxCreateDynamic(*physics, transform, *newShape, density);
+			physx::PxShape *newShape = CreateShape(*physics, *defaultMaterial, shape);
+
+			if(motionKind == PhysicsRigidBody::MotionKind::Static) {
+				this->actor = physx::PxCreateStatic(*physics, ntransform, *newShape);
+			} else {
+				this->actor = physx::PxCreateDynamic(*physics, ntransform, *newShape, density);
+			}
 		}
 	}
 
 	~NativeRigidBody() {
-		if(nRigidActor != nullptr) {
-			nRigidActor->release();
-			nRigidActor = nullptr;
+		if(actor != nullptr) {
+			actor->release();
+			actor = nullptr;
 		}
-		NativePhysicsActor::~NativePhysicsActor();
-		PhysicsRigidBody::~PhysicsRigidBody();
 	}
 
 	void AddShape(const PhysicsShape &shape) {
 		PhysicsRigidBody::AddShape(shape);
-		physx::PxShape *newShape = CreateShape(shape);
-		nRigidActor->attachShape(*newShape);
+		physx::PxShape *newShape = CreateShape(*physics, *defaultMaterial, shape);
+		if(newShape != nullptr) {
+			actor->attachShape(*newShape);
+		}
 	}
 };
 
@@ -184,6 +169,7 @@ struct NativeParticleSystem: public PhysicsParticleSystem {
 			fluid->setRestitution(desc.restitution);
 			fluid->setDamping(desc.damping);
 			fluid->setDynamicFriction(desc.dynamicFriction);
+			fluid->setStaticFriction(desc.staticFriction);
 			fluid->setMaxMotionDistance(desc.maxMotionDistance);
 			fluid->setRestOffset(desc.restOffset);
 			fluid->setContactOffset(desc.contactOffset);
@@ -201,45 +187,51 @@ struct NativeParticleSystem: public PhysicsParticleSystem {
 	~NativeParticleSystem() {
 		if(fluid != nullptr) {
 			fluid->release();
+			fluid = nullptr;
 		}
-
 		if(indexPool != nullptr) {
 			indexPool->freeIndices();
 			indexPool->release();
+			indexPool = nullptr;
 		}
 	}
 
 	void releaseParticles(const physx::PxStrideIterator<physx::PxU32> &indices, const physx::PxU32 count) {
 		fluid->releaseParticles(count, indices);
 		indexPool->freeIndices(count, indices);
+
+		assert(activeParticleCount >= count);
 		activeParticleCount -= count;
-		if(activeParticleCount < 0) activeParticleCount = 0;
 	}
 
 	void Syncronize() {
-		// TODO(final): Do not use a std::vector here, use a static array instead!
+		physx::PxBounds3 nbounds = fluid->getWorldBounds();
+		this->bounds = PhysicsBoundingBox(PhysicsUtils::toGLMVec3(nbounds.minimum), PhysicsUtils::toGLMVec3(nbounds.maximum));
+
 		std::vector<physx::PxU32> deletedPartices;
+
+		physx::PxParticleFluidReadData *rd = fluid->lockParticleFluidReadData(physx::PxDataAccessFlag::eREADABLE);
 		uint32_t count = 0;
-		physx::PxParticleFluidReadData *rd = fluid->lockParticleFluidReadData();
-		if(rd) {
+		if(rd != nullptr) {
 			physx::PxStrideIterator<const physx::PxParticleFlags> flagsIt(rd->flagsBuffer);
 			physx::PxStrideIterator<const physx::PxVec3> positionIt(rd->positionBuffer);
 			physx::PxStrideIterator<const physx::PxF32> densityIt(rd->densityBuffer);
 			physx::PxStrideIterator<const physx::PxVec3> velocityIt(rd->velocityBuffer);
 			for(physx::PxU32 i = 0; i < rd->validParticleRange; ++i, ++flagsIt, ++positionIt, ++velocityIt, ++densityIt) {
-				bool drain = *flagsIt & physx::PxParticleFlag::eCOLLISION_WITH_DRAIN;
-				if(drain) {
+				physx::PxParticleFlags flags = *flagsIt;
+				bool isDrained = flags & physx::PxParticleFlag::eCOLLISION_WITH_DRAIN;
+				if(isDrained) {
 					deletedPartices.push_back(i);
 				}
-				if(*flagsIt & physx::PxParticleFlag::eVALID && !drain) {
+				if(flags & physx::PxParticleFlag::eVALID && !isDrained) {
 					positions[count].x = positionIt->x;
 					positions[count].y = positionIt->y;
 					positions[count].z = positionIt->z;
 					velocities[count].x = velocityIt->x;
 					velocities[count].y = velocityIt->y;
 					velocities[count].z = velocityIt->z;
-					positions[count].w = *densityIt; // TODO(final): Clamp the density inside the shader!
-					count++;
+					densities[count] = *densityIt;
+					++count;
 				}
 			}
 			rd->unlock();
@@ -247,6 +239,7 @@ struct NativeParticleSystem: public PhysicsParticleSystem {
 		if(deletedPartices.size() > 0) {
 			releaseParticles(physx::PxStrideIterator<physx::PxU32>(&deletedPartices[0]), (physx::PxU32)deletedPartices.size());
 		}
+		activeParticleCount = count;
 	}
 
 	bool AddParticles(const PhysicsParticlesStorage &storage) {
@@ -264,6 +257,7 @@ struct NativeParticleSystem: public PhysicsParticleSystem {
 			positions.push_back(PhysicsUtils::toPxVec3(storage.positions[i]));
 			velocities.push_back(PhysicsUtils::toPxVec3(storage.velocities[i]));
 			indicesList.push_back(physx::PxU32(0));
+			++addedParticles;
 		}
 		activeParticleCount += storage.numParticles;
 
@@ -301,6 +295,46 @@ struct NativeParticleSystem: public PhysicsParticleSystem {
 		physx::PxVec3 nacc = PhysicsUtils::toPxVec3(accel);
 		fluid->setExternalAcceleration(nacc);
 	}
+
+	void SetViscosity(const float viscosity) {
+		fluid->setViscosity(viscosity);
+	}
+
+	void SetStiffness(const float stiffness) {
+		fluid->setStiffness(stiffness);
+	}
+
+	void SetMaxMotionDistance(const float maxMotionDistance) {
+		fluid->setMaxMotionDistance(maxMotionDistance);
+	}
+
+	void SetContactOffset(const float contactOffset) {
+		fluid->setContactOffset(contactOffset);
+	}
+
+	void SetRestOffset(const float restOffset) {
+		fluid->setRestOffset(restOffset);
+	}
+
+	void SetRestitution(const float restitution) {
+		fluid->setRestitution(restitution);
+	}
+
+	void SetDamping(const float damping) {
+		fluid->setDamping(damping);
+	}
+
+	void SetDynamicFriction(const float dynamicFriction) {
+		fluid->setDynamicFriction(dynamicFriction);
+	}
+
+	void SetStaticFriction(const float staticFriction) {
+		fluid->setStaticFriction(staticFriction);
+	}
+
+	void SetParticleMass(const float particleMass) {
+		fluid->setParticleMass(particleMass);
+	}
 };
 
 class NativePhysicsEngine: public PhysicsEngine {
@@ -329,18 +363,51 @@ public:
 	std::vector<NativeParticleSystem *> particleSystems;
 	std::vector<NativeRigidBody *> rigidbodies;
 
+	NativePhysicsEngine::NativePhysicsEngine(const PhysicsEngineConfiguration &config):
+		PhysicsEngine(config),
+		foundation(nullptr),
+		physics(nullptr),
+		defaultErrorCallback({}),
+		defaultAllocatorCallback({}),
+		defaultFilterShader(physx::PxSimulationFilterShader()),
+		defaultMaterial(nullptr),
+		scene(nullptr),
+		gpuDispatcher(nullptr),
+		cudaContextManager(nullptr),
+		useGPUAcceleration(false) {
+		Initialize(config);
+	}
+
+	NativePhysicsEngine::~NativePhysicsEngine() {
+		Shutdown();
+	}
+
 	void ClearScene() {
 		if(!isInitialized) return;
 
 		for(size_t i = 0, count = particleSystems.size(); i < count; ++i) {
 			NativeParticleSystem *particleSystem = particleSystems[i];
-			scene->removeActor(*particleSystem->fluid);
+			if(particleSystem->isReady) {
+				scene->removeActor(*particleSystem->fluid);
+				particleSystem->isReady = false;
+			}
+			delete particleSystem;
 		}
+		particleSystems.clear();
 
 		for(size_t i = 0, count = rigidbodies.size(); i < count; ++i) {
 			NativeRigidBody *rigidbody = rigidbodies[i];
-			scene->removeActor(*rigidbody->nRigidActor);
+			if(rigidbody->isReady) {
+				scene->removeActor(*rigidbody->actor);
+				rigidbody->isReady = false;
+			}
+			delete rigidbody;
+			// Do not delete, it will be deleted outside
 		}
+		rigidbodies.clear();
+
+		// Clear the PhysicsEngine actors, because we already have removed it
+		actors.clear();
 
 		physx::PxActorTypeFlags flags =
 			physx::PxActorTypeFlag::ePARTICLE_FLUID |
@@ -399,18 +466,9 @@ public:
 		}
 	}
 
-	NativePhysicsEngine::NativePhysicsEngine(const PhysicsEngineConfiguration &config):
-		PhysicsEngine(),
-		foundation(nullptr),
-		physics(nullptr),
-		defaultErrorCallback({}),
-		defaultAllocatorCallback({}),
-		defaultFilterShader(physx::PxSimulationFilterShader()),
-		defaultMaterial(nullptr),
-		scene(nullptr),
-		gpuDispatcher(nullptr),
-		cudaContextManager(nullptr),
-		useGPUAcceleration(false) {
+	void Initialize(const PhysicsEngineConfiguration &config) {
+		isInitialized = false;
+
 #ifdef PVD_ENABLED
 		visualDebugger = nullptr;
 		pvdTransport = nullptr;
@@ -425,12 +483,20 @@ public:
 		defaultAllocatorCallback = physx::PxDefaultAllocator();
 		defaultFilterShader = physx::PxDefaultSimulationFilterShader;
 		foundation = PxCreateFoundation(PX_FOUNDATION_VERSION, defaultAllocatorCallback, defaultErrorCallback);
+		if(foundation == nullptr) {
+			std::cerr << "  Failed creating PhysX foundation instance!" << std::endl;
+			Shutdown();
+			return;
+		}
+
 		physics = PxCreatePhysics(PX_PHYSICS_VERSION, *foundation, physx::PxTolerancesScale());
 		if(physics == nullptr) {
 			std::cerr << "  Failed creating PhysX instance!" << std::endl;
 			Shutdown();
 			return;
 		}
+
+		physx::PxPvd *thisPvd = nullptr;
 
 #ifdef PVD_ENABLED
 		// Connect to visual debugger
@@ -463,10 +529,12 @@ public:
 				visualDebugger = nullptr;
 			}
 		}
+
+		thisPvd = visualDebugger;
 #endif
 
 		// Initialize PhysX Extensions
-		if(!PxInitExtensions(*physics, visualDebugger)) {
+		if(!PxInitExtensions(*physics, thisPvd)) {
 			std::cerr << "  Failed to initialize PhysX extensions!" << std::endl;
 			Shutdown();
 			return;
@@ -522,18 +590,9 @@ public:
 		isInitialized = true;
 	}
 
-	NativePhysicsEngine::~NativePhysicsEngine() {
-		Shutdown();
-	}
-
 	void Advance(const float deltaTime) {
-		const physx::PxReal timestep = 1.0f / 60.0f;
-		float dt = deltaTime;
-		while(dt > 0.0f) {
-			scene->simulate(timestep);
-			scene->fetchResults(true);
-			dt -= timestep;
-		}
+		scene->simulate(deltaTime);
+		scene->fetchResults(true);
 	}
 
 	void Syncronize() {
@@ -542,7 +601,14 @@ public:
 		for(size_t bodyIndex = 0, count = rigidbodies.size(); bodyIndex < count; ++bodyIndex) {
 			NativeRigidBody *rigidbody = rigidbodies[bodyIndex];
 
-			physx::PxRigidActor *nrigidActor = rigidbody->nRigidActor;
+			physx::PxRigidActor *nrigidActor = rigidbody->actor;
+
+			physx::PxTransform worldTransform = nrigidActor->getGlobalPose();
+			rigidbody->transform.rotation = PhysicsUtils::toGLMQuat(worldTransform.q);
+			rigidbody->transform.pos = PhysicsUtils::toGLMVec3(worldTransform.p);
+
+			physx::PxBounds3 nbounds = nrigidActor->getWorldBounds();
+			rigidbody->bounds = PhysicsBoundingBox(PhysicsUtils::toGLMVec3(nbounds.minimum), PhysicsUtils::toGLMVec3(nbounds.maximum));
 
 			physx::PxU32 shapeCount = nrigidActor->getNbShapes();
 			physx::PxU32 writtenShapeCount = nrigidActor->getShapes(shapes, shapeCount);
@@ -552,15 +618,11 @@ public:
 				physx::PxShape *nshape = shapes[shapeIndex];
 				physx::PxGeometryType::Enum geoType = nshape->getGeometryType();
 				physx::PxTransform localTransform = nshape->getLocalPose();
-				physx::PxTransform worldTransform = physx::PxShapeExt::getGlobalPose(*nshape, *nrigidActor);
 
 				PhysicsShape &targetShape = rigidbody->shapes[shapeIndex];
 
-				targetShape.localRotation = PhysicsUtils::toGLMQuat(localTransform.q);
-				targetShape.localPosition = PhysicsUtils::toGLMVec3(localTransform.p);
-
-				targetShape.worldRotation = PhysicsUtils::toGLMQuat(worldTransform.q);
-				targetShape.worldPosition = PhysicsUtils::toGLMVec3(worldTransform.p);
+				targetShape.local.rotation = PhysicsUtils::toGLMQuat(localTransform.q);
+				targetShape.local.pos = PhysicsUtils::toGLMVec3(localTransform.p);
 
 				switch(geoType) {
 					case physx::PxGeometryType::ePLANE:
@@ -615,32 +677,46 @@ public:
 	void AddActor(PhysicsActor *actor) {
 		if(!isInitialized) return;
 
-		NativePhysicsActor *nativeActor = static_cast<NativePhysicsActor *>(actor);
+		actor->isReady = false;
 
+		physx::PxActor *nactor = nullptr;
 		if(actor->type == PhysicsActor::Type::RigidBody) {
-			NativeRigidBody *nRigidBody = static_cast<NativeRigidBody *>(nativeActor);
+			NativeRigidBody *nRigidBody = static_cast<NativeRigidBody *>(actor);
 			rigidbodies.push_back(nRigidBody);
+			nactor = nRigidBody->actor;
 		} else if(actor->type == PhysicsActor::Type::ParticleSystem) {
 			NativeParticleSystem *nParticleSystem = static_cast<NativeParticleSystem *>(actor);
 			particleSystems.push_back(nParticleSystem);
+			nactor = nParticleSystem->fluid;
+		} else {
+			assert(!"Not supported");
 		}
 
-		scene->addActor(*nativeActor->nBaseActor);
+		if(nactor != nullptr) {
+			scene->addActor(*nactor);
+			actor->isReady = true;
+		}
 	}
 
 	void RemoveActor(PhysicsActor *actor) {
 		if(!isInitialized) return;
 
-		NativePhysicsActor *nativeActor = static_cast<NativePhysicsActor *>(actor);
-
-		scene->removeActor(*nativeActor->nBaseActor);
-
+		physx::PxActor *nactor = nullptr;
 		if(actor->type == PhysicsActor::Type::RigidBody) {
-			NativeRigidBody *nRigidBody = static_cast<NativeRigidBody *>(nativeActor);
+			NativeRigidBody *nRigidBody = static_cast<NativeRigidBody *>(actor);
+			nactor = nRigidBody->actor;
 			rigidbodies.erase(std::remove(rigidbodies.begin(), rigidbodies.end(), nRigidBody), rigidbodies.end());
 		} else if(actor->type == PhysicsActor::Type::ParticleSystem) {
 			NativeParticleSystem *nParticleSystem = static_cast<NativeParticleSystem *>(actor);
+			nactor = nParticleSystem->fluid;
 			particleSystems.erase(std::remove(particleSystems.begin(), particleSystems.end(), nParticleSystem), particleSystems.end());
+		} else {
+			assert(!"Not supported");
+		}
+
+		if(nactor != nullptr && actor->isReady) {
+			scene->removeActor(*nactor);
+			actor->isReady = false;
 		}
 	}
 
@@ -658,7 +734,7 @@ public:
 	}
 
 	PhysicsRigidBody *CreateRigidBody(const PhysicsRigidBody::MotionKind motionKind, const glm::vec3 &pos, const glm::quat &rotation, const PhysicsShape &shape) {
-		PhysicsRigidBody *nativeRigidBody = new NativeRigidBody(physics, defaultMaterial, motionKind, pos, rotation, shape);
+		PhysicsRigidBody *nativeRigidBody = new NativeRigidBody(physics, scene, defaultMaterial, motionKind, pos, rotation, shape);
 		return(nativeRigidBody);
 	}
 
@@ -681,20 +757,30 @@ public:
 			// Need to update the particle system flags, but before we need to remove it from the scene first
 			for(size_t i = 0, count = particleSystems.size(); i < count; ++i) {
 				NativeParticleSystem *particleSystem = particleSystems[i];
-				scene->removeActor(*particleSystem->fluid);
-				particleSystem->fluid->setParticleBaseFlag(physx::PxParticleBaseFlag::eGPU, value);
-				scene->addActor(*particleSystem->fluid);
+				if(particleSystem->isReady) {
+					scene->removeActor(*particleSystem->fluid);
+					particleSystem->fluid->setParticleBaseFlag(physx::PxParticleBaseFlag::eGPU, value);
+					scene->addActor(*particleSystem->fluid);
+				}
 			}
 		}
 	}
 
+	void SetGravity(const glm::vec3 &gravity) {
+		if(!isInitialized)return;
+		scene->setGravity(PhysicsUtils::toPxVec3(gravity));
+	}
+
 };
 
-PhysicsEngine::PhysicsEngine():
-	isInitialized(false) {
+PhysicsEngine::PhysicsEngine(const PhysicsEngineConfiguration &config):
+	isInitialized(false),
+	stepDT(config.deltaTime),
+	accumulator(0) {
 }
 
 PhysicsEngine::~PhysicsEngine() {
+	Clear();
 }
 
 PhysicsEngine *PhysicsEngine::Create(const PhysicsEngineConfiguration &config) {
@@ -708,6 +794,16 @@ void PhysicsEngine::Clear() {
 		delete actor;
 	}
 	actors.clear();
+	accumulator = 0;
+}
+
+void PhysicsEngine::Step(const float dt) {
+	assert(stepDT > 0);
+	accumulator += dt;
+	while(accumulator >= stepDT) {
+		Simulate(stepDT);
+		accumulator -= stepDT;
+	}
 }
 
 PhysicsParticleSystem *PhysicsEngine::AddParticleSystem(const FluidSimulationProperties &desc, const uint32_t maxParticleCount) {
@@ -719,7 +815,7 @@ PhysicsParticleSystem *PhysicsEngine::AddParticleSystem(const FluidSimulationPro
 	return(result);
 }
 
-void PhysicsEngine::RemoveParticleSystem(PhysicsParticleSystem *particleSystem) {
+void PhysicsEngine::DeleteParticleSystem(PhysicsParticleSystem *particleSystem) {
 	if(particleSystem != nullptr) {
 		RemoveActor(particleSystem);
 		actors.erase(std::remove(actors.begin(), actors.end(), particleSystem), actors.end());
@@ -736,7 +832,7 @@ PhysicsRigidBody *PhysicsEngine::AddRigidBody(const PhysicsRigidBody::MotionKind
 	return(result);
 }
 
-void PhysicsEngine::RemoveRigidBody(PhysicsRigidBody *body) {
+void PhysicsEngine::DeleteRigidBody(PhysicsRigidBody *body) {
 	if(body != nullptr) {
 		RemoveActor(body);
 		actors.erase(std::remove(actors.begin(), actors.end(), body), actors.end());

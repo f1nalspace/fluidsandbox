@@ -74,10 +74,16 @@ struct CapsuleActor: public Actor {
 
 enum class FluidType: int {
 	None = -1,
-	Drop = 0,
-	Plane = 1,
-	Box = 2,
-	Sphere = 3,
+	Drop = 1,
+	Plane = 2,
+	Box = 3,
+	Sphere = 4,
+};
+
+struct ParticleSystemActor: public Actor {
+	ParticleSystemActor():
+		Actor(ActorType::ParticleSystem, ActorMovementType::Dynamic) {
+	}
 };
 
 struct FluidActor: public Actor {
