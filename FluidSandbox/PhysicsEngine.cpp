@@ -241,7 +241,8 @@ struct NativeParticleSystem: public PhysicsParticleSystem {
 			physx::PxStrideIterator<const physx::PxVec3> positionIt(rd->positionBuffer);
 			physx::PxStrideIterator<const physx::PxF32> densityIt(rd->densityBuffer);
 			physx::PxStrideIterator<const physx::PxVec3> velocityIt(rd->velocityBuffer);
-			for(physx::PxU32 i = 0; i < rd->validParticleRange; ++i, ++flagsIt, ++positionIt, ++velocityIt, ++densityIt) {
+			bool hasDensity = densityIt.ptr() != nullptr;
+			for(physx::PxU32 i = 0; i < rd->validParticleRange; ++i, ++flagsIt) {
 				bool drain = *flagsIt & physx::PxParticleFlag::eCOLLISION_WITH_DRAIN;
 				if(drain) {
 					deletedPartices.push_back(i);
@@ -250,11 +251,23 @@ struct NativeParticleSystem: public PhysicsParticleSystem {
 					positions[count].x = positionIt->x;
 					positions[count].y = positionIt->y;
 					positions[count].z = positionIt->z;
+					positions[count].w = 1.0f;
+
 					velocities[count].x = velocityIt->x;
 					velocities[count].y = velocityIt->y;
 					velocities[count].z = velocityIt->z;
-					positions[count].w = *densityIt; // TODO(final): Clamp the density inside the shader!
+
+					if(hasDensity) {
+						densities[count] = *densityIt;
+					}
+
 					count++;
+				}
+				++positionIt;
+				++velocityIt;
+
+				if(hasDensity) {
+					++densityIt;
 				}
 			}
 			rd->unlock();

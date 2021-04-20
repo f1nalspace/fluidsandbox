@@ -218,6 +218,7 @@ public:
 struct PhysicsParticleSystem: PhysicsActor {
 	glm::vec4 *positions;
 	glm::vec3 *velocities;
+	float *densities;
 	uint32_t maxParticleCount;
 	uint32_t activeParticleCount;
 protected:
@@ -227,9 +228,11 @@ protected:
 		activeParticleCount(0) {
 		positions = new glm::vec4[maxParticleCount];
 		velocities = new glm::vec3[maxParticleCount];
+		densities = new float[maxParticleCount];
 	}
 public:
 	virtual ~PhysicsParticleSystem() {
+		delete[] densities;
 		delete[] velocities;
 		delete[] positions;
 	}
@@ -242,8 +245,8 @@ public:
 		size_t size = sizeof(float) * 4 * count;
 		memcpy_s(dest, size, &positions[0], size);
 		for(size_t i = 0; i < count; ++i) {
-			float w = positions[i].w;
-			if(noDensity) {
+			float w = densities[i];
+			if(!noDensity) {
 				if(w < minDensity) w = minDensity;
 				if(w > 1.0f) w = 1.0f;
 				positions[i].w = w;
