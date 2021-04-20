@@ -203,9 +203,6 @@ const char *APPLICATION_AUTHOR = "Torsten Spaete";
 const char *APPLICATION_COPYRIGHT = "(C) 2015-2021 Torsten Spaete - All rights reserved";
 const std::string APPTITLE = APPLICATION_NAME + std::string(" v") + APPLICATION_VERSION + std::string(" by ") + APPLICATION_AUTHOR;
 
-// Math stuff
-const float DEG2RAD = (float)M_PI / 180.0f;
-
 //
 // Physics
 //
@@ -251,7 +248,6 @@ static const char *GetActorCreationKindName(const ActorCreationKind kind) {
 			return "Fluid / Sphere";
 		default:
 			return "Unknown";
-
 	}
 }
 static ActorCreationKind gCurrentActorCreationKind = ActorCreationKind::FluidCube;
@@ -378,22 +374,23 @@ constexpr static glm::vec4 DefaultDynamicRigidBodyCubeColor(0.85f, 0.0f, 0.0f, 1
 constexpr static glm::vec4 DefaultDynamicRigidBodySphereColor(0, 0.85f, 0.0f, 1.0f);
 constexpr static glm::vec4 DefaultDynamicRigidBodyCapsuleColor(0.85f, 0.85f, 0.0f, 1.0f);
 
-// Deegree to radius
-float Deg2Rad(float degree) {
-	return degree * DEG2RAD;
+inline float RoundFloat(const float x) {
+	const float sd = 1000; //for accuracy to 3 decimal places
+	return int(x * sd + (x < 0 ? -0.5 : 0.5)) / sd;
 }
 
-// Returns a random radius
-float RandomRadius() {
-	return (float)(rand() % 360);
-}
-
-// Returns a random float in range -1 to 1
-float getRandomFloat(float min, float max) {
+// Returns a random float in range min to max
+inline float GetRandomFloat(float min, float max) {
 	float scale = RAND_MAX + 1.;
 	float base = rand() / scale;
 	float fine = rand() / scale;
 	return min + ((base + fine / scale) * (max - min));
+}
+
+// Returns a random angle in radians
+inline float RandomAngle() {
+	float result = GetRandomFloat(0.0f, (float)M_PI * 2.0f);
+	return(result);
 }
 
 inline bool PointInSphere(const glm::vec3 &spherePos, const float &sphereRadius, const glm::vec3 &point, const float particleRadius) {
@@ -668,15 +665,6 @@ static Actor *CloneBodyActor(const Actor *actor) {
 	return(nullptr);
 }
 
-static glm::quat RotateQuat(const float radians, const glm::vec3 &axis) {
-	glm::vec3 axisNorm = glm::normalize(axis);
-	float w = glm::cos(radians / 2);
-	float v = glm::sin(radians / 2);
-	glm::vec3 qv = axisNorm * v;
-	glm::quat result(w, qv);
-	return(result);
-}
-
 static void ResetScene(PhysicsEngine &physics) {
 	assert(gActiveFluidScenario != nullptr);
 
@@ -695,7 +683,7 @@ static void ResetScene(PhysicsEngine &physics) {
 	// Add ground plane
 	PlaneActor *groundPlane = new PlaneActor();
 	groundPlane->transform.position = glm::vec3(0, 0, 0);
-	groundPlane->transform.rotation = RotateQuat((float)M_PI * 0.5f, glm::vec3(0, 0, 1));
+	groundPlane->transform.rotation = Utils::RotateQuat((float)M_PI * 0.5f, glm::vec3(0, 0, 1));
 	AddPlane(physics, *groundPlane);
 	gActors.push_back(groundPlane);
 
@@ -861,7 +849,7 @@ void DrawCapsuleShape(const PhysicsTransform &bodyTransform, const PhysicsTransf
 	gLightingShader->enable();
 	gLightingShader->uniform4f(gLightingShader->ulocColor, &color[0]);
 
-	glm::mat4 rotation = glm::rotate(multm, Deg2Rad(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	glm::mat4 rotation = glm::rotate(multm, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 
 	glm::mat4 translation0 = glm::translate(rotation, glm::vec3(0.0f, 0.0f, 0.0f));
 	glm::mat4 scaled0 = glm::scale(translation0, glm::vec3(radius, radius, 2.0f * halfHeight));
@@ -1473,7 +1461,7 @@ void OnRender(const int windowWidth, const int windowHeight, const float frameti
 	glm::mat4 orthoMVP = glm::mat4(1.0f) * orthoProj;
 
 	// Create camera
-	gCamera = CCamera(0.0f, 4.0f, gCameraDistance, Deg2Rad(gCamRotation.x), Deg2Rad(gCamRotation.y), DefaultZNear, DefaultZFar, Deg2Rad(DefaultFov), (float)windowWidth / (float)windowHeight);
+	gCamera = CCamera(0.0f, 4.0f, gCameraDistance, glm::radians(gCamRotation.x), glm::radians(gCamRotation.y), DefaultZNear, DefaultZFar, glm::radians(DefaultFov), (float)windowWidth / (float)windowHeight);
 	glm::mat4 mvp = gCamera.mvp;
 	glm::mat4 proj = gCamera.projection;
 	glm::mat4 mdlv = gCamera.modelview;
@@ -1568,12 +1556,7 @@ static void AddDynamicActor(PhysicsEngine &physics, PhysicsParticleSystem &parti
 	glm::vec3 pos = gRigidBodyFallPos;
 	glm::vec3 vel = DefaultRigidBodyVelocity;
 	float density = DefaultRigidBodyDensity;
-
-	// TODO(final): Random Y rotation
-	glm::quat rotation = glm::quat(glm::vec3(0));
-
-	//glm::quat rotation = toGLMQuat(physx::PxQuat(Deg2Rad(RandomRadius()), physx::PxVec3(0, 1, 0)));
-
+	glm::quat rotation = Utils::RotateQuat(RandomAngle(), glm::vec3(0, 1, 0));
 	switch(kind) {
 		case ActorCreationKind::RigidBox:
 		{
@@ -1632,17 +1615,17 @@ static void AddDynamicActor(PhysicsEngine &physics, PhysicsParticleSystem &parti
 	}
 }
 
-void ToggleFluidGPUAcceleration() {
+static void ToggleFluidGPUAcceleration() {
 	bool enabled = gPhysics->IsGPUAcceleration();
 	gPhysics->SetGPUAcceleration(!enabled);
 }
 
-void SetFluidExternalAcceleration(const glm::vec3 &acc) {
+static void SetFluidExternalAcceleration(const glm::vec3 &acc) {
 	gFluidLatestExternalAccelerationTime = fplGetTimeInMillisecondsLP() + 3000; // 3 Seconds
 	gPhysicsParticles->SetExternalAcceleration(acc);
 }
 
-void KeyUp(const fplKey key, const int x, const int y) {
+static void OnKeyUp(const fplKey key, const int x, const int y) {
 	assert(gPhysics != nullptr);
 	switch(key) {
 		case fplKey_Escape: // Escape
@@ -1803,11 +1786,6 @@ void KeyUp(const fplKey key, const int x, const int y) {
 	}
 }
 
-float roundFloat(float x) {
-	const float sd = 1000; //for accuracy to 3 decimal places
-	return int(x * sd + (x < 0 ? -0.5 : 0.5)) / sd;
-}
-
 void ChangeFluidProperty(float value) {
 	if(!gActiveFluidScenario) return;
 
@@ -1890,7 +1868,7 @@ void ChangeFluidProperty(float value) {
 		case FluidProperty::ParticleRenderFactor:
 		{
 			gCurrentProperties.render.particleRenderFactor += value / 10.0f;
-			gCurrentProperties.render.particleRenderFactor = roundFloat(gCurrentProperties.render.particleRenderFactor);
+			gCurrentProperties.render.particleRenderFactor = RoundFloat(gCurrentProperties.render.particleRenderFactor);
 		} break;
 
 		case FluidProperty::DebugType:
@@ -2297,7 +2275,7 @@ int main(int argc, char **argv) {
 					case fplEventType_Keyboard:
 						if(ev.keyboard.type == fplKeyboardEventType_Button) {
 							if(ev.keyboard.buttonState == fplButtonState_Release) {
-								KeyUp(ev.keyboard.mappedKey, 0, 0);
+								OnKeyUp(ev.keyboard.mappedKey, 0, 0);
 							} else {
 								KeyDown(ev.keyboard.mappedKey, 0, 0);
 							}

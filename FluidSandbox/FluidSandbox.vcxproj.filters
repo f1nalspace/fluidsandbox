@@ -23,11 +23,17 @@
     <ClCompile Include="TextureFont.cpp" />
     <ClCompile Include="PhysicsEngine.cpp" />
     <ClCompile Include="Scenario.cpp" />
-    <ClCompile Include="final_platform_layer.cpp" />
-    <ClCompile Include="..\Libraries\glad\src\glad.c" />
     <ClCompile Include="VariableManager.cpp" />
     <ClCompile Include="ValueTypes.cpp" />
-    <ClCompile Include="final_xml.cpp" />
+    <ClCompile Include="final_platform_layer.cpp">
+      <Filter>Dependencies</Filter>
+    </ClCompile>
+    <ClCompile Include="final_xml.cpp">
+      <Filter>Dependencies</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libraries\glad\src\glad.c">
+      <Filter>Dependencies</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.hpp" />
@@ -64,5 +70,10 @@
   </ItemGroup>
   <ItemGroup>
     <Text Include="LICENSE.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Dependencies">
+      <UniqueIdentifier>{87d5120a-668e-4be9-bb54-b74f8ad97bad}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
 </Project>

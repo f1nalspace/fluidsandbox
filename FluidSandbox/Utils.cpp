@@ -220,4 +220,14 @@ namespace Utils {
 		else
 			return ActorMovementType::Static;
 	}
+
+	glm::quat RotateQuat(const float radians, const glm::vec3 &axis) {
+		glm::vec3 axisNorm = glm::normalize(axis);
+		float w = glm::cos(radians / 2);
+		float v = glm::sin(radians / 2);
+		glm::vec3 qv = axisNorm * v;
+		glm::quat result(w, qv);
+		return(result);
+	}
+
 }

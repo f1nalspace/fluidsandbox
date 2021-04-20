@@ -51,4 +51,6 @@ namespace Utils {
 
 	int compareString(const std::string &a, const std::string &b, const EqualityMode mode = EqualityMode::CaseSensitive);
 	bool isEqual(const std::string &a, const std::string &b, const EqualityMode mode = EqualityMode::CaseSensitive);
+
+	glm::quat RotateQuat(const float radians, const glm::vec3 &axis);
 };
