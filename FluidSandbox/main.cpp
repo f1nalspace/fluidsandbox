@@ -1760,6 +1760,8 @@ void KeyUp(const fplKey key, const int x, const int y) {
 			if(mode > (int)SSFRenderMode::Disabled) mode = (int)SSFRenderMode::Fluid;
 			gSSFRenderMode = (SSFRenderMode)mode;
 
+			SingleStepPhysX(PhysXInitDT);
+
 			break;
 		}
 
