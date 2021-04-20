@@ -225,6 +225,7 @@ Copy "$(SolutionDir)Libraries\PhysX\pxshared\bin\$(Platform)\*.dll" "$(OutDir)"<
     <ClCompile Include="..\Libraries\glad\src\glad.c" />
     <ClCompile Include="FBO.cpp" />
     <ClCompile Include="final_platform_layer.cpp" />
+    <ClCompile Include="final_xml.cpp" />
     <ClCompile Include="Scenario.cpp" />
     <ClCompile Include="FluidSystem.cpp" />
     <ClCompile Include="FontAtlas.cpp" />

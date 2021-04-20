@@ -18,7 +18,7 @@ static bool IsMathType(const ValueType type) {
 		return(false);
 	return(true);
 }
-	
+
 
 static VariableValue ConvertToDefault(const VariableValue &source, const ValueType targetType) {
 	switch(targetType) {
@@ -339,74 +339,76 @@ static ValueType ParseType(const std::string &text) {
 	return(ValueType::None);
 }
 
-static Variable *ParseVariable(rapidxml::xml_node<> *rootNode) {
+static Variable *ParseVariable(const fxmlTag *rootNode) {
 	ValueType vtype = ValueType::None;
-	auto attr = rootNode->first_attribute();
+	const fxmlTag *attr = rootNode->firstAttribute;
 	while(attr != nullptr) {
-		std::string attrName = attr->name();
+		std::string attrName = attr->name;
 		if(Utils::isEqual(attrName, "type")) {
-			vtype = ParseType(attr->value());
+			vtype = ParseType(attr->value);
 			break;
 		}
-		attr = attr->next_attribute();
+		attr = attr->nextSibling;
 	}
 
-	rapidxml::xml_node<> *first = rootNode->first_node();
-	rapidxml::node_type type = first->type();
-	if(type == rapidxml::node_type::node_element) {
-		std::string nodeName = first->name();
-		MathVariable::Op op = MathVariable::Op::None;
-		if((Utils::isEqual(nodeName, "Add") && ((op = MathVariable::Op::Add) == MathVariable::Op::Add)) ||
-			(Utils::isEqual(nodeName, "Sub") && ((op = MathVariable::Op::Sub) == MathVariable::Op::Sub)) ||
-			(Utils::isEqual(nodeName, "Mul") && ((op = MathVariable::Op::Mult) == MathVariable::Op::Mult)) ||
-			(Utils::isEqual(nodeName, "Div") && ((op = MathVariable::Op::Div) == MathVariable::Op::Div))) {
+	const fxmlTag *first = rootNode->firstChild;
+	if(first != nullptr) {
+		fxmlTagType type = first->type;
+		if(type == fxmlTagType_Element) {
+			std::string nodeName = first->name;
+			MathVariable::Op op = MathVariable::Op::None;
+			if((Utils::isEqual(nodeName, "Add") && ((op = MathVariable::Op::Add) == MathVariable::Op::Add)) ||
+				(Utils::isEqual(nodeName, "Sub") && ((op = MathVariable::Op::Sub) == MathVariable::Op::Sub)) ||
+				(Utils::isEqual(nodeName, "Mul") && ((op = MathVariable::Op::Mult) == MathVariable::Op::Mult)) ||
+				(Utils::isEqual(nodeName, "Div") && ((op = MathVariable::Op::Div) == MathVariable::Op::Div))) {
 
-			rapidxml::xml_node<> *a = nullptr;
-			rapidxml::xml_node<> *b = nullptr;
+				const fxmlTag *a = nullptr;
+				const fxmlTag *b = nullptr;
 
-			rapidxml::xml_node<> *cur = first->first_node();
-			while(cur != nullptr) {
-				std::string nextName = cur->name();
-				if(Utils::isEqual(nextName, "A")) {
-					a = cur;
-				} else if(Utils::isEqual(nextName, "B")) {
-					b = cur;
-				} else {
-					std::cerr << "Unsupported math operand tag '" << nodeName << "'. Only A and B are allowed!" << std::endl;
+				const fxmlTag *cur = first->firstChild;
+				while(cur != nullptr) {
+					std::string nextName = cur->name;
+					if(Utils::isEqual(nextName, "A")) {
+						a = cur;
+					} else if(Utils::isEqual(nextName, "B")) {
+						b = cur;
+					} else {
+						std::cerr << "Unsupported math operand tag '" << nodeName << "'. Only A and B are allowed!" << std::endl;
+					}
+					if(a != nullptr && b != nullptr) {
+						break;
+					}
+					cur = cur->nextSibling;
 				}
-				if(a != nullptr && b != nullptr) {
-					break;
+				if(a != nullptr && b != nullptr && op != MathVariable::Op::None) {
+					Variable *varA = ParseVariable(a);
+					Variable *varB = ParseVariable(b);
+					if(vtype == ValueType::None) {
+						vtype = ValueType::Float;
+					}
+					if(varA != nullptr && varB != nullptr && IsMathType(vtype)) {
+						MathVariable *result = new MathVariable(varA, varB, op, vtype);
+						return(result);
+					} else {
+						if(varA != nullptr)
+							delete varA;
+						else if(varB != nullptr)
+							delete varB;
+					}
 				}
-				cur = cur->next_sibling();
+			} else if(Utils::isEqual(nodeName, "Var")) {
+				std::string varName = first->value;
+				ReferenceVariable *result = new ReferenceVariable(varName);
+				return(result);
+			} else {
+				std::cerr << "Unsupported math operation tag '" << nodeName << "'. Only Add/Sub/Mul/Div are allowed!" << std::endl;
 			}
-			if(a != nullptr && b != nullptr && op != MathVariable::Op::None) {
-				Variable *varA = ParseVariable(a);
-				Variable *varB = ParseVariable(b);
-				if(vtype == ValueType::None) {
-					vtype = ValueType::Float;
-				}
-				if(varA != nullptr && varB != nullptr && IsMathType(vtype)) {
-					MathVariable *result = new MathVariable(varA, varB, op, vtype);
-					return(result);
-				} else {
-					if(varA != nullptr)
-						delete varA;
-					else if(varB != nullptr)
-						delete varB;
-				}
-			}
-		} else if(Utils::isEqual(nodeName, "Var")) {
-			std::string varName = first->value();
-			ReferenceVariable *result = new ReferenceVariable(varName);
-			return(result);
-		} else {
-			std::cerr << "Unsupported math operation tag '" << nodeName << "'. Only Add/Sub/Mul/Div are allowed!" << std::endl;
 		}
-	} else if(type == rapidxml::node_data) {
+	} else {
 		if(vtype == ValueType::None) {
 			vtype = ValueType::String;
 		}
-		std::string str = rootNode->value();
+		std::string str = rootNode->value;
 		VariableValue stringValue = VariableValue::fromString(str);
 		VariableValue fixedValue = ConvertToType(stringValue, vtype);
 		FixedVariable *result = new FixedVariable(fixedValue);
@@ -553,19 +555,19 @@ static const VariableValue ResolveMath(const MathVariable *math, std::map<std::s
 }
 
 
-void VariableManager::Parse(rapidxml::xml_node<> *varsNode) {
+void VariableManager::Parse(const fxmlTag *varsNode) {
 	vars.clear();
 
 	// Load raw variables tree
 	std::map<std::string, Variable *> rawVars;
-	auto varNode = varsNode->first_node();
+	auto varNode = varsNode->firstChild;
 	std::vector<std::pair<std::string, Variable *>> varList;
 	while(varNode != nullptr) {
-		std::string name = varNode->name();
+		std::string name = varNode->name;
 		Variable *variable = ParseVariable(varNode);
 		varList.push_back(std::pair<std::string, Variable *>(name, variable));
 		rawVars.insert(std::pair<std::string, Variable *>(name, variable));
-		varNode = varNode->next_sibling();
+		varNode = varNode->nextSibling;
 	}
 
 	// Second resolve variables

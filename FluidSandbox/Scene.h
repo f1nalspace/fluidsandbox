@@ -40,6 +40,6 @@ struct CScene
 	inline void addFluidColor(const FluidColor &color) { fluidColors.push_back(color); };
 	void resetFluidColors();
 
-	void load(const char* filename);
+	bool load(const char* filePath);
 };
 

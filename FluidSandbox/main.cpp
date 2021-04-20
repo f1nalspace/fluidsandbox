@@ -23,9 +23,9 @@ Dependencies:
 	- STB image (included)
 	- STB freetype (included)
 	- Final Platform Layer (included)
+	- Final XML (included)
 	- Glad (included)
 	- glm (included)
-	- rapidxml (included)
 ======================================================================================================================
 How to compile:
 	PhysX SDK:
@@ -91,7 +91,6 @@ Todo:
 	- Tech:
 
 		- Replace Glad with final_dynamic_opengl.h
-		- Replace rapidxml with final_xml.h
 
 		- Use ImGUI for OSD, so we dont have to use keyboard to modify the scene
 

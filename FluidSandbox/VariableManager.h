@@ -3,7 +3,7 @@
 #include <map>
 #include <string>
 
-#include <rapidxml/rapidxml.hpp>
+#include <final_xml.h>
 
 #include "ValueTypes.h"
 
@@ -42,7 +42,7 @@ private:
 public:
 	std::map<std::string, VariableValue> vars;
 	VariableManager();
-	void Parse(rapidxml::xml_node<> *varsNode);
+	void Parse(const fxmlTag *varsNode);
 	std::string Resolve(const std::string &source) const;
 };
 

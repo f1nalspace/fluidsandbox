@@ -13,7 +13,7 @@
 
 #include <glm/glm.hpp>
 
-#include <rapidxml/rapidxml.hpp>
+#include <final_xml.h>
 
 #include "OSLowLevel.h"
 #include "XMLUtils.h"
@@ -49,26 +49,31 @@ Scenario *Scenario::load(const char *filePath, CScene *scene) {
 	if(COSLowLevel::fileExists(filePath)) {
 		std::cout << "  Load scenario from file '" << filePath << "'" << std::endl;
 
+		// Load file content
 		std::string xml = COSLowLevel::getTextFileContent(filePath);
-		std::vector<char> xml_copy = Utils::toCharVector(xml);
 
-		// First get variables
-		rapidxml::xml_document<> doc;
-		try {
-			doc.parse<0>(&xml_copy[0]);
-		} catch(...) {
-			std::cerr << "could not parse xml!" << std::endl;
+		// Parse XML
+		fxmlContext ctx = FXML_ZERO_INIT;
+		fxmlTag root = FXML_ZERO_INIT;
+		size_t xmlLen = xml.length();
+		if(!fxmlInitFromMemory(xml.c_str(), xmlLen, &ctx)) {
+			std::cerr << "Failed initialize XML context with xml length of " << xml << std::endl;
 			return nullptr;
 		}
-		rapidxml::xml_node<> *rootNode = doc.first_node("Scenario");
+		if(!fxmlParse(&ctx, &root)) {
+			std::cerr << "Failed to parse XML file '" << filePath << "'!" << std::endl;
+			return(nullptr);
+		}
+
+		const fxmlTag *rootNode = fxmlFindTagByName(&root, "Scenario");
 		if(!rootNode) {
-			doc.clear();
+			fxmlFree(&ctx);
 			return(nullptr);
 		}
 
 		VariableManager varMng = VariableManager();
 
-		rapidxml::xml_node<> *varsNode = rootNode->first_node("Variables");
+		const fxmlTag *varsNode = fxmlFindTagByName(rootNode, "Variables");
 		if(varsNode) {
 			varMng.Parse(varsNode);
 		}
@@ -78,16 +83,16 @@ Scenario *Scenario::load(const char *filePath, CScene *scene) {
 		Scenario *newScenario = new Scenario();
 
 		// Name
-		rapidxml::xml_node<> *nameNode = rootNode->first_node("Name");
+		const fxmlTag *nameNode = fxmlFindTagByName(rootNode, "Name");
 		if(nameNode) {
-			strcpy_s(newScenario->displayName, sizeof(newScenario->displayName), nameNode->value());
+			strcpy_s(newScenario->displayName, sizeof(newScenario->displayName), nameNode->value);
 		}
 
 		// Gravity
 		newScenario->gravity = xmlUtils.getNodeVec3(rootNode, "Gravity", glm::vec3(0.0f, -9.8f, 0.0f));
 
 		// Fluid properties
-		rapidxml::xml_node<> *fpNode = rootNode->first_node("FluidProperties");
+		const fxmlTag *fpNode = fxmlFindTagByName(rootNode, "FluidProperties");
 		if(fpNode) {
 			float particleRadius = xmlUtils.getNodeFloat(fpNode, "ParticleRadius", scene->sim.particleRadius);
 			float particleDistanceFactor = xmlUtils.getNodeFloat(fpNode, "ParticleDistanceFactor", scene->sim.particleDistanceFactor);
@@ -113,18 +118,17 @@ Scenario *Scenario::load(const char *filePath, CScene *scene) {
 		}
 
 		// Actor properties
-		rapidxml::xml_node<> *apNode = rootNode->first_node("ActorProperties");
+		const fxmlTag *apNode = fxmlFindTagByName(rootNode, "ActorProperties");
 		if(apNode) {
 			newScenario->actorCreatePosition = xmlUtils.getNodeVec3(apNode, "CreatePosition", glm::vec3(0.0f));
 		}
 
 		// Actors
-		rapidxml::xml_node<> *actorsNode = rootNode->first_node("Actors");
+		const fxmlTag *actorsNode = fxmlFindTagByName(rootNode, "Actors");
 		if(actorsNode) {
-			std::vector<rapidxml::xml_node<> *> actors = xmlUtils.getChilds(actorsNode, "Actor");
-			std::vector<rapidxml::xml_node<> *>::iterator p;
-			for(p = actors.begin(); p != actors.end(); ++p) {
-				rapidxml::xml_node<> *actorNode = *p;
+			std::vector<const fxmlTag *> actors = xmlUtils.getChilds(actorsNode, "Actor");
+			for(auto p = actors.begin(); p != actors.end(); ++p) {
+				const fxmlTag *actorNode = *p;
 
 				std::string type = xmlUtils.getAttribute(actorNode, "type", "");
 				ActorMovementType atype = Utils::toActorMovementType(type.c_str());
@@ -184,12 +188,11 @@ Scenario *Scenario::load(const char *filePath, CScene *scene) {
 		}
 
 		// Fluids
-		rapidxml::xml_node<> *fluidsNode = rootNode->first_node("Fluids");
+		const fxmlTag *fluidsNode = fxmlFindTagByName(rootNode, "Fluids");
 		if(fluidsNode) {
-			std::vector<rapidxml::xml_node<> *> fluids = xmlUtils.getChilds(fluidsNode, "Fluid");
-			std::vector<rapidxml::xml_node<> *>::iterator p;
-			for(p = fluids.begin(); p != fluids.end(); ++p) {
-				rapidxml::xml_node<> *fluidNode = *p;
+			std::vector<const fxmlTag *> fluids = xmlUtils.getChilds(fluidsNode, "Fluid");
+			for(auto p = fluids.begin(); p != fluids.end(); ++p) {
+				const fxmlTag *fluidNode = *p;
 				std::string fluidTypeStr = xmlUtils.getAttribute(fluidNode, "type", "blob");
 				FluidType fluidType = Utils::toFluidType(fluidTypeStr.c_str());
 				glm::vec3 pos = xmlUtils.getAttributeVec3(fluidNode, "pos", glm::vec3(0.0f));
@@ -216,6 +219,8 @@ Scenario *Scenario::load(const char *filePath, CScene *scene) {
 				newScenario->fluids.push_back(fluidCon);
 			}
 		}
+
+		fxmlFree(&ctx);
 
 		return newScenario;
 	} else {

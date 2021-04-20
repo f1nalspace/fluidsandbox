@@ -27,6 +27,7 @@
     <ClCompile Include="..\Libraries\glad\src\glad.c" />
     <ClCompile Include="VariableManager.cpp" />
     <ClCompile Include="ValueTypes.cpp" />
+    <ClCompile Include="final_xml.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.hpp" />

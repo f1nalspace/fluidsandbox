@@ -26,46 +26,34 @@ std::string XMLUtils::Resolve(const std::string &source) {
 	return(source);
 }
 
-std::vector<rapidxml::xml_node<> *> XMLUtils::getChilds(rapidxml::xml_node<> *parent) {
-	std::vector<rapidxml::xml_node<> *> r;
-	rapidxml::xml_node<> *cur = parent->first_node();
-	if(cur) {
-		r.push_back(cur);
-		while((cur = cur->next_sibling())) {
+std::vector<const fxmlTag *> XMLUtils::getChilds(const fxmlTag *parent, const char *search) {
+	std::vector<const fxmlTag *> r;
+	const fxmlTag *cur = parent->firstChild;
+	while(cur != nullptr) {
+		if(cur->type == fxmlTagType_Element && Utils::isEqual(cur->name, search)) {
 			r.push_back(cur);
 		}
+		cur = cur->nextSibling;
 	}
 	return r;
 }
 
-std::vector<rapidxml::xml_node<> *> XMLUtils::getChilds(rapidxml::xml_node<> *parent, const char *search) {
-	std::vector<rapidxml::xml_node<> *> r;
-	rapidxml::xml_node<> *cur = parent->first_node(search);
-	if(cur) {
-		r.push_back(cur);
-		while((cur = cur->next_sibling(search))) {
-			r.push_back(cur);
-		}
-	}
-	return r;
-}
-
-std::string XMLUtils::getNodeValue(rapidxml::xml_node<> *parent, const char *search, const char *def) {
+std::string XMLUtils::getNodeValue(const fxmlTag *parent, const char *search, const char *def) {
 	std::string r = def;
-	rapidxml::xml_node<> *foundNode = parent->first_node(search);
-	if(foundNode) {
-		std::string v = foundNode->value();
+	const fxmlTag *foundNode = fxmlFindTagByName(parent, search);
+	if(foundNode != nullptr) {
+		std::string v = foundNode->value;
 		std::string r = Resolve(v);
 		return(r);
 	}
 	return(def);
 }
 
-bool XMLUtils::getNodeBool(rapidxml::xml_node<> *parent, const char *search, const bool def) {
+bool XMLUtils::getNodeBool(const fxmlTag *parent, const char *search, const bool def) {
 	bool r = def;
-	rapidxml::xml_node<> *foundNode = parent->first_node(search);
-	if(foundNode) {
-		std::string v = foundNode->value();
+	const fxmlTag *foundNode = fxmlFindTagByName(parent, search);
+	if(foundNode != nullptr) {
+		std::string v = foundNode->value;
 		std::string r = Resolve(v);
 		bool result = Utils::toBool(r);
 		return(result);
@@ -73,11 +61,11 @@ bool XMLUtils::getNodeBool(rapidxml::xml_node<> *parent, const char *search, con
 	return(def);
 }
 
-int32_t XMLUtils::getNodeS32(rapidxml::xml_node<> *parent, const char *search, const int32_t def) {
+int32_t XMLUtils::getNodeS32(const fxmlTag *parent, const char *search, const int32_t def) {
 	int32_t r = def;
-	rapidxml::xml_node<> *foundNode = parent->first_node(search);
-	if(foundNode) {
-		std::string v = foundNode->value();
+	const fxmlTag *foundNode = fxmlFindTagByName(parent, search);
+	if(foundNode != nullptr) {
+		std::string v = foundNode->value;
 		std::string r = Resolve(v);
 		int32_t result = Utils::toS32(r);
 		return(result);
@@ -85,11 +73,11 @@ int32_t XMLUtils::getNodeS32(rapidxml::xml_node<> *parent, const char *search, c
 	return(def);
 }
 
-uint32_t XMLUtils::getNodeU32(rapidxml::xml_node<> *parent, const char *search, const uint32_t def) {
+uint32_t XMLUtils::getNodeU32(const fxmlTag *parent, const char *search, const uint32_t def) {
 	uint32_t r = def;
-	rapidxml::xml_node<> *foundNode = parent->first_node(search);
-	if(foundNode) {
-		std::string v = foundNode->value();
+	const fxmlTag *foundNode = fxmlFindTagByName(parent, search);
+	if(foundNode != nullptr) {
+		std::string v = foundNode->value;
 		std::string r = Resolve(v);
 		uint32_t result = Utils::toU32(r);
 		return(result);
@@ -97,11 +85,11 @@ uint32_t XMLUtils::getNodeU32(rapidxml::xml_node<> *parent, const char *search, 
 	return(def);
 }
 
-float XMLUtils::getNodeFloat(rapidxml::xml_node<> *parent, const char *search, const float def) {
+float XMLUtils::getNodeFloat(const fxmlTag *parent, const char *search, const float def) {
 	float r = def;
-	rapidxml::xml_node<> *foundNode = parent->first_node(search);
-	if(foundNode) {
-		std::string v = foundNode->value();
+	const fxmlTag *foundNode = fxmlFindTagByName(parent, search);
+	if(foundNode != nullptr) {
+		std::string v = foundNode->value;
 		std::string r = Resolve(v);
 		float result = Utils::toFloat(r);
 		return(result);
@@ -109,11 +97,11 @@ float XMLUtils::getNodeFloat(rapidxml::xml_node<> *parent, const char *search, c
 	return(def);
 }
 
-glm::vec3 XMLUtils::getNodeVec3(rapidxml::xml_node<> *parent, const char *search, const glm::vec3 &def) {
+glm::vec3 XMLUtils::getNodeVec3(const fxmlTag *parent, const char *search, const glm::vec3 &def) {
 	glm::vec3 r = def;
-	rapidxml::xml_node<> *foundNode = parent->first_node(search);
-	if(foundNode) {
-		std::string v = foundNode->value();
+	const fxmlTag *foundNode = fxmlFindTagByName(parent, search);
+	if(foundNode != nullptr) {
+		std::string v = foundNode->value;
 		std::string r = Resolve(v);
 		glm::vec3 result = Utils::toVec3(r);
 		return(result);
@@ -121,10 +109,10 @@ glm::vec3 XMLUtils::getNodeVec3(rapidxml::xml_node<> *parent, const char *search
 	return(def);
 }
 
-glm::vec4 XMLUtils::getNodeVec4(rapidxml::xml_node<> *parent, const char *search, const glm::vec4 &def) {
-	rapidxml::xml_node<> *foundNode = parent->first_node(search);
-	if(foundNode) {
-		std::string v = foundNode->value();
+glm::vec4 XMLUtils::getNodeVec4(const fxmlTag *parent, const char *search, const glm::vec4 &def) {
+	const fxmlTag *foundNode = fxmlFindTagByName(parent, search);
+	if(foundNode != nullptr) {
+		std::string v = foundNode->value;
 		std::string r = Resolve(v);
 		glm::vec4 result = Utils::toVec4(r);
 		return(result);
@@ -132,20 +120,20 @@ glm::vec4 XMLUtils::getNodeVec4(rapidxml::xml_node<> *parent, const char *search
 	return(def);
 }
 
-std::string XMLUtils::getAttribute(rapidxml::xml_node<> *parent, const char *attr, const char *def) {
-	rapidxml::xml_attribute<> *foundAttr = parent->first_attribute(attr);
-	if(foundAttr) {
-		std::string v = foundAttr->value();
+std::string XMLUtils::getAttribute(const fxmlTag *parent, const char *attr, const char *def) {
+	const fxmlTag *foundAttr = fxmlFindAttributeByName(parent, attr);
+	if(foundAttr != nullptr) {
+		std::string v = foundAttr->value;
 		std::string r = Resolve(v);
 		return(r);
 	}
 	return def;
 }
 
-bool XMLUtils::getAttributeBool(rapidxml::xml_node<> *parent, const char *attr, const bool def) {
-	rapidxml::xml_attribute<> *foundAttr = parent->first_attribute(attr);
-	if(foundAttr) {
-		std::string v = foundAttr->value();
+bool XMLUtils::getAttributeBool(const fxmlTag *parent, const char *attr, const bool def) {
+	const fxmlTag *foundAttr = fxmlFindAttributeByName(parent, attr);
+	if(foundAttr != nullptr) {
+		std::string v = foundAttr->value;
 		std::string r = Resolve(v);
 		bool result = Utils::toBool(r);
 		return(result);
@@ -153,10 +141,10 @@ bool XMLUtils::getAttributeBool(rapidxml::xml_node<> *parent, const char *attr, 
 	return def;
 }
 
-float XMLUtils::getAttributeFloat(rapidxml::xml_node<> *parent, const char *attr, const float def) {
-	rapidxml::xml_attribute<> *foundAttr = parent->first_attribute(attr);
-	if(foundAttr) {
-		std::string v = foundAttr->value();
+float XMLUtils::getAttributeFloat(const fxmlTag *parent, const char *attr, const float def) {
+	const fxmlTag *foundAttr = fxmlFindAttributeByName(parent, attr);
+	if(foundAttr != nullptr) {
+		std::string v = foundAttr->value;
 		std::string r = Resolve(v);
 		float result = Utils::toFloat(r);
 		return(result);
@@ -164,10 +152,10 @@ float XMLUtils::getAttributeFloat(rapidxml::xml_node<> *parent, const char *attr
 	return def;
 }
 
-int32_t XMLUtils::getAttributeS32(rapidxml::xml_node<> *parent, const char *attr, const int32_t def) {
-	rapidxml::xml_attribute<> *foundAttr = parent->first_attribute(attr);
-	if(foundAttr) {
-		std::string v = foundAttr->value();
+int32_t XMLUtils::getAttributeS32(const fxmlTag *parent, const char *attr, const int32_t def) {
+	const fxmlTag *foundAttr = fxmlFindAttributeByName(parent, attr);
+	if(foundAttr != nullptr) {
+		std::string v = foundAttr->value;
 		std::string r = Resolve(v);
 		int32_t result = Utils::toS32(r);
 		return(result);
@@ -175,10 +163,10 @@ int32_t XMLUtils::getAttributeS32(rapidxml::xml_node<> *parent, const char *attr
 	return def;
 }
 
-uint32_t XMLUtils::getAttributeU32(rapidxml::xml_node<> *parent, const char *attr, const uint32_t def) {
-	rapidxml::xml_attribute<> *foundAttr = parent->first_attribute(attr);
-	if(foundAttr) {
-		std::string v = foundAttr->value();
+uint32_t XMLUtils::getAttributeU32(const fxmlTag *parent, const char *attr, const uint32_t def) {
+	const fxmlTag *foundAttr = fxmlFindAttributeByName(parent, attr);
+	if(foundAttr != nullptr) {
+		std::string v = foundAttr->value;
 		std::string r = Resolve(v);
 		uint32_t result = Utils::toU32(r);
 		return(result);
@@ -186,10 +174,10 @@ uint32_t XMLUtils::getAttributeU32(rapidxml::xml_node<> *parent, const char *att
 	return def;
 }
 
-glm::vec3 XMLUtils::getAttributeVec3(rapidxml::xml_node<> *parent, const char *attr, const glm::vec3 &def) {
-	rapidxml::xml_attribute<> *foundAttr = parent->first_attribute(attr);
-	if(foundAttr) {
-		std::string v = foundAttr->value();
+glm::vec3 XMLUtils::getAttributeVec3(const fxmlTag *parent, const char *attr, const glm::vec3 &def) {
+	const fxmlTag *foundAttr = fxmlFindAttributeByName(parent, attr);
+	if(foundAttr != nullptr) {
+		std::string v = foundAttr->value;
 		std::string r = Resolve(v);
 		glm::vec3 result = Utils::toVec3(r);
 		return(result);
@@ -197,10 +185,10 @@ glm::vec3 XMLUtils::getAttributeVec3(rapidxml::xml_node<> *parent, const char *a
 	return def;
 }
 
-glm::vec4 XMLUtils::getAttributeVec4(rapidxml::xml_node<> *parent, const char *attr, const glm::vec4 &def) {
-	rapidxml::xml_attribute<> *foundAttr = parent->first_attribute(attr);
-	if(foundAttr) {
-		std::string v = foundAttr->value();
+glm::vec4 XMLUtils::getAttributeVec4(const fxmlTag *parent, const char *attr, const glm::vec4 &def) {
+	const fxmlTag *foundAttr = fxmlFindAttributeByName(parent, attr);
+	if(foundAttr != nullptr) {
+		std::string v = foundAttr->value;
 		std::string r = Resolve(v);
 		glm::vec4 result = Utils::toVec4(r);
 		return(result);
