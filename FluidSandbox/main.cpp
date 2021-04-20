@@ -183,25 +183,31 @@ License:
 #include "AllActors.hpp"
 
 // Application
-const char *APPLICATION_NAME = "Fluid Sandbox";
+#define APPLICATION_NAME "Fluid Sandbox"
+#define APPLICATION_VERSION "1.8.0"
+#define APPLICATION_AUTHOR "Torsten Spaete"
+#define APPLICATION_COPYRIGHT "(C) 2015-2021 Torsten Spaete - All rights reserved"
+
+#define CONCAT_TWO(A, B) A ## B
+#define CONCAT_FIVE(A, B, C, D, E) CONCAT_TWO(A, B) CONCAT_TWO(C, D) E
 
 #if defined(__x86_64__) || defined(_M_X64) || defined(__amd64__)
 #	ifdef _DEBUG
-const char *APPLICATION_VERSION = "1.8.0 (x64-debug)";
+#define APPLICATION_VERSION_FULL CONCAT_TWO(APPLICATION_VERSION, " (x64-debug)")
 #	else
-const char *APPLICATION_VERSION = "1.8.0 (x64-release)";
+#define APPLICATION_VERSION_FULL CONCAT_TWO(APPLICATION_VERSION, " (x64-release)")
 #	endif
 #else
 #	ifdef _DEBUG
-const char *APPLICATION_VERSION = "1.8.0 (x86-debug)";
+#define APPLICATION_VERSION_FULL CONCAT_TWO(APPLICATION_VERSION, " (x86-debug)")
 #	else
-const char *APPLICATION_VERSION = "1.8.0 (x86-release)";
+#define APPLICATION_VERSION_FULL CONCAT_TWO(APPLICATION_VERSION, " (x86-release)")
 #	endif
 #endif
 
-const char *APPLICATION_AUTHOR = "Torsten Spaete";
-const char *APPLICATION_COPYRIGHT = "(C) 2015-2021 Torsten Spaete - All rights reserved";
-const std::string APPTITLE = APPLICATION_NAME + std::string(" v") + APPLICATION_VERSION + std::string(" by ") + APPLICATION_AUTHOR;
+const char *APPTITLE = CONCAT_FIVE(APPLICATION_NAME, " v", APPLICATION_VERSION_FULL, " by ", APPLICATION_AUTHOR);
+
+#undef CONCAT_TWO
 
 //
 // Physics
@@ -2210,7 +2216,7 @@ int main(int argc, char **argv) {
 	platformSettings.video.graphics.opengl.compabilityFlags = fplOpenGLCompabilityFlags_Legacy;
 	platformSettings.video.graphics.opengl.majorVersion = 2;
 	platformSettings.video.graphics.opengl.minorVersion = 1;
-	fplCopyString(APPTITLE.c_str(), platformSettings.window.title, fplArrayCount(platformSettings.window.title));
+	fplCopyString(APPTITLE, platformSettings.window.title, fplArrayCount(platformSettings.window.title));
 	if(fplPlatformInit(fplInitFlags_Console | fplInitFlags_Video, &platformSettings)) {
 
 		if(!gladLoadGL()) {
