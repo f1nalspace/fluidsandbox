@@ -52,31 +52,6 @@ namespace PhysicsUtils {
 	inline glm::quat toGLMQuat(const physx::PxQuat &input) {
 		return glm::quat(input.w, input.x, input.y, input.z);
 	}
-	static glm::mat4 toGLMMat4(const physx::PxMat33 &m, const physx::PxVec3 &t) {
-		glm::mat4 mat = glm::mat4(1.0f);
-
-		mat[0][0] = m.column0[0];
-		mat[0][1] = m.column0[1];
-		mat[0][2] = m.column0[2];
-		mat[0][3] = 0;
-
-		mat[1][0] = m.column1[0];
-		mat[1][1] = m.column1[1];
-		mat[1][2] = m.column1[2];
-		mat[1][3] = 0;
-
-		mat[2][0] = m.column2[0];
-		mat[2][1] = m.column2[1];
-		mat[2][2] = m.column2[2];
-		mat[2][3] = 0;
-
-		mat[3][0] = t[0];
-		mat[3][1] = t[1];
-		mat[3][2] = t[2];
-		mat[3][3] = 1;
-
-		return mat;
-	}
 }
 
 static physx::PxShape *CreateShape(physx::PxPhysics &physics, physx::PxMaterial &defaultMaterial, const PhysicsShape &shape) {
@@ -229,18 +204,34 @@ struct NativeParticleSystem: public PhysicsParticleSystem {
 		activeParticleCount -= count;
 	}
 
-	void RemoveInvalidParticles() {
-		// TODO(final): Do not use a std::vector here, use a static array instead!
+	void Syncronize() {
+		physx::PxBounds3 nbounds = fluid->getWorldBounds();
+		this->bounds = PhysicsBoundingBox(PhysicsUtils::toGLMVec3(nbounds.minimum), PhysicsUtils::toGLMVec3(nbounds.maximum));
+
 		std::vector<physx::PxU32> deletedPartices;
+
 		physx::PxParticleFluidReadData *rd = fluid->lockParticleFluidReadData(physx::PxDataAccessFlag::eREADABLE);
+		uint32_t count = 0;
 		if(rd != nullptr) {
 			physx::PxStrideIterator<const physx::PxParticleFlags> flagsIt(rd->flagsBuffer);
-			for(physx::PxU32 i = 0; i < rd->validParticleRange; ++i, ++flagsIt) {
+			physx::PxStrideIterator<const physx::PxVec3> positionIt(rd->positionBuffer);
+			physx::PxStrideIterator<const physx::PxF32> densityIt(rd->densityBuffer);
+			physx::PxStrideIterator<const physx::PxVec3> velocityIt(rd->velocityBuffer);
+			for(physx::PxU32 i = 0; i < rd->validParticleRange; ++i, ++flagsIt, ++positionIt, ++velocityIt, ++densityIt) {
 				physx::PxParticleFlags flags = *flagsIt;
-				bool isValid = flags & physx::PxParticleFlag::eVALID;
 				bool isDrained = flags & physx::PxParticleFlag::eCOLLISION_WITH_DRAIN;
-				if(!isValid || isDrained) {
+				if(isDrained) {
 					deletedPartices.push_back(i);
+				}
+				if(flags & physx::PxParticleFlag::eVALID && !isDrained) {
+					positions[count].x = positionIt->x;
+					positions[count].y = positionIt->y;
+					positions[count].z = positionIt->z;
+					velocities[count].x = velocityIt->x;
+					velocities[count].y = velocityIt->y;
+					velocities[count].z = velocityIt->z;
+					densities[count] = *densityIt;
+					++count;
 				}
 			}
 			rd->unlock();
@@ -248,32 +239,7 @@ struct NativeParticleSystem: public PhysicsParticleSystem {
 		if(deletedPartices.size() > 0) {
 			releaseParticles(physx::PxStrideIterator<physx::PxU32>(&deletedPartices[0]), (physx::PxU32)deletedPartices.size());
 		}
-	}
-
-	void Syncronize() {
-		physx::PxBounds3 nbounds = fluid->getWorldBounds();
-		this->bounds = PhysicsBoundingBox(PhysicsUtils::toGLMVec3(nbounds.minimum), PhysicsUtils::toGLMVec3(nbounds.maximum));
-		physx::PxParticleFluidReadData *rd = fluid->lockParticleFluidReadData(physx::PxDataAccessFlag::eREADABLE);
-		if(rd != nullptr) {
-			physx::PxStrideIterator<const physx::PxParticleFlags> flagsIt(rd->flagsBuffer);
-			physx::PxStrideIterator<const physx::PxVec3> positionIt(rd->positionBuffer);
-			physx::PxStrideIterator<const physx::PxF32> densityIt(rd->densityBuffer);
-			physx::PxStrideIterator<const physx::PxVec3> velocityIt(rd->velocityBuffer);
-			bool hasDensity = densityIt.ptr() != nullptr;
-			for(physx::PxU32 i = 0; i < rd->validParticleRange; ++i, ++flagsIt, ++positionIt, ++velocityIt) {
-				positions[i].x = positionIt->x;
-				positions[i].y = positionIt->y;
-				positions[i].z = positionIt->z;
-				velocities[i].x = velocityIt->x;
-				velocities[i].y = velocityIt->y;
-				velocities[i].z = velocityIt->z;
-				densities[i] = hasDensity ? *densityIt : 1.0f;
-				if(hasDensity) {
-					++densityIt;
-				}
-			}
-			rd->unlock();
-		}
+		activeParticleCount = count;
 	}
 
 	bool AddParticles(const PhysicsParticlesStorage &storage) {
@@ -397,10 +363,8 @@ public:
 	std::vector<NativeParticleSystem *> particleSystems;
 	std::vector<NativeRigidBody *> rigidbodies;
 
-	float accumulator;
-
 	NativePhysicsEngine::NativePhysicsEngine(const PhysicsEngineConfiguration &config):
-		PhysicsEngine(),
+		PhysicsEngine(config),
 		foundation(nullptr),
 		physics(nullptr),
 		defaultErrorCallback({}),
@@ -410,8 +374,7 @@ public:
 		scene(nullptr),
 		gpuDispatcher(nullptr),
 		cudaContextManager(nullptr),
-		useGPUAcceleration(false),
-		accumulator(0) {
+		useGPUAcceleration(false) {
 		Initialize(config);
 	}
 
@@ -628,13 +591,8 @@ public:
 	}
 
 	void Advance(const float deltaTime) {
-		const physx::PxReal timestep = 1.0f / 60.0f;
-		accumulator += deltaTime;
-		while(accumulator > 0.0f) {
-			scene->simulate(timestep);
-			scene->fetchResults(true);
-			accumulator -= timestep;
-		}
+		scene->simulate(deltaTime);
+		scene->fetchResults(true);
 	}
 
 	void Syncronize() {
@@ -702,7 +660,6 @@ public:
 
 		for(size_t i = 0, count = particleSystems.size(); i < count; ++i) {
 			NativeParticleSystem *particleSys = particleSystems[i];
-			particleSys->RemoveInvalidParticles();
 			particleSys->Syncronize();
 		}
 	}
@@ -816,8 +773,10 @@ public:
 
 };
 
-PhysicsEngine::PhysicsEngine():
-	isInitialized(false) {
+PhysicsEngine::PhysicsEngine(const PhysicsEngineConfiguration &config):
+	isInitialized(false),
+	stepDT(config.deltaTime),
+	accumulator(0) {
 }
 
 PhysicsEngine::~PhysicsEngine() {
@@ -835,6 +794,16 @@ void PhysicsEngine::Clear() {
 		delete actor;
 	}
 	actors.clear();
+	accumulator = 0;
+}
+
+void PhysicsEngine::Step(const float dt) {
+	assert(stepDT > 0);
+	accumulator += dt;
+	while(accumulator >= stepDT) {
+		Simulate(stepDT);
+		accumulator -= stepDT;
+	}
 }
 
 PhysicsParticleSystem *PhysicsEngine::AddParticleSystem(const FluidSimulationProperties &desc, const uint32_t maxParticleCount) {

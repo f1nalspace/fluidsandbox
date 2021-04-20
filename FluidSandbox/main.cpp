@@ -266,7 +266,7 @@ static bool gShowOSD = false;
 // Drawing statistics
 static size_t gTotalActors = 0;
 static size_t gDrawedActors = 0;
-static uint32_t gTotalFluidParticles = 0;
+static uint32_t gActiveParticleCount = 0;
 static float gFps = 0;
 static int gTotalFrames = 0;
 static float gAppStartTime = 0.0f;
@@ -521,9 +521,7 @@ static void AddFluid(PhysicsParticleSystem &particleSys, const FluidActor &conta
 	storage.velocities = velocities.data();
 	storage.numParticles = numParticles;
 
-	if(gPhysics->AddParticles(&particleSys, storage)) {
-		gTotalFluidParticles += numParticles;
-	}
+	gPhysics->AddParticles(&particleSys, storage);
 }
 
 static void AddFluids(PhysicsParticleSystem &particleSys, const FluidType type) {
@@ -556,30 +554,33 @@ static PhysicsRigidBody::MotionKind ToMotionKind(const ActorMovementType movemen
 
 static void AddBox(PhysicsEngine &physics, CubeActor &cube) {
 	PhysicsShape shape = PhysicsShape::MakeBox(cube.halfExtents);
+	shape.isParticleDrain = cube.particleDrain;
 	PhysicsRigidBody *rigidBody = physics.AddRigidBody(ToMotionKind(cube.movementType), cube.transform.position, cube.transform.rotation, shape);
 	cube.physicsData = rigidBody;
 }
 
 static void AddSphere(PhysicsEngine &physics, SphereActor &sphere) {
 	PhysicsShape shape = PhysicsShape::MakeSphere(sphere.radius);
+	shape.isParticleDrain = sphere.particleDrain;
 	PhysicsRigidBody *rigidBody = physics.AddRigidBody(ToMotionKind(sphere.movementType), sphere.transform.position, sphere.transform.rotation, shape);
 	sphere.physicsData = rigidBody;
 }
 
 static void AddCapsule(PhysicsEngine &physics, CapsuleActor &capsule) {
 	PhysicsShape shape = PhysicsShape::MakeCapsule(capsule.radius, capsule.halfHeight);
+	shape.isParticleDrain = capsule.particleDrain;
 	PhysicsRigidBody *rigidBody = physics.AddRigidBody(ToMotionKind(capsule.movementType), capsule.transform.position, capsule.transform.rotation, shape);
 	capsule.physicsData = rigidBody;
 }
 
 static void AddPlane(PhysicsEngine &physics, PlaneActor &plane) {
 	PhysicsShape shape = PhysicsShape::MakePlane();
+	shape.isParticleDrain = plane.particleDrain;
 	PhysicsRigidBody *rigidBody = physics.AddRigidBody(ToMotionKind(plane.movementType), plane.transform.position, plane.transform.rotation, shape);
 	plane.physicsData = rigidBody;
 }
 
 static void AddScenarioActor(PhysicsEngine &physics, Actor *actor) {
-	PhysicsShape shape = {};
 	if(actor->type == ActorType::Cube) {
 		CubeActor *cube = static_cast<CubeActor *>(actor);
 		AddBox(physics, *cube);
@@ -600,13 +601,14 @@ static void AddScenarioActor(PhysicsEngine &physics, Actor *actor) {
 static void SaveFluidPositions(PhysicsParticleSystem &particleSys) {
 	float *data = gPointSprites->Map();
 	bool noDensity = gSSFRenderMode == SSFRenderMode::Points;
-	particleSys.WriteToPositionBuffer(data, MaxFluidParticleCount, noDensity, gCurrentProperties.render.minDensity);
+	particleSys.WriteToPositionBuffer(data, gActiveParticleCount, noDensity, gCurrentProperties.render.minDensity);
 	gPointSprites->UnMap();
 }
 
 static void SingleStepPhysX(const float frametime) {
 	// Advance simulation
-	gPhysics->Simulate(frametime);
+	gPhysics->Step(frametime);
+	gActiveParticleCount = gPhysicsParticles->activeParticleCount;
 
 	// Save fluid positions
 	if(gSSFRenderMode != SSFRenderMode::Disabled)
@@ -617,7 +619,7 @@ static void ClearScene(PhysicsEngine &physics) {
 	// Destroy all physics actors
 	physics.Clear();
 	gPhysicsParticles = nullptr;
-	gTotalFluidParticles = 0;
+	gActiveParticleCount = 0;
 
 	// Delete all actors
 	for(size_t index = 0, count = gActors.size(); index < count; ++index) {
@@ -748,6 +750,7 @@ void InitializePhysics() {
 
 	PhysicsEngineConfiguration config = PhysicsEngineConfiguration();
 	config.threadCount = numThreads;
+	config.deltaTime = PhysXUpdateDT;
 
 	gPhysics = PhysicsEngine::Create(config);
 
@@ -1255,7 +1258,7 @@ void RenderOSD(const int windowWidth, const int windowHeight) {
 	if(gShowOSD) {
 		sprintf_s(buffer, "Drawed actors: %zu of %zu", gDrawedActors, gTotalActors);
 		RenderOSDLine(osdPos, buffer);
-		sprintf_s(buffer, "Total fluid particles: %lu", gTotalFluidParticles);
+		sprintf_s(buffer, "Total fluid particles: %lu", gActiveParticleCount);
 		RenderOSDLine(osdPos, buffer);
 		sprintf_s(buffer, "Draw error: %s", drawingError.c_str());
 		RenderOSDLine(osdPos, buffer);
@@ -1499,7 +1502,7 @@ void OnRender(const int windowWidth, const int windowHeight, const float frameti
 
 	// Render fluid
 	if(drawFluidParticles) {
-		gFluidRenderer->Render(gCamera, gTotalFluidParticles, options, windowWidth, windowHeight, gCurrentProperties.sim.particleRadius * gCurrentProperties.render.particleRenderFactor);
+		gFluidRenderer->Render(gCamera, gActiveParticleCount, options, windowWidth, windowHeight, gCurrentProperties.sim.particleRadius * gCurrentProperties.render.particleRenderFactor);
 	}
 
 	// Check for opengl error

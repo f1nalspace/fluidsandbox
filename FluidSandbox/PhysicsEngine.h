@@ -275,6 +275,7 @@ public:
 
 struct PhysicsEngineConfiguration {
 	uint32_t threadCount;
+	float deltaTime;
 };
 
 struct PhysicsParticlesStorage {
@@ -286,20 +287,28 @@ struct PhysicsParticlesStorage {
 class PhysicsEngine {
 protected:
 	std::vector<PhysicsActor *> actors;
+	const float stepDT;
+	float accumulator;
 	bool isInitialized;
+
 	virtual PhysicsParticleSystem *CreateParticleSystem(const FluidSimulationProperties &desc, const uint32_t maxParticleCount) = 0;
+
 	virtual void AddActor(PhysicsActor *actor) = 0;
 	virtual void RemoveActor(PhysicsActor *actor) = 0;
+
 	virtual PhysicsRigidBody *CreateRigidBody(const PhysicsRigidBody::MotionKind motionKind, const glm::vec3 &pos, const glm::quat &rotation, const PhysicsShape &shape) = 0;
+
+	virtual void Simulate(const float deltaTime) = 0;
+
+	PhysicsEngine(const PhysicsEngineConfiguration &config);
 public:
-	PhysicsEngine();
 	virtual ~PhysicsEngine();
 
 	static PhysicsEngine *Create(const PhysicsEngineConfiguration &config);
 
-	virtual void Simulate(const float deltaTime) = 0;
-
 	virtual void Clear();
+
+	void Step(const float deltaTime);
 
 	PhysicsParticleSystem *AddParticleSystem(const FluidSimulationProperties &desc, const uint32_t maxParticleCount);
 	void DeleteParticleSystem(PhysicsParticleSystem *particleSystem);
