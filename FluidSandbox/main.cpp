@@ -736,6 +736,7 @@ static void ResetScene(PhysicsEngine &physics) {
 
 	gTotalTimeElapsed = 0;
 	gPhysicsAccumulator = 0;
+	SingleStepPhysX(PhysXInitDT);
 }
 
 void InitializePhysics() {
