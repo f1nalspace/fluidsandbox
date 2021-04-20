@@ -237,15 +237,19 @@ public:
 	virtual void AddForce(const glm::vec3 &force, const PhysicsForceMode mode) = 0;
 	virtual void SetExternalAcceleration(const glm::vec3 &accel) = 0;
 
-	void WriteToPositionBuffer(float *dest, const size_t count) {
+	void WriteToPositionBuffer(float *dest, const size_t count, const bool noDensity, const float minDensity) {
 		assert(count < maxParticleCount);
 		size_t size = sizeof(float) * 4 * count;
 		memcpy_s(dest, size, &positions[0], size);
 		for(size_t i = 0; i < count; ++i) {
 			float w = positions[i].w;
-			if(w < 0) w = 0;
-			if(w > 1) w = 1;
-			positions[i].w = w;
+			if(noDensity) {
+				if(w < minDensity) w = minDensity;
+				if(w > 1.0f) w = 1.0f;
+				positions[i].w = w;
+			} else {
+				positions[i].w = 1.0f;
+			}
 		}
 	}
 

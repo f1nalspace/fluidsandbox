@@ -600,7 +600,7 @@ static void AddScenarioActor(PhysicsEngine &physics, Actor *actor) {
 static void SaveFluidPositions(PhysicsParticleSystem &particleSys) {
 	float *data = gPointSprites->Map();
 	bool noDensity = gSSFRenderMode == SSFRenderMode::Points;
-	particleSys.WriteToPositionBuffer(data, gTotalFluidParticles);
+	particleSys.WriteToPositionBuffer(data, gTotalFluidParticles, noDensity, gCurrentProperties.render.minDensity);
 	gPointSprites->UnMap();
 }
 
