@@ -231,7 +231,7 @@ Copy "$(SolutionDir)Libraries\PhysX\pxshared\bin\$(Platform)\*.dll" "$(OutDir)"<
     <ClCompile Include="FontAtlas.cpp" />
     <ClCompile Include="Frustum.cpp" />
     <ClCompile Include="GLSL.cpp" />
-    <ClCompile Include="main.cpp" />
+    <ClCompile Include="FluidSandbox.cpp" />
     <ClCompile Include="OSLowLevel.cpp" />
     <ClCompile Include="PhysicsEngine.cpp" />
     <ClCompile Include="Primitives.cpp" />

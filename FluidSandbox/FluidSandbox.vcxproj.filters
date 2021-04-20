@@ -5,7 +5,6 @@
     <ClCompile Include="FluidSystem.cpp" />
     <ClCompile Include="Frustum.cpp" />
     <ClCompile Include="GLSL.cpp" />
-    <ClCompile Include="main.cpp" />
     <ClCompile Include="OSLowLevel.cpp" />
     <ClCompile Include="Primitives.cpp" />
     <ClCompile Include="Renderer.cpp" />
@@ -34,6 +33,7 @@
     <ClCompile Include="..\Libraries\glad\src\glad.c">
       <Filter>Dependencies</Filter>
     </ClCompile>
+    <ClCompile Include="FluidSandbox.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.hpp" />
