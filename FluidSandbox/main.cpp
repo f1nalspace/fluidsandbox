@@ -88,36 +88,38 @@ How to compile:
 ======================================================================================================================
 Todo:
 
-	- Replace Glad with final_dynamic_opengl.h
-	- Replace rapidxml with final_xml.h
+	- Tech:
 
-	- Move all physics code into its own class, so we can swap physics engine any time (Allmost done)
+		- Replace Glad with final_dynamic_opengl.h
+		- Replace rapidxml with final_xml.h
 
-	- Use ImGUI for OSD, so we dont have to use keyboard to modify the scene
+		- Use ImGUI for OSD, so we dont have to use keyboard to modify the scene
 
-	- Migrate to OpenGL 3.x
+		- Migrate to OpenGL 3.x
 
-	- Abstract rendering so we can support multiple renderer (GL 3.x, Vulkan)
+		- Abstract rendering so we can support multiple renderer (GL 3.x, Vulkan)
 
-	- More cameras (Free, Rotate around point, Fixed)
+	- Features:
 
-	- Transform the sandbox in a real sandbox, by making it a 3D editor (ImGUI)
+		- More cameras (Free, Rotate around point, Fixed)
 
-	- Add actor animations (Useful for simulating waves):
-		- Rotation
-		- Simple movement
+		- Transform the sandbox in a real sandbox, by making it a 3D editor (ImGUI)
 
-	- Support for kinematic bodies (Moveable static bodies)
+		- Add actor animations (Useful for simulating waves):
+			- Rotation
+			- Simple movement
 
-	- Support for joints
+		- Support for kinematic bodies (Moveable static bodies)
 
-	- Generate tubes (http://www.songho.ca/opengl/gl_cylinder.html)
+		- Support for joints
 
-	- More scenarios:
-		- Use custom gravity
-		- Tubes
-		- Water slides
-		- Rube Goldberg machine
+		- Generate tubes (http://www.songho.ca/opengl/gl_cylinder.html)
+
+		- More scenarios:
+			- Use custom gravity
+			- Tubes
+			- Water slides
+			- Rube Goldberg machine
 
 ======================================================================================================================
 License:
