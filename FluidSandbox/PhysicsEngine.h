@@ -70,14 +70,14 @@ public:
 	PhysicsBoundingBox bounds;
 	void *userData;
 	Type type;
-	bool IsReady;
+	bool isReady;
 protected:
 	PhysicsActor(Type type):
 		transform(PhysicsTransform()),
 		bounds(PhysicsBoundingBox()),
 		userData(nullptr),
 		type(type),
-		IsReady(false) {
+		isReady(false) {
 	}
 public:
 	virtual ~PhysicsActor() {}
@@ -216,7 +216,7 @@ public:
 };
 
 struct PhysicsParticleSystem: PhysicsActor {
-	glm::vec4 *positions;
+	glm::vec3 *positions;
 	glm::vec3 *velocities;
 	float *densities;
 	uint32_t maxParticleCount;
@@ -226,7 +226,7 @@ protected:
 		PhysicsActor(PhysicsActor::Type::ParticleSystem),
 		maxParticleCount(maxParticleCount),
 		activeParticleCount(0) {
-		positions = new glm::vec4[maxParticleCount];
+		positions = new glm::vec3[maxParticleCount];
 		velocities = new glm::vec3[maxParticleCount];
 		densities = new float[maxParticleCount];
 	}
@@ -240,24 +240,29 @@ public:
 	virtual void AddForce(const glm::vec3 &force, const PhysicsForceMode mode) = 0;
 	virtual void SetExternalAcceleration(const glm::vec3 &accel) = 0;
 
-	void WriteToPositionBuffer(float *dest, const size_t count, const bool noDensity, const float minDensity) {
-		assert(count < maxParticleCount);
-		size_t size = sizeof(float) * 4 * count;
-		memcpy_s(dest, size, &positions[0], size);
-		for(size_t i = 0; i < count; ++i) {
+	void WriteToPositionBuffer(float *dest, const size_t maxCount, const bool noDensity, const float minDensity) {
+		assert(maxCount <= maxParticleCount);
+		for(size_t i = 0; i < activeParticleCount; ++i) {
+			float x = positions[i].x;
+			float y = positions[i].y;
+			float z = positions[i].z;
 			float w = densities[i];
 			if(!noDensity) {
 				if(w < minDensity) w = minDensity;
 				if(w > 1.0f) w = 1.0f;
-				positions[i].w = w;
 			} else {
-				positions[i].w = 1.0f;
+				w = 1.0f;
 			}
+			size_t destOffset = i * 4;
+			dest[destOffset + 0] = x;
+			dest[destOffset + 1] = y;
+			dest[destOffset + 2] = z;
+			dest[destOffset + 3] = w;
 		}
 	}
 
 	virtual void SetViscosity(const float viscosity) = 0;
-	virtual void SetStiffness(const float stiffnes) = 0;
+	virtual void SetStiffness(const float stiffness) = 0;
 	virtual void SetMaxMotionDistance(const float maxMotionDistance) = 0;
 	virtual void SetContactOffset(const float contactOffset) = 0;
 	virtual void SetRestOffset(const float restOffset) = 0;

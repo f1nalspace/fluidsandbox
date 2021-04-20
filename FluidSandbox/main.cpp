@@ -212,6 +212,7 @@ constexpr float PhysXInitDT = 0.000001f;
 constexpr float PhysXUpdateDT = 1.0f / 60.0f;
 static PhysicsEngine *gPhysics = nullptr;
 static PhysicsParticleSystem *gPhysicsParticles = nullptr;
+static bool gPhysicsUseGPUAcceleration = false;
 
 // Window vars
 constexpr int DefaultWindowWidth = 1280;
@@ -257,7 +258,7 @@ static ActorCreationKind gCurrentActorCreationKind = ActorCreationKind::FluidCub
 static std::vector<Actor *> gActors;
 
 static bool gDrawWireframe = false;
-static bool gDrawBoundBox = true;
+static bool gDrawBoundBox = false;
 static bool gHideStaticRigidBodies = false;
 static bool gHideDynamicRigidBodies = false;
 static bool gShowOSD = false;
@@ -280,7 +281,6 @@ constexpr int MaxFluidParticleCount = 512000;
 static CSphericalPointSprites *gPointSprites = nullptr;
 static CPointSpritesShader *gPointSpritesShader = nullptr;
 
-static bool gFluidUseGPUAcceleration = false;
 static FluidDebugType gFluidDebugType = FluidDebugType::Final;
 
 // Fluid properties
@@ -600,7 +600,7 @@ static void AddScenarioActor(PhysicsEngine &physics, Actor *actor) {
 static void SaveFluidPositions(PhysicsParticleSystem &particleSys) {
 	float *data = gPointSprites->Map();
 	bool noDensity = gSSFRenderMode == SSFRenderMode::Points;
-	particleSys.WriteToPositionBuffer(data, gTotalFluidParticles, noDensity, gCurrentProperties.render.minDensity);
+	particleSys.WriteToPositionBuffer(data, MaxFluidParticleCount, noDensity, gCurrentProperties.render.minDensity);
 	gPointSprites->UnMap();
 }
 
@@ -704,7 +704,7 @@ static void ResetScene(PhysicsEngine &physics) {
 	gActors.push_back(mainFluid);
 
 	// Set GPU acceleration for particle fluid if supported
-	physics.SetGPUAcceleration(gFluidUseGPUAcceleration);
+	physics.SetGPUAcceleration(gPhysicsUseGPUAcceleration);
 
 	// Add bodies immediately from scenario
 	for(size_t i = 0, count = gActiveFluidScenario->bodies.size(); i < count; i++) {
@@ -750,6 +750,8 @@ void InitializePhysics() {
 	config.threadCount = numThreads;
 
 	gPhysics = PhysicsEngine::Create(config);
+
+	gPhysicsUseGPUAcceleration = gPhysics->IsGPUAcceleration();
 }
 
 void DrawGrid(int GRID_SIZE) {
@@ -1325,7 +1327,7 @@ void RenderOSD(const int windowWidth, const int windowHeight) {
 		RenderOSDLine(osdPos, buffer);
 		sprintf_s(buffer, "Fluid add acceleration (Arrow Keys)");
 		RenderOSDLine(osdPos, buffer);
-		sprintf_s(buffer, "Fluid using GPU acceleration (H): %s", gFluidUseGPUAcceleration ? "yes" : "no");
+		sprintf_s(buffer, "Fluid using GPU acceleration (H): %s", gPhysicsUseGPUAcceleration ? "yes" : "no");
 		RenderOSDLine(osdPos, buffer);
 		sprintf_s(buffer, "Fluid emitter active (K): %s", !gStoppedEmitter ? "yes" : "no");
 		RenderOSDLine(osdPos, buffer);

@@ -50,7 +50,7 @@ namespace PhysicsUtils {
 		return glm::vec4(input.x, input.y, input.z, input.w);
 	}
 	inline glm::quat toGLMQuat(const physx::PxQuat &input) {
-		return glm::quat(input.x, input.y, input.z, input.w);
+		return glm::quat(input.w, input.x, input.y, input.z);
 	}
 	static glm::mat4 toGLMMat4(const physx::PxMat33 &m, const physx::PxVec3 &t) {
 		glm::mat4 mat = glm::mat4(1.0f);
@@ -224,58 +224,55 @@ struct NativeParticleSystem: public PhysicsParticleSystem {
 	void releaseParticles(const physx::PxStrideIterator<physx::PxU32> &indices, const physx::PxU32 count) {
 		fluid->releaseParticles(count, indices);
 		indexPool->freeIndices(count, indices);
+
+		assert(activeParticleCount >= count);
 		activeParticleCount -= count;
-		if(activeParticleCount < 0) activeParticleCount = 0;
 	}
 
-	void Syncronize() {
-		physx::PxBounds3 nbounds = fluid->getWorldBounds();
-		this->bounds = PhysicsBoundingBox(PhysicsUtils::toGLMVec3(nbounds.minimum), PhysicsUtils::toGLMVec3(nbounds.maximum));
-
+	void RemoveInvalidParticles() {
 		// TODO(final): Do not use a std::vector here, use a static array instead!
 		std::vector<physx::PxU32> deletedPartices;
-		uint32_t count = 0;
-		physx::PxParticleFluidReadData *rd = fluid->lockParticleFluidReadData();
+		physx::PxParticleFluidReadData *rd = fluid->lockParticleFluidReadData(physx::PxDataAccessFlag::eREADABLE);
 		if(rd != nullptr) {
 			physx::PxStrideIterator<const physx::PxParticleFlags> flagsIt(rd->flagsBuffer);
-			physx::PxStrideIterator<const physx::PxVec3> positionIt(rd->positionBuffer);
-			physx::PxStrideIterator<const physx::PxF32> densityIt(rd->densityBuffer);
-			physx::PxStrideIterator<const physx::PxVec3> velocityIt(rd->velocityBuffer);
-			bool hasDensity = densityIt.ptr() != nullptr;
 			for(physx::PxU32 i = 0; i < rd->validParticleRange; ++i, ++flagsIt) {
-				bool drain = *flagsIt & physx::PxParticleFlag::eCOLLISION_WITH_DRAIN;
-				if(drain) {
+				physx::PxParticleFlags flags = *flagsIt;
+				bool isValid = flags & physx::PxParticleFlag::eVALID;
+				bool isDrained = flags & physx::PxParticleFlag::eCOLLISION_WITH_DRAIN;
+				if(!isValid || isDrained) {
 					deletedPartices.push_back(i);
-				}
-				if(*flagsIt & physx::PxParticleFlag::eVALID && !drain) {
-					positions[count].x = positionIt->x;
-					positions[count].y = positionIt->y;
-					positions[count].z = positionIt->z;
-					positions[count].w = 1.0f;
-
-					velocities[count].x = velocityIt->x;
-					velocities[count].y = velocityIt->y;
-					velocities[count].z = velocityIt->z;
-
-					if(hasDensity) {
-						densities[count] = *densityIt;
-					} else {
-						densities[count] = 1.0f;
-					}
-
-					count++;
-				}
-				++positionIt;
-				++velocityIt;
-
-				if(hasDensity) {
-					++densityIt;
 				}
 			}
 			rd->unlock();
 		}
 		if(deletedPartices.size() > 0) {
 			releaseParticles(physx::PxStrideIterator<physx::PxU32>(&deletedPartices[0]), (physx::PxU32)deletedPartices.size());
+		}
+	}
+
+	void Syncronize() {
+		physx::PxBounds3 nbounds = fluid->getWorldBounds();
+		this->bounds = PhysicsBoundingBox(PhysicsUtils::toGLMVec3(nbounds.minimum), PhysicsUtils::toGLMVec3(nbounds.maximum));
+		physx::PxParticleFluidReadData *rd = fluid->lockParticleFluidReadData(physx::PxDataAccessFlag::eREADABLE);
+		if(rd != nullptr) {
+			physx::PxStrideIterator<const physx::PxParticleFlags> flagsIt(rd->flagsBuffer);
+			physx::PxStrideIterator<const physx::PxVec3> positionIt(rd->positionBuffer);
+			physx::PxStrideIterator<const physx::PxF32> densityIt(rd->densityBuffer);
+			physx::PxStrideIterator<const physx::PxVec3> velocityIt(rd->velocityBuffer);
+			bool hasDensity = densityIt.ptr() != nullptr;
+			for(physx::PxU32 i = 0; i < rd->validParticleRange; ++i, ++flagsIt, ++positionIt, ++velocityIt) {
+				positions[i].x = positionIt->x;
+				positions[i].y = positionIt->y;
+				positions[i].z = positionIt->z;
+				velocities[i].x = velocityIt->x;
+				velocities[i].y = velocityIt->y;
+				velocities[i].z = velocityIt->z;
+				densities[i] = hasDensity ? *densityIt : 1.0f;
+				if(hasDensity) {
+					++densityIt;
+				}
+			}
+			rd->unlock();
 		}
 	}
 
@@ -334,43 +331,43 @@ struct NativeParticleSystem: public PhysicsParticleSystem {
 	}
 
 	void SetViscosity(const float viscosity) {
-
+		fluid->setViscosity(viscosity);
 	}
 
-	void SetStiffness(const float stiffnes) {
-
+	void SetStiffness(const float stiffness) {
+		fluid->setStiffness(stiffness);
 	}
 
 	void SetMaxMotionDistance(const float maxMotionDistance) {
-
+		fluid->setMaxMotionDistance(maxMotionDistance);
 	}
 
 	void SetContactOffset(const float contactOffset) {
-
+		fluid->setContactOffset(contactOffset);
 	}
 
 	void SetRestOffset(const float restOffset) {
-
+		fluid->setRestOffset(restOffset);
 	}
 
 	void SetRestitution(const float restitution) {
-
+		fluid->setRestitution(restitution);
 	}
 
 	void SetDamping(const float damping) {
-
+		fluid->setDamping(damping);
 	}
 
 	void SetDynamicFriction(const float dynamicFriction) {
-
+		fluid->setDynamicFriction(dynamicFriction);
 	}
 
 	void SetStaticFriction(const float staticFriction) {
-
+		fluid->setStaticFriction(staticFriction);
 	}
 
 	void SetParticleMass(const float particleMass) {
-
+		fluid->setParticleMass(particleMass);
 	}
 };
 
@@ -427,9 +424,9 @@ public:
 
 		for(size_t i = 0, count = particleSystems.size(); i < count; ++i) {
 			NativeParticleSystem *particleSystem = particleSystems[i];
-			if(particleSystem->IsReady) {
+			if(particleSystem->isReady) {
 				scene->removeActor(*particleSystem->fluid);
-				particleSystem->IsReady = false;
+				particleSystem->isReady = false;
 			}
 			delete particleSystem;
 		}
@@ -437,9 +434,9 @@ public:
 
 		for(size_t i = 0, count = rigidbodies.size(); i < count; ++i) {
 			NativeRigidBody *rigidbody = rigidbodies[i];
-			if(rigidbody->IsReady) {
+			if(rigidbody->isReady) {
 				scene->removeActor(*rigidbody->actor);
-				rigidbody->IsReady = false;
+				rigidbody->isReady = false;
 			}
 			delete rigidbody;
 			// Do not delete, it will be deleted outside
@@ -705,6 +702,7 @@ public:
 
 		for(size_t i = 0, count = particleSystems.size(); i < count; ++i) {
 			NativeParticleSystem *particleSys = particleSystems[i];
+			particleSys->RemoveInvalidParticles();
 			particleSys->Syncronize();
 		}
 	}
@@ -722,7 +720,7 @@ public:
 	void AddActor(PhysicsActor *actor) {
 		if(!isInitialized) return;
 
-		actor->IsReady = false;
+		actor->isReady = false;
 
 		physx::PxActor *nactor = nullptr;
 		if(actor->type == PhysicsActor::Type::RigidBody) {
@@ -739,7 +737,7 @@ public:
 
 		if(nactor != nullptr) {
 			scene->addActor(*nactor);
-			actor->IsReady = true;
+			actor->isReady = true;
 		}
 	}
 
@@ -759,9 +757,9 @@ public:
 			assert(!"Not supported");
 		}
 
-		if(nactor != nullptr && actor->IsReady) {
+		if(nactor != nullptr && actor->isReady) {
 			scene->removeActor(*nactor);
-			actor->IsReady = false;
+			actor->isReady = false;
 		}
 	}
 
@@ -802,7 +800,7 @@ public:
 			// Need to update the particle system flags, but before we need to remove it from the scene first
 			for(size_t i = 0, count = particleSystems.size(); i < count; ++i) {
 				NativeParticleSystem *particleSystem = particleSystems[i];
-				if(particleSystem->IsReady) {
+				if(particleSystem->isReady) {
 					scene->removeActor(*particleSystem->fluid);
 					particleSystem->fluid->setParticleBaseFlag(physx::PxParticleBaseFlag::eGPU, value);
 					scene->addActor(*particleSystem->fluid);
