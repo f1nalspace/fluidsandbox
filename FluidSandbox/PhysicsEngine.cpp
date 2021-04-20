@@ -259,6 +259,8 @@ struct NativeParticleSystem: public PhysicsParticleSystem {
 
 					if(hasDensity) {
 						densities[count] = *densityIt;
+					} else {
+						densities[count] = 1.0f;
 					}
 
 					count++;
