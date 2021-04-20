@@ -992,6 +992,9 @@ const char *GetFluidProperty(const FluidProperty prop) {
 		case FluidProperty::DynamicFriction:
 			return "Dynamic friction\0";
 
+		case FluidProperty::StaticFriction:
+			return "Static friction\0";
+
 		case FluidProperty::ParticleMass:
 			return "Particle mass\0";
 
