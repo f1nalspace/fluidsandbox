@@ -27,9 +27,9 @@ MPL v.2 licensed. See LICENSE.txt for more details.
 - Glad (included)
 - glm (included)
 
-##How to compile:
+## How to compile:
 
-###PhysX SDK:
+### PhysX SDK:
 - Compile the PhysX SDK as Multithreaded DLLs for x64 and x64 platform with the configurations Debug/Release
 NOTE: Do not compile with static CRT library, change to (Multithreaded DLL and Multithreaded Debug DLL).
 
@@ -87,4 +87,4 @@ NOTE: Do not compile with static CRT library, change to (Multithreaded DLL and M
 
 - Build and run the FluidSandbox Solution
 
-##Screenshots
+## Screenshots
