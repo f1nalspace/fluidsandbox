@@ -2,12 +2,15 @@
 ======================================================================================================================
 	Fluid Sandbox
 
-	A realtime application for playing around with 3D fluids and rigid bodies.
+	A real time application for playing around with 3D fluids and rigid bodies.
+
 	Features
-	- Fluid and rigid body simulation based on NVidia PhysX
-	- Screen Space Fluid Rendering with clear and colored rendering
-	- Customizable Scene & Scenarios
-	- Custom Rendering Engine
+	- Fluid and rigid body simulation based on NVIDIA PhysX (R)
+	- Screen Space Fluid Rendering with clear and colored particle fluids
+	- Fully customizable scenarios stored in XML
+	- Changing allmost all simulation properties in real time
+	- Uses a custom OpenGL rendering engine
+	- Uses Final Platform Layer (libfpl.org) for creating a window and a opengl rendering context
 
 	This is the main source file.
 
@@ -90,27 +93,28 @@ Todo:
 
 	- Tech:
 
-		- Replace Glad with final_dynamic_opengl.h
+		- Replace Glad with final_dynamic_opengl.h (Glad is weird and have too many warnings)
 
-		- Use ImGUI for OSD, so we dont have to use keyboard to modify the scene
+		- Use ImGUI for OSD, so we don't have to use keyboard to modify the scene
 
-		- Migrate to OpenGL 3.x
+		- Migrate to OpenGL 4.x
 
-		- Abstract rendering so we can support multiple renderer (GL 3.x, Vulkan)
+		- Abstract rendering so we can support multiple renderer (GL 4.x, Vulkan, D3D 11/12, etc.)
 
 	- Features:
 
 		- More cameras (Free, Rotate around point, Fixed)
 
-		- Transform the sandbox in a real sandbox, by making it a 3D editor (ImGUI)
-
-		- Add actor animations (Useful for simulating waves):
-			- Rotation
-			- Simple movement
+		- Transform the sandbox in a real sandbox, by making it a real 3D editor
 
 		- Support for kinematic bodies (Moveable static bodies)
 
 		- Support for joints
+
+		- Add actor animations (Useful for simulating waves):
+			- Rotation
+			- Simple movement
+			- Path movement
 
 		- Generate tubes (http://www.songho.ca/opengl/gl_cylinder.html)
 
@@ -120,6 +124,20 @@ Todo:
 			- Water slides
 			- Rube Goldberg machine
 
+======================================================================================================================
+Background:
+
+	Fluid Sandbox was my attempt to re-create the first NVIDIA PhysX fluid simulation released in 2007/2008.
+	Back then I really liked the demo and wanted to create my own scenes for it.
+	Unfortunately, the demo was not suitable for that, so I simply created my own application -> Fluid Sandbox.
+	But at that time, I had bare minimum knowledge about math and no experience using any kind of physics engines.
+	So it took me ~3 months to learn how everything works and implement it using the PhysX SDK.
+
+	Why 3 months? Fluids are very hard to configure, especially to find parameters which works and does not explode.
+	Rest offset, contact offset, distance offset, max motion distance, viscosity, stiffness and many more have to be properly set and affect each other.
+	Also the screen space fluid rendering was not easy too and it took me a while to get it working.
+
+	After 10 years i revisited it, upgraded it to latest PhysX SDK, cleaned up the source and put in on Github.
 ======================================================================================================================
 License:
 
