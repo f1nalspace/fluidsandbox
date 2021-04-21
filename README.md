@@ -8,7 +8,7 @@ A real time application for playing around with 3D fluids and rigid bodies.
 ![Fluid Sandbox v1.8 (Complex scene)](/Documents/screenshot1_8_b.png)
 
 ## Features
-- Fluid and rigid body simulation based on NVIDIA PhysX (R)
+- Fluid and rigid body simulation based on [NVIDIA PhysX (R)](https://github.com/NVIDIAGameWorks/PhysX-3.4)
 - [Screen Space Fluid Rendering](http://developer.download.nvidia.com/presentations/2010/gdc/Direct3D_Effects.pdf) with clear and colored particle fluids
 - Fully customizable scenarios stored in XML
 - Changing allmost all simulation properties in real time
