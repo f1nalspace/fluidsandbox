@@ -1,6 +1,12 @@
 # Fluid Sandbox
 A real time application for playing around with 3D fluids and rigid bodies.
 
+## Screenshots
+
+![Fluid Sandbox v1.8 (Dambreak)](/Documents/screenshot1_8.png)
+
+![Fluid Sandbox v1.8 (Complex scene)](/Documents/screenshot1_8_b.png)
+
 ## Features
 - Fluid and rigid body simulation based on NVIDIA PhysX (R)
 - Screen Space Fluid Rendering with clear and colored particle fluids
@@ -86,9 +92,3 @@ NOTE: Do not compile with static CRT library, change to (Multithreaded DLL and M
 - All other libraries are already included
 
 - Build and run the FluidSandbox Solution
-
-## Screenshots
-
-![Fluid Sandbox v1.8 (Dambreak)](/Documents/screenshot1_8.png)
-
-![Fluid Sandbox v1.8 (Complex scene)](/Documents/screenshot1_8_b.png)
