@@ -1,7 +1,7 @@
 # Fluid Sandbox
 A real time application for playing around with 3D fluids and rigid bodies.
 
-##Features
+## Features
 - Fluid and rigid body simulation based on NVIDIA PhysX (R)
 - Screen Space Fluid Rendering with clear and colored particle fluids
 - Fully customizable scenarios stored in XML
