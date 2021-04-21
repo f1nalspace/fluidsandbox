@@ -14,8 +14,8 @@
     <PoolTopBottom>2.025000</PoolTopBottom>
   </Variables>
   <FluidProperties>
-    <Viscosity>10.0</Viscosity>
-    <Stiffness>10.0</Stiffness>
+    <Viscosity>150.0</Viscosity>
+    <Stiffness>20.0</Stiffness>
   </FluidProperties>
   <Actors>
     <Actor type="static" primitive="cube" pos="{%PoolLeftRight}, {%PoolHeight}, 0.000000" extents="0.025000, {%PoolHeight}, {%PoolDepth}" color="{%PoolColor}" alpha="{%PoolAlpha}" time="-1" />
@@ -24,6 +24,6 @@
     <Actor type="static" primitive="cube" pos="0.000000, {%PoolHeight}, {%PoolTopBottom}" extents="{%PoolWidth}, {%PoolHeight}, 0.025000" color="{%PoolColor}" alpha="{%PoolAlpha}" time="-1" />
   </Actors>
   <Fluids>
-    <Fluid isEmitter="true" emitterRate="70.0" emitterDuration="10000"  type="sphere" pos="-1.8, 9.0, 0.0" size="0.2, 2.0, 2.0" vel="8.0, 0.0, 0.0" time="-1"></Fluid>
+    <Fluid isEmitter="true" emitterRate="70.0" emitterDuration="15000"  type="sphere" pos="-1.8, 9.0, 0.0" size="0.2, 2.0, 2.0" vel="8.0, 0.0, 0.0" time="-1"></Fluid>
   </Fluids>
 </Scenario>

@@ -18,10 +18,11 @@ struct FluidSimulationProperties {
 	// The factor how cell sizes are computed based on the particle radius
 	constexpr static float DefaultCellSizeFactor = 1.0f;
 
-	// 45 - 60 nvidia, 80 - 40 is better for this, 20 - 35 is a good value for water
-	constexpr static float DefaultViscosity = 10.0f;
+	// 40-50 is a good stable configuration
+	constexpr static float DefaultViscosity = 40.0f;
 	constexpr static float DefaultStiffness = 50.0f;
-	constexpr static float DefaultRestitution = 0.3f;
+
+	constexpr static float DefaultRestitution = 0.25f;
 	constexpr static float DefaultDamping = 0.001f;
 	constexpr static float DefaultDynamicFriction = 0.001f;
 	constexpr static float DefaultStaticFriction = 0.0f;
@@ -35,8 +36,8 @@ struct FluidSimulationProperties {
 	float stiffness;				// Gas-constant [1-200], 1 = Compressed, 200 = Less compressed, more unstable
 	float restitution;				// How fluids bounces of surfaces [0-1]
 	float damping;					// Destroying of energy to increase stability
-	float dynamicFriction;			// Friction used when interacting with dynamic rigid bodies [0-1]
-	float staticFriction;			// Friction used when interacting with static rigid bodies [0-1]
+	float dynamicFriction;			// Friction used when interacting with rigid bodies when in motion [0-1]
+	float staticFriction;			// Friction used when interacting with rigid bodies when in rest [0-1]
 	float maxMotionDistance;		// Much much particles can move for one timestep
 	float restOffset;				// Distance of particles how interacting with with each other
 	float contactOffset;			// Smallest distance a collision contact gets generated

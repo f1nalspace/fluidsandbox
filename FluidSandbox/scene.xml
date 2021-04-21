@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scene xmlns:fs="http://www.finalspace.org/FluidSimulation/Scene" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.finalspace.org/FluidSimulation FluidSchema.xsd">
 	<System>
+    <!-- Maximum number of threads for PhysX -->
 		<CPUThreads>8</CPUThreads>
 	</System>
 	<FluidColors>
@@ -13,29 +14,37 @@
 		<FluidColor base="1.0, 1.0, 1.0, 1.0" falloff="0.0, 0.0, 0.0, 1.0" falloffScale="0.1" name="White" />
 	</FluidColors>
 	<FluidSystem>
-		<!-- Particle radius (Default: 0.06) -->
-		<ParticleRadius>0.06</ParticleRadius>
-		<!-- Particle distance = Particle radius * Particle Distance Factor (Default: 2.0) -->
-		<ParticleDistanceFactor>2.0</ParticleDistanceFactor>
-		<!-- Max distance the particles will move (Default: 0.3) -->
+    <!-- Particle distance factor (Default: 2.0, Range 0.0 - 10.0) -->
+    <ParticleDistanceFactor>2.0</ParticleDistanceFactor>
+    <!-- Particle radius (Default: 0.05) -->
+    <ParticleRadius>0.05</ParticleRadius>
+    <!-- Max distance the particles will move (Default: 0.3) -->
 		<MaxMotionDistance>0.3</MaxMotionDistance>
-		<!-- RestOffset(Default: 0.12) -->
+		<!-- Rest offset(Default: 0.12) -->
 		<RestOffset>0.12</RestOffset>
-		<!-- ContactOffset (Default: 0.24) -->
+		<!-- Contact offset (Default: 0.24) -->
 		<ContactOffset>0.24</ContactOffset>
-
-		<Viscosity>30.0</Viscosity>
+    <!-- Viscosity (Default: 40, Range 5 - 300) -->
+		<Viscosity>40.0</Viscosity>
+    <!-- Stiffness/Gas-Constant (Default: 50, Range 1 - 200) -->
 		<Stiffness>50.0</Stiffness>
-
-		<Restitution>0.2</Restitution>
-		<Damping>0.1</Damping>
+    <!-- Restitution (Default: 0.25, Range 0.0 - 1.0) -->
+		<Restitution>0.0</Restitution>
+    <!-- Damping (Default: 0.001, Range 0.0 - 1.0) -->
+		<Damping>0.001</Damping>
+    <!-- Dynamic friction (Default: 0.001, Range 0.0 - 1.0) -->
 		<DynamicFriction>0.001</DynamicFriction>
+    <!-- Static friction (Default: 0.0, Range 0.0 - 1.0) -->
+    <StaticFriction>0</StaticFriction>
+    <!-- Particle mass (Default: 0.0001, Range 0.0 - 1.0) -->
 		<ParticleMass>0.0001</ParticleMass>
-		
+    <!-- Particle render factor (Default: 1.5, Range: 0.0 - 10.0) -->
 		<ParticleRenderFactor>1.5</ParticleRenderFactor>
+    <!-- Minimum density for smallest particle (Default: 0.01, Range: 0.0 - 1.0) -->
 		<ParticleMinDensity>0.01</ParticleMinDensity>
 	</FluidSystem>
 	<Properties>
+    <!-- Scene background color -->
 		<BackgroundColor>0.0, 0.0, 0.0</BackgroundColor>
 	</Properties>
 </Scene>
