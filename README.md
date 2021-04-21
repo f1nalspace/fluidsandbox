@@ -88,3 +88,7 @@ NOTE: Do not compile with static CRT library, change to (Multithreaded DLL and M
 - Build and run the FluidSandbox Solution
 
 ## Screenshots
+
+![Fluid Sandbox v1.8 (Dambreak)](/Documents/screenshot1_8.png)
+
+![Fluid Sandbox v1.8 (Complex scene)](/Documents/screenshot1_8_b.png)
