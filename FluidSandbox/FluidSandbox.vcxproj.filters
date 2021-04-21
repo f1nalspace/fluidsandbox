@@ -1,29 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="FBO.cpp" />
-    <ClCompile Include="FluidSystem.cpp" />
-    <ClCompile Include="Frustum.cpp" />
-    <ClCompile Include="GLSL.cpp" />
-    <ClCompile Include="OSLowLevel.cpp" />
-    <ClCompile Include="Primitives.cpp" />
-    <ClCompile Include="Renderer.cpp" />
-    <ClCompile Include="Scene.cpp" />
-    <ClCompile Include="ScreenSpaceFluidRendering.cpp" />
-    <ClCompile Include="SphericalPointSprites.cpp" />
-    <ClCompile Include="Texture.cpp" />
-    <ClCompile Include="Texture2D.cpp" />
-    <ClCompile Include="TextureCubemap.cpp" />
-    <ClCompile Include="TextureManager.cpp" />
-    <ClCompile Include="Utils.cpp" />
-    <ClCompile Include="XMLUtils.cpp" />
-    <ClCompile Include="VBO.cpp" />
-    <ClCompile Include="FontAtlas.cpp" />
-    <ClCompile Include="TextureFont.cpp" />
-    <ClCompile Include="PhysicsEngine.cpp" />
-    <ClCompile Include="Scenario.cpp" />
-    <ClCompile Include="VariableManager.cpp" />
-    <ClCompile Include="ValueTypes.cpp" />
     <ClCompile Include="final_platform_layer.cpp">
       <Filter>Dependencies</Filter>
     </ClCompile>
@@ -34,39 +11,164 @@
       <Filter>Dependencies</Filter>
     </ClCompile>
     <ClCompile Include="FluidSandbox.cpp" />
+    <ClCompile Include="Scenario.cpp">
+      <Filter>World</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene.cpp">
+      <Filter>World</Filter>
+    </ClCompile>
+    <ClCompile Include="GLSL.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="Texture.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="Texture2D.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="TextureCubemap.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="TextureFont.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="TextureManager.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="VBO.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="ScreenSpaceFluidRendering.cpp">
+      <Filter>Fluid</Filter>
+    </ClCompile>
+    <ClCompile Include="SphericalPointSprites.cpp">
+      <Filter>Fluid</Filter>
+    </ClCompile>
+    <ClCompile Include="Frustum.cpp">
+      <Filter>Math</Filter>
+    </ClCompile>
+    <ClCompile Include="Primitives.cpp">
+      <Filter>Math</Filter>
+    </ClCompile>
+    <ClCompile Include="PhysicsEngine.cpp">
+      <Filter>Physics</Filter>
+    </ClCompile>
+    <ClCompile Include="ValueTypes.cpp">
+      <Filter>Types</Filter>
+    </ClCompile>
+    <ClCompile Include="XMLUtils.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="VariableManager.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="OSLowLevel.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="FontAtlas.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="FBO.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Camera.hpp" />
-    <ClInclude Include="FBO.h" />
-    <ClInclude Include="FluidSystem.h" />
-    <ClInclude Include="Frustum.h" />
-    <ClInclude Include="GLSL.h" />
-    <ClInclude Include="OSLowLevel.h" />
-    <ClInclude Include="Primitives.h" />
-    <ClInclude Include="Renderer.h" />
-    <ClInclude Include="Scene.h" />
-    <ClInclude Include="ScreenSpaceFluidRendering.h" />
-    <ClInclude Include="SphericalPointSprites.h" />
-    <ClInclude Include="Texture.h" />
-    <ClInclude Include="Texture2D.h" />
-    <ClInclude Include="TextureCubemap.h" />
-    <ClInclude Include="TextureManager.h" />
-    <ClInclude Include="Utils.h" />
-    <ClInclude Include="XMLUtils.h" />
-    <ClInclude Include="Actor.hpp" />
-    <ClInclude Include="VBO.h" />
-    <ClInclude Include="Fonts.h" />
-    <ClInclude Include="FontAtlas.h" />
-    <ClInclude Include="TextureFont.h" />
-    <ClInclude Include="AllActors.hpp" />
-    <ClInclude Include="AllFBOs.hpp" />
-    <ClInclude Include="AllShaders.hpp" />
-    <ClInclude Include="FluidProperties.h" />
-    <ClInclude Include="PhysicsEngine.h" />
-    <ClInclude Include="Scenario.h" />
-    <ClInclude Include="GeometryVBO.h" />
-    <ClInclude Include="VariableManager.h" />
-    <ClInclude Include="ValueTypes.h" />
+    <ClInclude Include="AllShaders.hpp">
+      <Filter>World</Filter>
+    </ClInclude>
+    <ClInclude Include="AllFBOs.hpp">
+      <Filter>World</Filter>
+    </ClInclude>
+    <ClInclude Include="Actor.hpp">
+      <Filter>World</Filter>
+    </ClInclude>
+    <ClInclude Include="AllActors.hpp">
+      <Filter>World</Filter>
+    </ClInclude>
+    <ClInclude Include="Scenario.h">
+      <Filter>World</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene.h">
+      <Filter>World</Filter>
+    </ClInclude>
+    <ClInclude Include="GLSL.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="VBO.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Texture.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Texture2D.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="TextureCubemap.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="TextureFont.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="TextureManager.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="GeometryVBO.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="ScreenSpaceFluidRendering.h">
+      <Filter>Fluid</Filter>
+    </ClInclude>
+    <ClInclude Include="SphericalPointSprites.h">
+      <Filter>Fluid</Filter>
+    </ClInclude>
+    <ClInclude Include="Camera.hpp">
+      <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Frustum.h">
+      <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Primitives.h">
+      <Filter>Math</Filter>
+    </ClInclude>
+    <ClInclude Include="PhysicsEngine.h">
+      <Filter>Physics</Filter>
+    </ClInclude>
+    <ClInclude Include="ValueTypes.h">
+      <Filter>Types</Filter>
+    </ClInclude>
+    <ClInclude Include="XMLUtils.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="VariableManager.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="OSLowLevel.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="FontAtlas.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="FluidProperties.h">
+      <Filter>Fluid</Filter>
+    </ClInclude>
+    <ClInclude Include="FBO.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="Fonts.h">
+      <Filter>Resources</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="LICENSE.txt" />
@@ -74,6 +176,30 @@
   <ItemGroup>
     <Filter Include="Dependencies">
       <UniqueIdentifier>{87d5120a-668e-4be9-bb54-b74f8ad97bad}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="World">
+      <UniqueIdentifier>{cab6d484-7621-487b-815f-4f6da00b8fa3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Math">
+      <UniqueIdentifier>{00469db3-09e9-4c47-be9a-6d97cb023511}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Rendering">
+      <UniqueIdentifier>{259cbe98-0be3-4510-856e-4064c96b9e49}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Physics">
+      <UniqueIdentifier>{1943cd7b-08b0-4ffc-990d-50753dbb1809}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Types">
+      <UniqueIdentifier>{02f96e3f-128a-4ddc-a7e0-d9e70a427b03}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Utils">
+      <UniqueIdentifier>{4f4b77ae-7f79-4512-b76f-a9214a93b5b6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Fluid">
+      <UniqueIdentifier>{a4fdc931-1cde-41f2-b286-6fec0cfef085}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resources">
+      <UniqueIdentifier>{47886d2c-0022-424a-b8e1-b774635e2f82}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
 </Project>
