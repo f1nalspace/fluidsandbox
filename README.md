@@ -9,7 +9,7 @@ A real time application for playing around with 3D fluids and rigid bodies.
 
 ## Features
 - Fluid and rigid body simulation based on NVIDIA PhysX (R)
-- Screen Space Fluid Rendering with clear and colored particle fluids
+- [Screen Space Fluid Rendering](http://developer.download.nvidia.com/presentations/2010/gdc/Direct3D_Effects.pdf) with clear and colored particle fluids
 - Fully customizable scenarios stored in XML
 - Changing allmost all simulation properties in real time
 - Uses a custom OpenGL rendering engine
