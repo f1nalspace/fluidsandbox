@@ -13,7 +13,7 @@ A real time application for playing around with 3D fluids and rigid bodies.
 - Fully customizable scenarios stored in XML
 - Changing allmost all simulation properties in real time
 - Uses a custom OpenGL rendering engine
-- Uses Final Platform Layer (libfpl.org) for creating a window and a opengl rendering context
+- Uses Final Platform Layer ([libfpl.org](https://www.libfpl.org)) for creating a window and an opengl rendering context
 
 ## Copyright / License
 Copyright (C) Torsten Spaete 2011-2021. All rights reserved.
