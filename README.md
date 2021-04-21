@@ -36,7 +36,7 @@ MPL v.2 licensed. See LICENSE.txt for more details.
 ## How to compile:
 
 ### PhysX SDK:
-- Compile the PhysX SDK as Multithreaded DLLs for x64 and x64 platform with the configurations Debug/Release
+- Compile the PhysX SDK as Multithreaded DLLs for x86 and x64 platform with the configurations Debug/Release
 NOTE: Do not compile with static CRT library, change to (Multithreaded DLL and Multithreaded Debug DLL).
 
 - Copy all 10 resulting PhysX DLL files into the folders for each platform:
