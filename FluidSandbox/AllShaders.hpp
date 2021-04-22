@@ -11,19 +11,42 @@
 
 #include "GLSL.h"
 
+class CLineShader: public CGLSL {
+protected:
+
+	void updateUniformLocations() {
+		ulocColor = getUniformLocation("color");
+		ulocMVP = getUniformLocation("mvp");
+	}
+
+public:
+	GLuint ulocColor;
+	GLuint ulocMVP;
+
+	CLineShader():
+		CGLSL(),
+		ulocColor(0),
+		ulocMVP(0) {
+	}
+
+};
+
 class CLightingShader: public CGLSL {
 protected:
 
 	void updateUniformLocations() {
 		ulocColor = getUniformLocation("color");
+		ulocMVP = getUniformLocation("mvp");
 	}
 
 public:
 	GLuint ulocColor;
+	GLuint ulocMVP;
 
 	CLightingShader():
 		CGLSL(),
-		ulocColor(0) {
+		ulocColor(0),
+		ulocMVP(0) {
 	}
 
 };

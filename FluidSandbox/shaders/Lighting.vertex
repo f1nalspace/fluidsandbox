@@ -1,8 +1,9 @@
+uniform mat4 mvp;
 varying vec3 normal, posEye;
 void main()
 {
 	normal = gl_Normal;
-	vec3 vVertex = vec3(gl_ModelViewMatrix * gl_Vertex);
+	vec3 vVertex = vec3(mvp * gl_Vertex);
 	posEye = -vVertex;
-	gl_Position = gl_ModelViewMatrix * vec4(gl_Vertex.xyz, 1.0);
+	gl_Position = mvp * vec4(gl_Vertex.xyz, 1.0);
 }

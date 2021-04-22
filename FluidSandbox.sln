@@ -30,6 +30,38 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		README.md = README.md
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Shaders", "Shaders", "{ACE16B6B-BEE6-40F3-97B4-083DC0D6FFCC}"
+	ProjectSection(SolutionItems) = preProject
+		FluidSandbox\shaders\ClearWater.fragment = FluidSandbox\shaders\ClearWater.fragment
+		FluidSandbox\shaders\ClearWater.vertex = FluidSandbox\shaders\ClearWater.vertex
+		FluidSandbox\shaders\ColorWater.fragment = FluidSandbox\shaders\ColorWater.fragment
+		FluidSandbox\shaders\ColorWater.vertex = FluidSandbox\shaders\ColorWater.vertex
+		FluidSandbox\shaders\Debug.fragment = FluidSandbox\shaders\Debug.fragment
+		FluidSandbox\shaders\Debug.vertex = FluidSandbox\shaders\Debug.vertex
+		FluidSandbox\shaders\Depth.fragment = FluidSandbox\shaders\Depth.fragment
+		FluidSandbox\shaders\Depth.vertex = FluidSandbox\shaders\Depth.vertex
+		FluidSandbox\shaders\DepthBlur.fragment = FluidSandbox\shaders\DepthBlur.fragment
+		FluidSandbox\shaders\DepthBlur.vertex = FluidSandbox\shaders\DepthBlur.vertex
+		FluidSandbox\shaders\DirectionalLight.fragment = FluidSandbox\shaders\DirectionalLight.fragment
+		FluidSandbox\shaders\DirectionalLight.vertex = FluidSandbox\shaders\DirectionalLight.vertex
+		FluidSandbox\shaders\FontTexture.fragment = FluidSandbox\shaders\FontTexture.fragment
+		FluidSandbox\shaders\FontTexture.vertex = FluidSandbox\shaders\FontTexture.vertex
+		FluidSandbox\shaders\Lighting.fragment = FluidSandbox\shaders\Lighting.fragment
+		FluidSandbox\shaders\Lighting.vertex = FluidSandbox\shaders\Lighting.vertex
+		FluidSandbox\shaders\Line.fragment = FluidSandbox\shaders\Line.fragment
+		FluidSandbox\shaders\Line.vertex = FluidSandbox\shaders\Line.vertex
+		FluidSandbox\shaders\PointLight.fragment = FluidSandbox\shaders\PointLight.fragment
+		FluidSandbox\shaders\PointLight.vertex = FluidSandbox\shaders\PointLight.vertex
+		FluidSandbox\shaders\PointSprites.fragment = FluidSandbox\shaders\PointSprites.fragment
+		FluidSandbox\shaders\PointSprites.vertex = FluidSandbox\shaders\PointSprites.vertex
+		FluidSandbox\shaders\Skybox.fragment = FluidSandbox\shaders\Skybox.fragment
+		FluidSandbox\shaders\Skybox.vertex = FluidSandbox\shaders\Skybox.vertex
+		FluidSandbox\shaders\Thickness.fragment = FluidSandbox\shaders\Thickness.fragment
+		FluidSandbox\shaders\Thickness.vertex = FluidSandbox\shaders\Thickness.vertex
+		FluidSandbox\shaders\VisualizeDepth.fragment = FluidSandbox\shaders\VisualizeDepth.fragment
+		FluidSandbox\shaders\VisualizeDepth.vertex = FluidSandbox\shaders\VisualizeDepth.vertex
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32

@@ -91,6 +91,10 @@ void CRenderer::SetColor(const float *color) {
 	glColor4fv(color);
 }
 
+void CRenderer::SetColor(const glm::vec4 &color) {
+	glColor4fv(&color[0]);
+}
+
 void CRenderer::SetDepthTest(const bool enabled) {
 	assert(depthTestEnabled != enabled);
 	depthTestEnabled = enabled;
@@ -152,22 +156,15 @@ void CRenderer::DrawTexturedQuad(const float posX, const float posY, const float
 	glEnd();
 }
 
-void CRenderer::DrawTexturedRect(const float left, const float top, const float right, const float bottom) {
-	glBegin(GL_QUADS);
-	glTexCoord2f(0.0f, 0.0f); glVertex2f(left, top);
-	glTexCoord2f(0.0f, 1.0f); glVertex2f(left, bottom);
-	glTexCoord2f(1.0f, 1.0f); glVertex2f(right, bottom);
-	glTexCoord2f(1.0f, 0.0f); glVertex2f(right, top);
-	glEnd();
-}
-
-void CRenderer::DrawSimpleRect(const float left, const float top, const float right, const float bottom) {
+void CRenderer::DrawSimpleRect(const float left, const float top, const float right, const float bottom, const glm::vec4 &color) {
+	SetColor(color);
 	glBegin(GL_QUADS);
 	glVertex2f(left, top);
 	glVertex2f(left, bottom);
 	glVertex2f(right, bottom);
 	glVertex2f(right, top);
 	glEnd();
+	SetColor(1, 1, 1, 1);
 }
 
 void CRenderer::DrawVBO(CVBO *vbo, const GLenum mode, const GLuint count, const GLsizeiptr offset) {
@@ -219,7 +216,7 @@ glm::vec2 CRenderer::GetStringSize(const CTextureFont *fontTex, const char *text
 	return(result);
 }
 
-void CRenderer::DrawString(const int texIndex, CTextureFont *fontTex, const float posX, const float posY, const float charHeight, const char *text, const size_t textLen) {
+void CRenderer::DrawString(const int texIndex, CTextureFont *fontTex, const float posX, const float posY, const float charHeight, const char *text, const size_t textLen, const glm::vec4 &color) {
 	if(fontTex == nullptr) return;
 
 	const FontAtlas &atlas = fontTex->GetAtlas();
@@ -227,6 +224,8 @@ void CRenderer::DrawString(const int texIndex, CTextureFont *fontTex, const floa
 
 	glm::vec2 size = GetStringSize(fontTex, text, textLen, charHeight);
 	glm::vec2 alignOffset = glm::vec2(0, size.y * 0.5f);
+
+	SetColor(color);
 
 	EnableTexture(texIndex, fontTex);
 
@@ -266,11 +265,13 @@ void CRenderer::DrawString(const int texIndex, CTextureFont *fontTex, const floa
 	glEnd();
 
 	DisableTexture(texIndex, fontTex);
+
+	SetColor(1, 1, 1, 1);
 }
 
-void CRenderer::DrawString(const int texIndex, CTextureFont *fontTex, const float posX, const float posY, const float charHeight, const char *text) {
+void CRenderer::DrawString(const int texIndex, CTextureFont *fontTex, const float posX, const float posY, const float charHeight, const char *text, const glm::vec4 &color) {
 	size_t textLen = strlen(text);
-	DrawString(texIndex, fontTex, posX, posY, charHeight, text, textLen);
+	DrawString(texIndex, fontTex, posX, posY, charHeight, text, textLen, color);
 }
 
 void CRenderer::Flip() {

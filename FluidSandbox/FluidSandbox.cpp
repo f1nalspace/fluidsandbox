@@ -341,9 +341,9 @@ static FluidProperty gFluidCurrentProperty = FluidProperty::None;
 // Scenario
 static bool gStoppedEmitter = false;
 static glm::vec3 gRigidBodyFallPos(0.0f, 10.0f, 0.0f);
-static std::vector<Scenario *> gFluidScenarios;
-static Scenario *gActiveFluidScenario = nullptr;
-static int gActiveFluidScenarioIdx = -1;
+static std::vector<Scenario *> gScenarios;
+static Scenario *gActiveScenario = nullptr;
+static int gActiveScenarioIdx = -1;
 static bool gWaterAddBySceneChange = true;
 
 // Renderer
@@ -370,10 +370,10 @@ static CCamera gCamera;
 static Frustum gFrustum;
 
 // Non fluid rendering
+static CLineShader *gLineShader = nullptr;
 static CLightingShader *gLightingShader = nullptr;
 
 static CSceneFBO *gSceneFBO = nullptr;
-static CGLSL *gSceneShader = nullptr;
 static GeometryVBO *gSkyboxVBO = nullptr;
 static CSkyboxShader *gSkyboxShader = nullptr;
 static CTexture *gSkyboxCubemap = nullptr;
@@ -691,19 +691,19 @@ static Actor *CloneBodyActor(const Actor *actor) {
 }
 
 static void ResetScene(PhysicsEngine &physics) {
-	assert(gActiveFluidScenario != nullptr);
+	assert(gActiveScenario != nullptr);
 
-	printf("Load/Reload scene: %s\n", gActiveFluidScenario->displayName);
+	printf("Load/Reload scene: %s\n", gActiveScenario->displayName);
 
 	ClearScene(physics);
 
 	// Set scene properties
-	physics.SetGravity(gActiveFluidScenario->gravity);
+	physics.SetGravity(gActiveScenario->gravity);
 
 	// Set particle properties
-	gCurrentProperties.sim = gActiveFluidScenario->sim;
-	gCurrentProperties.render = gActiveFluidScenario->render;
-	gRigidBodyFallPos = gActiveFluidScenario->actorCreatePosition;
+	gCurrentProperties.sim = gActiveScenario->sim;
+	gCurrentProperties.render = gActiveScenario->render;
+	gRigidBodyFallPos = gActiveScenario->actorCreatePosition;
 
 	// Add ground plane
 	PlaneActor *groundPlane = new PlaneActor();
@@ -723,8 +723,8 @@ static void ResetScene(PhysicsEngine &physics) {
 	physics.SetGPUAcceleration(gPhysicsUseGPUAcceleration);
 
 	// Add bodies immediately from scenario
-	for(size_t i = 0, count = gActiveFluidScenario->bodies.size(); i < count; i++) {
-		const Actor *sourceActor = gActiveFluidScenario->bodies[i];
+	for(size_t i = 0, count = gActiveScenario->bodies.size(); i < count; i++) {
+		const Actor *sourceActor = gActiveScenario->bodies[i];
 		Actor *targetActor = CloneBodyActor(sourceActor);
 		gActors.push_back(targetActor);
 		if(targetActor != nullptr) {
@@ -736,8 +736,8 @@ static void ResetScene(PhysicsEngine &physics) {
 	}
 
 	// Add waters immediately from scenario
-	for(size_t i = 0, count = gActiveFluidScenario->fluids.size(); i < count; i++) {
-		const FluidActor *sourceActor = gActiveFluidScenario->fluids[i];
+	for(size_t i = 0, count = gActiveScenario->fluids.size(); i < count; i++) {
+		const FluidActor *sourceActor = gActiveScenario->fluids[i];
 		FluidActor *targetActor = new FluidActor(sourceActor->size, sourceActor->radius, sourceActor->fluidType);
 		targetActor->Assign(sourceActor);
 		targetActor->timeElapsed = 0.0f;
@@ -772,7 +772,7 @@ void InitializePhysics() {
 }
 
 void DrawPrimitive(GeometryVBO *vbo, const bool asLines) {
-	// Ensure that the matrix has correct transform for scale, position, rotation
+	// NOTE(final): Expect that a shader is already bound
 
 	// Vertex (vec3, vec3, vec2)
 	vbo->bind();
@@ -798,12 +798,13 @@ void DrawPrimitive(GeometryVBO *vbo, const bool asLines) {
 	vbo->unbind();
 }
 
-static void DrawGrid() {
-	glm::mat4 mvp = gCamera.mvp;
-	gRenderer->LoadMatrix(mvp);
-	glColor4f(0.25f, 0.25f, 0.25f, 1.0f);
+static void DrawGrid(const glm::mat4 &mvp) {
+	glm::vec4 color = glm::vec4(0.25f, 0.25f, 0.25f, 1.0f);
+	gLineShader->enable();
+	gLineShader->uniform4f(gLineShader->ulocColor, &color[0]);
+	gLineShader->uniformMatrix4(gLineShader->ulocMVP, &mvp[0][0]);
 	DrawPrimitive(gGridVBO, true);
-	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+	gLineShader->disable();
 }
 
 
@@ -830,102 +831,103 @@ glm::mat4 ComputeGlobalPose(const PhysicsTransform &bodyTransform, const Physics
 	return(result);
 }
 
-void DrawBoxShape(const PhysicsTransform &bodyTransform, const PhysicsTransform &shapeTransform, const PhysicsBoxShape &box, const glm::vec4 &color) {
-	glm::vec3 halfExtents = box.halfExtents;
-	glm::mat4 mat = ComputeGlobalPose(bodyTransform, shapeTransform);
-	glm::mat4 scaled = glm::scale(mat, glm::vec3(halfExtents.x, halfExtents.y, halfExtents.z));
-	glm::mat4 mvp = gCamera.mvp * scaled;
-	gRenderer->LoadMatrix(mvp);
+void DrawBoxShape(const glm::mat4 &cameraMVP, const PhysicsTransform &bodyTransform, const PhysicsTransform &shapeTransform, const PhysicsBoxShape &box, const glm::vec4 &color) {
+	glm::vec3 scale = box.halfExtents;
+	glm::mat4 modelView = ComputeGlobalPose(bodyTransform, shapeTransform);
+	glm::mat4 modelViewScaled = glm::scale(modelView, scale);
+	glm::mat4 mvp = cameraMVP * modelViewScaled;
 
 	gLightingShader->enable();
 	gLightingShader->uniform4f(gLightingShader->ulocColor, &color[0]);
+	gLightingShader->uniformMatrix4(gLightingShader->ulocMVP, &mvp[0][0]);
 	DrawPrimitive(gBoxVBO, false);
 	gLightingShader->disable();
 }
 
-void DrawSphereShape(const PhysicsTransform &bodyTransform, const PhysicsTransform &shapeTransform, const PhysicsSphereShape &sphere, const glm::vec4 &color) {
-	float radius = sphere.radius;
-
-	glm::mat4 mat = ComputeGlobalPose(bodyTransform, shapeTransform);
-	glm::mat4 scaled = glm::scale(mat, glm::vec3(radius));
-	glm::mat4 mvp = gCamera.mvp * scaled;
-	gRenderer->LoadMatrix(mvp);
+void DrawSphereShape(const glm::mat4 &cameraMVP, const PhysicsTransform &bodyTransform, const PhysicsTransform &shapeTransform, const PhysicsSphereShape &sphere, const glm::vec4 &color) {
+	glm::vec3 scale = glm::vec3(sphere.radius);
+	glm::mat4 modelView = ComputeGlobalPose(bodyTransform, shapeTransform);
+	glm::mat4 modelViewScaled = glm::scale(modelView, scale);
+	glm::mat4 mvp = cameraMVP * modelViewScaled;
 
 	gLightingShader->enable();
 	gLightingShader->uniform4f(gLightingShader->ulocColor, &color[0]);
+	gLightingShader->uniformMatrix4(gLightingShader->ulocMVP, &mvp[0][0]);
 	DrawPrimitive(gSphereVBO, false);
 	gLightingShader->disable();
 }
 
-void DrawCapsuleShape(const PhysicsTransform &bodyTransform, const PhysicsTransform &shapeTransform, const PhysicsCapsuleShape &capsule, const glm::vec4 &color) {
+void DrawCapsuleShape(const glm::mat4 &cameraMVP, const PhysicsTransform &bodyTransform, const PhysicsTransform &shapeTransform, const PhysicsCapsuleShape &capsule, const glm::vec4 &color) {
 	float radius = capsule.radius;
 	float halfHeight = capsule.halfHeight;
 
-	glm::mat4 mat = ComputeGlobalPose(bodyTransform, shapeTransform);
-	glm::mat4 multm = gCamera.mvp * mat;
+	glm::mat4 modelView = ComputeGlobalPose(bodyTransform, shapeTransform);
+	glm::mat4 baseMvp = cameraMVP * modelView;
 
 	gLightingShader->enable();
 	gLightingShader->uniform4f(gLightingShader->ulocColor, &color[0]);
 
-	glm::mat4 rotation = glm::rotate(multm, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+	glm::mat4 rotationMVP = glm::rotate(baseMvp, glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 
-	glm::mat4 translation0 = glm::translate(rotation, glm::vec3(0.0f, 0.0f, 0.0f));
+	glm::mat4 translation0 = glm::translate(rotationMVP, glm::vec3(0.0f, 0.0f, 0.0f));
 	glm::mat4 scaled0 = glm::scale(translation0, glm::vec3(radius, radius, 2.0f * halfHeight));
-	gRenderer->LoadMatrix(scaled0);
+	gLightingShader->uniformMatrix4(gLightingShader->ulocMVP, &scaled0[0][0]);
 	DrawPrimitive(gCylinderVBO, false);
 
-	glm::mat4 translation1 = glm::translate(rotation, glm::vec3(0.0f, 0.0f, -halfHeight));
+	glm::mat4 translation1 = glm::translate(rotationMVP, glm::vec3(0.0f, 0.0f, -halfHeight));
 	glm::mat4 scaled1 = glm::scale(translation1, glm::vec3(radius));
-	gRenderer->LoadMatrix(scaled1);
+	gLightingShader->uniformMatrix4(gLightingShader->ulocMVP, &scaled1[0][0]);
 	DrawPrimitive(gSphereVBO, false);
 
-	glm::mat4 translation2 = glm::translate(rotation, glm::vec3(0.0f, 0.0f, halfHeight));
+	glm::mat4 translation2 = glm::translate(rotationMVP, glm::vec3(0.0f, 0.0f, halfHeight));
 	glm::mat4 scaled2 = glm::scale(translation2, glm::vec3(radius));
-	gRenderer->LoadMatrix(scaled2);
+	gLightingShader->uniformMatrix4(gLightingShader->ulocMVP, &scaled2[0][0]);
 	DrawPrimitive(gSphereVBO, false);
 
 	gLightingShader->disable();
 }
 
-void DrawShape(const PhysicsTransform &bodyTransform, const PhysicsShape &shape, const glm::vec4 &color) {
+void DrawShape(const glm::mat4 &mvp, const PhysicsTransform &bodyTransform, const PhysicsShape &shape, const glm::vec4 &color) {
 	switch(shape.type) {
 		case PhysicsShape::Type::Box:
-			DrawBoxShape(bodyTransform, shape.local, shape.box, color);
+			DrawBoxShape(mvp, bodyTransform, shape.local, shape.box, color);
 			break;
 
 		case PhysicsShape::Type::Sphere:
-			DrawSphereShape(bodyTransform, shape.local, shape.sphere, color);
+			DrawSphereShape(mvp, bodyTransform, shape.local, shape.sphere, color);
 			break;
 
 		case PhysicsShape::Type::Capsule:
-			DrawCapsuleShape(bodyTransform, shape.local, shape.capsule, color);
+			DrawCapsuleShape(mvp, bodyTransform, shape.local, shape.capsule, color);
 			break;
 	}
 }
 
-void DrawBounds(const PhysicsBoundingBox &bounds) {
+void DrawBounds(const glm::mat4 &cameraMVP, const PhysicsBoundingBox &bounds) {
 	glm::vec3 center = bounds.GetCenter();
 	glm::vec3 ext = bounds.GetSize() * 0.5f;
-
-	GLfloat mat_diffuse[4] = { 0, 1, 1, 1 };
-	glColor4fv(mat_diffuse);
+	glm::vec4 color = glm::vec4(0, 1, 1, 1);
 
 	glm::mat4 translation = glm::translate(glm::mat4(1.0f), center);
 	glm::mat4 scaled = glm::scale(translation, ext);
-	glm::mat4 mvp = gCamera.mvp * scaled;
-	gRenderer->LoadMatrix(mvp);
+	glm::mat4 mvp = cameraMVP * scaled;
+	
+	gLineShader->enable();
+	gLineShader->uniform4f(gLineShader->ulocColor, &color[0]);
+	gLineShader->uniformMatrix4(gLineShader->ulocMVP, &mvp[0][0]);
 	DrawPrimitive(gBoxVBO, true);
+	gLineShader->disable();	
 }
 
-void DrawActorBounds(const PhysicsActor &physicsActor) {
+void DrawActorBounds(const glm::mat4 &mvp, const PhysicsActor &physicsActor) {
 	PhysicsBoundingBox bounds = physicsActor.bounds;
 	if(gFrustum.containsBounds(bounds.min, bounds.max)) {
 		gDrawedActors++;
-		DrawBounds(bounds);
+		DrawBounds(mvp, bounds);
 	}
 }
 
-void DrawRigidBody(const Actor &actor, const PhysicsRigidBody &rigidBody, const bool isVisible, const bool isBlending) {
+void DrawRigidBody(const glm::mat4 &mvp, const Actor &actor, const PhysicsRigidBody &rigidBody, const bool isVisible, const bool isBlending) {
 	PhysicsBoundingBox bounds = rigidBody.bounds;
 	if(gFrustum.containsBounds(bounds.min, bounds.max)) {
 		if(isVisible) {
@@ -935,17 +937,17 @@ void DrawRigidBody(const Actor &actor, const PhysicsRigidBody &rigidBody, const 
 
 				if(isBlending) {
 					gRenderer->SetBlending(true);
-					glDisable(GL_DEPTH_TEST);
+					gRenderer->SetDepthTest(false);
 				}
 
 				for(size_t shapeIndex = 0; shapeIndex < rigidBody.shapeCount; ++shapeIndex) {
 					const PhysicsShape &shape = rigidBody.shapes[shapeIndex];
-					DrawShape(rigidBody.transform, shape, actor.color);
+					DrawShape(mvp, rigidBody.transform, shape, actor.color);
 				}
 
 				if(isBlending) {
 					gRenderer->SetBlending(false);
-					glEnable(GL_DEPTH_TEST);
+					gRenderer->SetDepthTest(true);
 				}
 
 				gDrawedActors++;
@@ -954,7 +956,7 @@ void DrawRigidBody(const Actor &actor, const PhysicsRigidBody &rigidBody, const 
 	}
 }
 
-void RenderActors() {
+void RenderActors(const glm::mat4 &mvp) {
 	// Render all the actors in the scene
 	for(size_t index = 0, count = gActors.size(); index < count; ++index) {
 		Actor *actor = gActors[index];
@@ -962,19 +964,19 @@ void RenderActors() {
 			PhysicsActor *pactor = static_cast<PhysicsActor *>(actor->physicsData);
 			if(pactor->type == PhysicsActor::Type::RigidBody) {
 				PhysicsRigidBody *rigidBody = static_cast<PhysicsRigidBody *>(pactor);
-				DrawRigidBody(*actor, *rigidBody, actor->visible, actor->blending);
+				DrawRigidBody(mvp, *actor, *rigidBody, actor->visible, actor->blending);
 			}
 		}
 	}
 }
 
-void RenderActorBoundings() {
+void RenderActorBoundings(const glm::mat4 &mvp) {
 	// Render all the actors in the scene as bounding volume
 	for(size_t index = 0, count = gActors.size(); index < count; ++index) {
 		Actor *actor = gActors[index];
 		if(actor->physicsData != nullptr) {
 			PhysicsActor *pactor = static_cast<PhysicsActor *>(actor->physicsData);
-			DrawActorBounds(*pactor);
+			DrawActorBounds(mvp, *pactor);
 		}
 	}
 }
@@ -1217,17 +1219,15 @@ void RenderOSDLine(OSDRenderPosition &osdpos, char *value) {
 		font = gFontTexture16;
 	else
 		font = gFontTexture32;
-
-
-	gRenderer->SetColor(0.0f, 0.0f, 0.0f, 1.0f);
-	gRenderer->DrawString(0, font, osdpos.x, osdpos.y, osdpos.fontHeight, value);
-	gRenderer->SetColor(1, 1, 1, 1);
-	gRenderer->DrawString(0, font, osdpos.x + 1, osdpos.y + 1, osdpos.fontHeight, value);
+	gRenderer->DrawString(0, font, osdpos.x, osdpos.y, osdpos.fontHeight, value, glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
+	gRenderer->DrawString(0, font, osdpos.x + 1, osdpos.y + 1, osdpos.fontHeight, value, glm::vec4(1, 1, 1, 1));
 	osdpos.newLine();
 }
 
 std::string drawingError = "";
 void RenderOSD(const int windowWidth, const int windowHeight) {
+	// TODO(final): Old opengl render style (DrawSimpleRect, LoadMatrix)
+
 	char buffer[256];
 
 	// Setup ortho for font rendering
@@ -1243,9 +1243,7 @@ void RenderOSD(const int windowWidth, const int windowHeight) {
 
 	if(gShowOSD) {
 		// Draw background
-		gRenderer->SetColor(0.1f, 0.1f, 0.1f, 0.2f);
-		gRenderer->DrawSimpleRect(0.0f, 0.0f, (float)windowWidth * 0.25f, (float)windowHeight);
-		gRenderer->SetColor(1, 1, 1, 1);
+		gRenderer->DrawSimpleRect(0.0f, 0.0f, (float)windowWidth * 0.25f, (float)windowHeight, glm::vec4(0.1f, 0.1f, 0.1f, 0.2f));
 	}
 
 	// Font height is proportional to window height
@@ -1329,7 +1327,7 @@ void RenderOSD(const int windowWidth, const int windowHeight) {
 		RenderOSDLine(osdPos, buffer);
 		sprintf_s(buffer, "    Fluid color falloff alpha: %f", activeFluidColor.falloff.w);
 		RenderOSDLine(osdPos, buffer);
-		sprintf_s(buffer, "Fluid scenario (L): %d / %zu - %s", gActiveFluidScenarioIdx + 1, gFluidScenarios.size(), gActiveFluidScenario ? gActiveFluidScenario->displayName : "No scenario loaded!");
+		sprintf_s(buffer, "Fluid scenario (L): %d / %zu - %s", gActiveScenarioIdx + 1, gScenarios.size(), gActiveScenario ? gActiveScenario->displayName : "No scenario loaded!");
 		RenderOSDLine(osdPos, buffer);
 		sprintf_s(buffer, "New actor (Space)");
 		RenderOSDLine(osdPos, buffer);
@@ -1353,7 +1351,7 @@ void RenderOSD(const int windowWidth, const int windowHeight) {
 		RenderOSDLine(osdPos, buffer);
 		sprintf_s(buffer, "Fluid cell size: %f", gCurrentProperties.sim.cellSize);
 		RenderOSDLine(osdPos, buffer);
-		sprintf_s(buffer, "Fluid min density: %f", gActiveFluidScenario ? gActiveFluidScenario->render.minDensity : gActiveScene->render.minDensity);
+		sprintf_s(buffer, "Fluid min density: %f", gActiveScenario ? gActiveScenario->render.minDensity : gActiveScene->render.minDensity);
 		RenderOSDLine(osdPos, buffer);
 	}
 
@@ -1368,8 +1366,6 @@ void RenderSkybox(const glm::mat4 &mvp) {
 	if(!gSkyboxVBO) return;
 	if(!gSkyboxShader) return;
 	if(!gSkyboxCubemap) return;
-
-	gRenderer->SetColor(1, 1, 1, 1);
 
 	gRenderer->SetDepthMask(false);
 
@@ -1391,20 +1387,20 @@ void RenderScene(const glm::mat4 &mvp) {
 	RenderSkybox(mvp);
 
 	// Draw the grid
-	DrawGrid();
+	DrawGrid(mvp);
 
 	if(gDrawWireframe)
 		gRenderer->SetWireframe(true);
 
 	// Render actors
-	RenderActors();
+	RenderActors(mvp);
 
 	// Render actor boundings if required
 	if(gDrawBoundBox) {
 		if(!gDrawWireframe)
 			gRenderer->SetWireframe(true);
 
-		RenderActorBoundings();
+		RenderActorBoundings(mvp);
 
 		if(!gDrawWireframe)
 			gRenderer->SetWireframe(false);
@@ -1419,7 +1415,6 @@ void RenderSceneFBO(const glm::mat4 &mvp, const int windowWidth, const int windo
 	GLint latestDrawBuffer = gSceneFBO->getDrawBuffer();
 
 	gRenderer->SetViewport(0, 0, windowWidth, windowHeight);
-	gRenderer->LoadMatrix(mvp);
 
 	// Resize FBO if required
 	if(gSceneFBO->getWidth() != windowWidth || gSceneFBO->getHeight() != windowHeight) {
@@ -1441,7 +1436,6 @@ void RenderSceneFBO(const glm::mat4 &mvp, const int windowWidth, const int windo
 	gSceneFBO->setDrawBuffer(latestDrawBuffer);
 
 	gRenderer->SetViewport(0, 0, windowWidth, windowHeight);
-	gRenderer->LoadMatrix(mvp);
 }
 
 void OnRender(const int windowWidth, const int windowHeight, const float frametime) {
@@ -1483,7 +1477,6 @@ void OnRender(const int windowWidth, const int windowHeight, const float frameti
 	glm::mat4 mvp = gCamera.mvp;
 	glm::mat4 proj = gCamera.projection;
 	glm::mat4 mdlv = gCamera.modelview;
-	gRenderer->LoadMatrix(mvp);
 
 	// Update (Frustum and PhysX)
 	Update(proj, mdlv, frametime);
@@ -1498,9 +1491,6 @@ void OnRender(const int windowWidth, const int windowHeight, const float frameti
 	// Render scene to FBO
 	if(drawFluidParticles)
 		RenderSceneFBO(mvp, windowWidth, windowHeight);
-
-	// Load mvp matrix
-	gRenderer->LoadMatrix(mvp);
 
 	// Render scene
 	gDrawedActors = 0;
@@ -1733,12 +1723,12 @@ static void OnKeyUp(const fplKey key, const int x, const int y) {
 
 		case fplKey_L: // l
 		{
-			if(gFluidScenarios.size() > 0) {
-				gActiveFluidScenarioIdx++;
+			if(gScenarios.size() > 0) {
+				gActiveScenarioIdx++;
 
-				if(gActiveFluidScenarioIdx > (int)gFluidScenarios.size() - 1) gActiveFluidScenarioIdx = 0;
+				if(gActiveScenarioIdx > (int)gScenarios.size() - 1) gActiveScenarioIdx = 0;
 
-				gActiveFluidScenario = gFluidScenarios[gActiveFluidScenarioIdx];
+				gActiveScenario = gScenarios[gActiveScenarioIdx];
 				ResetScene(*gPhysics);
 			}
 
@@ -1805,21 +1795,21 @@ static void OnKeyUp(const fplKey key, const int x, const int y) {
 }
 
 void ChangeFluidProperty(float value) {
-	if(!gActiveFluidScenario) return;
+	if(!gActiveScenario) return;
 
 	switch(gFluidCurrentProperty) {
 		case FluidProperty::Viscosity:
 		{
 			gCurrentProperties.sim.viscosity += value;
 			gPhysicsParticles->SetViscosity(gCurrentProperties.sim.viscosity);
-			gActiveFluidScenario->sim.viscosity = gCurrentProperties.sim.viscosity;
+			gActiveScenario->sim.viscosity = gCurrentProperties.sim.viscosity;
 		} break;
 
 		case FluidProperty::Stiffness:
 		{
 			gCurrentProperties.sim.stiffness += value;
 			gPhysicsParticles->SetStiffness(gCurrentProperties.sim.stiffness);
-			gActiveFluidScenario->sim.stiffness = gCurrentProperties.sim.stiffness;
+			gActiveScenario->sim.stiffness = gCurrentProperties.sim.stiffness;
 		} break;
 
 		case FluidProperty::MaxMotionDistance:
@@ -1978,15 +1968,15 @@ void LoadFluidScenarios(const char *appPath) {
 	for(unsigned int i = 0; i < scenFiles.size(); i++) {
 		std::string filePath = COSLowLevel::pathCombine(scenariosPath, scenFiles[i]);
 		Scenario *scenario = Scenario::load(filePath.c_str(), gActiveScene);
-		gFluidScenarios.push_back(scenario);
+		gScenarios.push_back(scenario);
 	}
 
-	if(gFluidScenarios.size() > 0) {
-		gActiveFluidScenarioIdx = 0;
-		gActiveFluidScenario = gFluidScenarios[gActiveFluidScenarioIdx];
+	if(gScenarios.size() > 0) {
+		gActiveScenarioIdx = 0;
+		gActiveScenario = gScenarios[gActiveScenarioIdx];
 	} else {
-		gActiveFluidScenarioIdx = -1;
-		gActiveFluidScenario = nullptr;
+		gActiveScenarioIdx = -1;
+		gActiveScenario = nullptr;
 		std::cerr << "  No fluid scenario found!" << std::endl;
 	}
 }
@@ -2048,12 +2038,6 @@ static void InitResources(const char *appPath) {
 	gSceneFBO->sceneTexture = gSceneFBO->addTextureTarget(GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, GL_COLOR_ATTACHMENT0, GL_LINEAR);
 	gSceneFBO->update();
 
-	// Create scene shader
-	printf("  Create ortho shader\n");
-	gSceneShader = new CGLSL();
-	Utils::attachShaderFromFile(gSceneShader, GL_VERTEX_SHADER, "shaders\\Ortho.vertex", "    ");
-	Utils::attachShaderFromFile(gSceneShader, GL_FRAGMENT_SHADER, "shaders\\Ortho.fragment", "    ");
-
 	// Create fluid renderer
 	printf("  Create fluid renderer\n");
 	// Initial FBO size does not matter, because its resized on render anyway
@@ -2063,6 +2047,12 @@ static void InitResources(const char *appPath) {
 	gFluidRenderer->SetPointSpritesShader(gPointSpritesShader);
 	gFluidRenderer->SetSceneTexture(gSceneFBO->sceneTexture);
 	gFluidRenderer->SetSkyboxCubemap(gSkyboxCubemap);
+
+	// Create line shader
+	printf("  Create line renderer\n");
+	gLineShader = new CLineShader();
+	Utils::attachShaderFromFile(gLineShader, GL_VERTEX_SHADER, "shaders\\Line.vertex", "    ");
+	Utils::attachShaderFromFile(gLineShader, GL_FRAGMENT_SHADER, "shaders\\Line.fragment", "    ");
 
 	// Create lightning shader
 	printf("  Create lighting renderer\n");
@@ -2137,57 +2127,43 @@ void ReleaseResources() {
 		delete gSphereVBO;
 	if(gBoxVBO != nullptr)
 		delete gBoxVBO;
-
-	printf("  Release skybox\n");
-	if(gSkyboxShader != nullptr)
-		delete gSkyboxShader;
 	if(gSkyboxVBO != nullptr)
 		delete gSkyboxVBO;
 
+	printf("  Release shaders\n");
+	if(gSkyboxShader != nullptr)
+		delete gSkyboxShader;
 	if(gLightingShader != nullptr)
 		delete gLightingShader;
+	if(gLineShader != nullptr)
+		delete gLineShader;
+	if(gPointSpritesShader != nullptr)
+		delete gPointSpritesShader;
 
 	printf("  Release fluid renderer\n");
 	if(gFluidRenderer)
 		delete gFluidRenderer;
-
-	printf("  Release ortho shader\n");
-	if(gSceneShader != nullptr)
-		delete gSceneShader;
-
-	// Release scene FBO
-	printf("  Release scene fbo\n");
-
-	if(gSceneFBO != nullptr)
-		delete gSceneFBO;
-
-	// Release point sprites shader
-	printf("  Release spherical point sprites\n");
-
-	if(gPointSpritesShader != nullptr)
-		delete gPointSpritesShader;
-
 	if(gPointSprites != nullptr)
 		delete gPointSprites;
 
-	// Release scene
-	printf("  Release scene\n");
-
-	if(gActiveScene != nullptr)
-		delete gActiveScene;
+	// Release scene FBO
+	printf("  Release frame buffer objects\n");
+	if(gSceneFBO != nullptr)
+		delete gSceneFBO;
 
 	// Release texture manager
-	printf("  Release texture manager\n");
-
+	printf("  Release textures\n");
 	if(gTexMng != nullptr)
 		delete gTexMng;
-
 	if(gFontAtlas32 != nullptr) {
-		delete gFontAtlas32;
-	}
+		delete gFontAtlas32;}
 	if(gFontAtlas16 != nullptr) {
 		delete gFontAtlas16;
 	}
+
+	printf("  Release world\n");
+	if(gActiveScene != nullptr)
+		delete gActiveScene;
 }
 
 void OnShutdown() {
@@ -2203,11 +2179,11 @@ void OnShutdown() {
 
 	// Release scenarios
 	printf("Release Fluid Scenarios\n");
-	for(unsigned int i = 0; i < gFluidScenarios.size(); i++) {
-		Scenario *scenario = gFluidScenarios[i];
+	for(unsigned int i = 0; i < gScenarios.size(); i++) {
+		Scenario *scenario = gScenarios[i];
 		delete scenario;
 	}
-	gFluidScenarios.clear();
+	gScenarios.clear();
 
 	// Release renderer
 	printf("Release Renderer\n");

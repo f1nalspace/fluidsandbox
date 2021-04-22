@@ -103,6 +103,7 @@ public:
 
 	void SetColor(const float r, const float g, const float b, const float a);
 	void SetColor(const float *color);
+	void SetColor(const glm::vec4 &color);
 	void SetDepthTest(const bool enabled);
 	void SetDepthMask(const bool enabled);
 	void SetCullFace(const bool enabled);
@@ -113,12 +114,11 @@ public:
 	void DisableTexture(const int index, CTexture *texture);
 
 	void DrawTexturedQuad(const float posX, const float posY, const float scaleW, const float scaleH);
-	void DrawTexturedRect(const float left, const float top, const float right, const float bottom);
-	void DrawSimpleRect(const float left, const float top, const float right, const float bottom);
+	void DrawSimpleRect(const float left, const float top, const float right, const float bottom, const glm::vec4 &color);
 	void DrawVBO(CVBO *vbo, const GLenum mode, const GLuint count, const GLsizeiptr offset);
 	glm::vec2 GetStringSize(const CTextureFont *fontTex, const char *text, const size_t textLen, const float charHeight);
-	void DrawString(const int texIndex, CTextureFont *fontTex, const float posX, const float posY, const float charHeight, const char *text, const size_t textLen);
-	void DrawString(const int texIndex, CTextureFont *fontTex, const float posX, const float posY, const float charHeight, const char *text);
+	void DrawString(const int texIndex, CTextureFont *fontTex, const float posX, const float posY, const float charHeight, const char *text, const size_t textLen, const glm::vec4 &color);
+	void DrawString(const int texIndex, CTextureFont *fontTex, const float posX, const float posY, const float charHeight, const char *text, const glm::vec4 &color);
 
 	void Flip();
 
