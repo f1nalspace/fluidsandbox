@@ -336,103 +336,32 @@ namespace Primitives {
 				result.AddIndices(topVertexIndex, k, topVertexIndex + 1);
 		}
 
-#if 0
-		// put side vertices to arrays
-		for(int i = 0; i < 2; ++i) {
-			float h = -height / 2.0f + i * height;           // z value; -h/2 to h/2
-			float t = 1.0f - i;                              // vertical tex coord; 1 to 0
-			for(int j = 0, k = 0; j <= sectorCount; ++j, ++k) {
-				glm::vec3 sideNormal = sideNormals[k];
-				float ux = sideNormal.x;
-				float uy = sideNormal.y;
-				float uz = sideNormal.z;
-				glm::vec3 pos = glm::vec3(ux * radius, uy * radius, h);
-				glm::vec3 normal = glm::vec3(ux, uy, uz);
-				glm::vec2 texcoord = glm::vec2((float)j / (float)sectorCount, t);
-				result.positions.push_back(pos);
-				result.normals.push_back(normal);
-				result.texcoords.push_back(texcoord);
-				result.verts.push_back(Vertex(pos, normal, texcoord));
-			}
+		result.ValidateAndUpdateCounts();
+
+		return(result);
+	}
+
+	Primitive CreateGrid2D(const float cellSize, const float totalSize) {
+		Primitive result = Primitive();
+
+		int numCells = (int)(totalSize / cellSize) + 1;
+
+		float minXZ = -totalSize * 0.5f;
+		float maxXZ = totalSize * 0.5f;
+
+		for(int i = 0; i < numCells; ++i) {
+			float xz = minXZ + (float)i * cellSize;
+
+			uint32_t index = (uint32_t)result.verts.size();
+			result.AddVertex(glm::vec3(xz, 0, minXZ), glm::vec3(0), glm::vec2(0, 0));
+			result.AddVertex(glm::vec3(xz, 0, maxXZ), glm::vec3(0), glm::vec2(0, 0));
+			result.AddLineIndices(index + 0, index + 1);
+
+			index = (uint32_t)result.verts.size();
+			result.AddVertex(glm::vec3(minXZ, 0, xz), glm::vec3(0), glm::vec2(0, 0));
+			result.AddVertex(glm::vec3(maxXZ, 0, xz), glm::vec3(0), glm::vec2(0, 0));
+			result.AddLineIndices(index + 0, index + 1);
 		}
-
-		int baseCenterIndex = (int)result.positions.size();
-		int topCenterIndex = baseCenterIndex + sectorCount + 1; // include center vertex
-		// put base and top vertices to arrays
-		for(int i = 0; i < 2; ++i) {
-			float h = -height / 2.0f + i * height;           // z value; -h/2 to h/2
-			float nz = -1 + i * 2;                           // z value of normal; -1 to 1
-
-			// center point
-			glm::vec3 centerPos = glm::vec3(0, 0, h);
-			glm::vec3 centerNormal = glm::vec3(0, 0, nz);
-			glm::vec2 centerTexcoord = glm::vec2(0.5f, 0.5f);
-			result.positions.push_back(centerPos);
-			result.normals.push_back(centerNormal);
-			result.texcoords.push_back(centerTexcoord);
-			result.verts.push_back(Vertex(centerPos, centerNormal, centerTexcoord));
-
-			for(int j = 0, k = 0; j < sectorCount; ++j, ++k) {
-				glm::vec3 sideNormal = sideNormals[k];
-				float ux = sideNormal.x;
-				float uy = sideNormal.y;
-				glm::vec3 pos = glm::vec3(ux * radius, uy * radius, h);
-				glm::vec3 normal = glm::vec3(0, 0, nz);
-				glm::vec2 texcoord = glm::vec2(-ux * 0.5f + 0.5f, -uy * 0.5f + 0.5f);
-				result.positions.push_back(pos);
-				result.normals.push_back(normal);
-				result.texcoords.push_back(texcoord);
-				result.verts.push_back(Vertex(pos, normal, texcoord));
-			}
-		}
-
-		GLuint k1 = 0;                         // 1st vertex index at base
-		GLuint k2 = sectorCount + 1;           // 1st vertex index at top
-
-		// indices for the side surface
-		for(GLuint i = 0; i < sectorCount; ++i, ++k1, ++k2) {
-			// 2 triangles per sector
-			// k1 => k1+1 => k2
-			result.indices.push_back(k1);
-			result.indices.push_back(k1 + 1);
-			result.indices.push_back(k2);
-
-			// k2 => k1+1 => k2+1
-			result.indices.push_back(k2);
-			result.indices.push_back(k1 + 1);
-			result.indices.push_back(k2 + 1);
-		}
-
-		// indices for the base surface
-		//NOTE: baseCenterIndex and topCenterIndices are pre-computed during vertex generation
-		//      please see the previous code snippet
-		for(GLuint i = 0, k = baseCenterIndex + 1; i < sectorCount; ++i, ++k) {
-			if(i < sectorCount - 1) {
-				result.indices.push_back(baseCenterIndex);
-				result.indices.push_back(k + 1);
-				result.indices.push_back(k);
-			} else // last triangle
-			{
-				result.indices.push_back(baseCenterIndex);
-				result.indices.push_back(baseCenterIndex + 1);
-				result.indices.push_back(k);
-			}
-		}
-
-		// indices for the top surface
-		for(GLuint i = 0, k = topCenterIndex + 1; i < sectorCount; ++i, ++k) {
-			if(i < sectorCount - 1) {
-				result.indices.push_back(topCenterIndex);
-				result.indices.push_back(k);
-				result.indices.push_back(k + 1);
-			} else // last triangle
-			{
-				result.indices.push_back(topCenterIndex);
-				result.indices.push_back(k);
-				result.indices.push_back(topCenterIndex + 1);
-			}
-		}
-#endif
 
 		result.ValidateAndUpdateCounts();
 

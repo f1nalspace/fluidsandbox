@@ -378,6 +378,7 @@ static GeometryVBO *gSkyboxVBO = nullptr;
 static CSkyboxShader *gSkyboxShader = nullptr;
 static CTexture *gSkyboxCubemap = nullptr;
 
+static GeometryVBO *gGridVBO = nullptr;
 static GeometryVBO *gBoxVBO = nullptr;
 static GeometryVBO *gSphereVBO = nullptr;
 static GeometryVBO *gCylinderVBO = nullptr;
@@ -770,38 +771,6 @@ void InitializePhysics() {
 	gPhysicsUseGPUAcceleration = gPhysics->IsGPUAcceleration();
 }
 
-void DrawGrid(int GRID_SIZE) {
-	glBegin(GL_LINES);
-	glColor3f(0.25f, 0.25f, 0.25f);
-
-	for(int i = -GRID_SIZE; i <= GRID_SIZE; i++) {
-		glVertex3f((float)i, 0, (float)-GRID_SIZE);
-		glVertex3f((float)i, 0, (float)GRID_SIZE);
-
-		glVertex3f((float)-GRID_SIZE, 0, (float)i);
-		glVertex3f((float)GRID_SIZE, 0, (float)i);
-	}
-
-	glEnd();
-}
-
-
-void UpdatePhysX(const float frametime) {
-	// Update water external direction if required
-	if(gFluidLatestExternalAccelerationTime > -1) {
-		uint64_t current = fplGetTimeInMillisecondsLP();
-		if((int64_t)current > gFluidLatestExternalAccelerationTime) {
-			gPhysicsParticles->SetExternalAcceleration(glm::vec3(0.0f, 0.0f, 0.0f));
-			gFluidLatestExternalAccelerationTime = -1;
-		}
-	}
-
-	// Update PhysX
-	if(!gPaused) {
-		SingleStepPhysX(frametime);
-	}
-}
-
 void DrawPrimitive(GeometryVBO *vbo, const bool asLines) {
 	// Ensure that the matrix has correct transform for scale, position, rotation
 
@@ -827,6 +796,31 @@ void DrawPrimitive(GeometryVBO *vbo, const bool asLines) {
 	}
 
 	vbo->unbind();
+}
+
+static void DrawGrid() {
+	glm::mat4 mvp = gCamera.mvp;
+	gRenderer->LoadMatrix(mvp);
+	glColor4f(0.25f, 0.25f, 0.25f, 1.0f);
+	DrawPrimitive(gGridVBO, true);
+	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+}
+
+
+void UpdatePhysX(const float frametime) {
+	// Update water external direction if required
+	if(gFluidLatestExternalAccelerationTime > -1) {
+		uint64_t current = fplGetTimeInMillisecondsLP();
+		if((int64_t)current > gFluidLatestExternalAccelerationTime) {
+			gPhysicsParticles->SetExternalAcceleration(glm::vec3(0.0f, 0.0f, 0.0f));
+			gFluidLatestExternalAccelerationTime = -1;
+		}
+	}
+
+	// Update PhysX
+	if(!gPaused) {
+		SingleStepPhysX(frametime);
+	}
 }
 
 glm::mat4 ComputeGlobalPose(const PhysicsTransform &bodyTransform, const PhysicsTransform &shapeTransform) {
@@ -1397,7 +1391,7 @@ void RenderScene(const glm::mat4 &mvp) {
 	RenderSkybox(mvp);
 
 	// Draw the grid
-	DrawGrid(40);
+	DrawGrid();
 
 	if(gDrawWireframe)
 		gRenderer->SetWireframe(true);
@@ -2123,10 +2117,20 @@ static void InitResources(const char *appPath) {
 		gCylinderVBO->triangleIndexCount = prim.indexCount;
 		gCylinderVBO->lineIndexCount = prim.lineIndexCount;
 	}
+	gGridVBO = new GeometryVBO();
+	{
+		Primitives::Primitive prim = Primitives::CreateGrid2D(1.0f, 40.0f);
+		gGridVBO->bufferVertices(prim.verts[0].data(), prim.sizeOfVertices, GL_STATIC_DRAW);
+		gGridVBO->reserveIndices(prim.lineIndexCount, GL_STATIC_DRAW);
+		gGridVBO->subbufferIndices(&prim.lineIndices[0], 0, prim.lineIndexCount);
+		gGridVBO->lineIndexCount = prim.lineIndexCount;
+	}
 }
 
 void ReleaseResources() {
 	printf("  Release geometry buffers\n");
+	if(gGridVBO != nullptr)
+		delete gGridVBO;
 	if(gCylinderVBO != nullptr)
 		delete gCylinderVBO;
 	if(gSphereVBO != nullptr)
