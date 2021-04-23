@@ -77,6 +77,9 @@
     <ClCompile Include="FBO.cpp">
       <Filter>Rendering</Filter>
     </ClCompile>
+    <ClCompile Include="Renderer2.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AllShaders.hpp">
@@ -168,6 +171,9 @@
     </ClInclude>
     <ClInclude Include="Fonts.h">
       <Filter>Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer2.h">
+      <Filter>Rendering</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -200,6 +200,8 @@ License:
 #include "AllFBOs.hpp"
 #include "AllActors.hpp"
 
+#include "Renderer2.h"
+
 // Application
 #define APPLICATION_NAME "Fluid Sandbox"
 #define APPLICATION_VERSION "1.8.0"

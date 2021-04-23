@@ -226,6 +226,7 @@ Copy "$(SolutionDir)Libraries\PhysX\pxshared\bin\$(Platform)\*.dll" "$(OutDir)"<
     <ClCompile Include="FBO.cpp" />
     <ClCompile Include="final_platform_layer.cpp" />
     <ClCompile Include="final_xml.cpp" />
+    <ClCompile Include="Renderer2.cpp" />
     <ClCompile Include="Scenario.cpp" />
     <ClCompile Include="FontAtlas.cpp" />
     <ClCompile Include="Frustum.cpp" />
@@ -257,6 +258,7 @@ Copy "$(SolutionDir)Libraries\PhysX\pxshared\bin\$(Platform)\*.dll" "$(OutDir)"<
     <ClInclude Include="FBO.h" />
     <ClInclude Include="FluidProperties.h" />
     <ClInclude Include="GeometryVBO.h" />
+    <ClInclude Include="Renderer2.h" />
     <ClInclude Include="Scenario.h" />
     <ClInclude Include="FontAtlas.h" />
     <ClInclude Include="Fonts.h" />
