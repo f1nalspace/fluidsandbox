@@ -4,327 +4,368 @@
 #include <vector>
 #include <memory>
 
-//
-// Buffer
-//
-enum class BufferType: int {
-	None = 0,
-	Vertex,
-	Index,
-	Uniform,
-	Storage,
-};
+#include <glm/glm.hpp>
 
-enum class BufferAccess: int {
-	ReadWrite = 0,
-	WriteOnly,
-	ReadOnly,
-};
+#include <final_platform_layer.h>
 
-enum class BufferUsage {
-	Static = 0,
-	Dynamic,
-};
+namespace renderer {
+	typedef int32_t b32;
 
-struct BufferID {
-	uint32_t id;
+	//
+	// Buffer
+	//
+	enum class BufferType: int {
+		None = 0,
+		Vertex,
+		Index,
+		Uniform,
+		Storage,
+	};
 
-	bool operator<(const BufferID &o)  const {
-		bool result = id < o.id;
-		return(result);
-	}
-};
+	enum class BufferAccess: int {
+		ReadWrite = 0,
+		WriteOnly,
+		ReadOnly,
+	};
 
-struct Buffer {
-	size_t size;
-	BufferID id;
-	BufferType type;
-	BufferAccess access;
-	BufferUsage usage;
-protected:
-	inline Buffer(const BufferID id, const BufferType type, const size_t size, const BufferAccess access, const BufferUsage usage):
-		size(size),
-		id(id),
-		type(type),
-		access(access),
-		usage() {
-	}
-};
+	enum class BufferUsage {
+		Static = 0,
+		Dynamic,
+	};
 
-//
-// Texture
-//
-enum class TextureType: int {
-	None = 0,
-	T1D,
-	T2D,
-	T3D,
-	Cube,
-};
+	struct BufferID {
+		uint32_t id;
 
-enum class TextureFormat: int {
-	//! No texture format
-	None = 0,
+		bool operator<(const BufferID &o)  const {
+			bool result = id < o.id;
+			return(result);
+		}
+	};
 
-	//! Unsigned byte, 1 byte per channel, Alpha channels only
-	AlphaU8,
+	struct Buffer {
+		size_t size;
+		BufferID id;
+		BufferType type;
+		BufferAccess access;
+		BufferUsage usage;
+	protected:
+		inline Buffer(const BufferID id, const BufferType type, const size_t size, const BufferAccess access, const BufferUsage usage):
+			size(size),
+			id(id),
+			type(type),
+			access(access),
+			usage() {
+		}
+	};
 
-	//! Unsigned byte, 1 byte per channel, RGBA channels
-	RGBAU8,
+	//
+	// Texture
+	//
+	enum class TextureType: int {
+		None = 0,
+		T1D,
+		T2D,
+		T3D,
+		Cube,
+	};
 
-	//! Floating point, 4-bytes per channel, RGBA channels
-	RGBAF32,
-};
+	enum class TextureFormat: int {
+		//! No texture format
+		None = 0,
 
-struct TextureID {
-	uint32_t id;
+		//! Unsigned byte, 1 byte per channel, Alpha channels only
+		AlphaU8,
 
-	bool operator<(const TextureID &o)  const {
-		bool result = id < o.id;
-		return(result);
-	}
-};
+		//! Unsigned byte, 1 byte per channel, RGBA channels
+		RGBAU8,
 
-struct Texture {
-	uint32_t width;
-	uint32_t height;
-	uint32_t depth;
-	TextureID id;
-	TextureFormat format;
-	TextureType type;
-protected:
-	inline Texture(const TextureID id, const TextureType type, const TextureFormat format, const uint32_t width, const uint32_t height, const uint32_t depth):
-		width(0),
-		height(0),
-		depth(0),
-		id(id),
-		format(format),
-		type(type) {
-	}
-};
+		//! Floating point, 4-bytes per channel, RGBA channels
+		RGBAF32,
+	};
 
-//
-// RenderTarget
-//
-struct RenderTargetID {
-	uint32_t id;
-};
+	struct TextureID {
+		uint32_t id;
 
-struct RenderTarget {
-	TextureID texture;
-	RenderTargetID id;
-};
+		bool operator<(const TextureID &o)  const {
+			bool result = id < o.id;
+			return(result);
+		}
+	};
 
-//
-// Shader
-//
-enum class ShaderType: int {
-	None = 0,
-	Vertex,
-	Geometry,
-	Fragment,
-	Compute,
-	First = Vertex,
-	Last = Compute,
-};
+	struct Texture {
+		uint32_t width;
+		uint32_t height;
+		uint32_t depth;
+		TextureID id;
+		TextureFormat format;
+		TextureType type;
+	protected:
+		inline Texture(const TextureID id, const TextureType type, const TextureFormat format, const uint32_t width, const uint32_t height, const uint32_t depth):
+			width(0),
+			height(0),
+			depth(0),
+			id(id),
+			format(format),
+			type(type) {
+		}
+	};
 
-struct ShaderID {
-	uint32_t id;
-};
+	//
+	// RenderTarget
+	//
+	enum class RenderTargetAttachmentType : int {
+		None = 0,
+		Depth,
+		Color,
+		Stencil
+	};
 
-struct Shader {
-	const char *source;
-	ShaderID id;
-	ShaderType type;
-};
+	struct RenderTargetAttachment {
+		TextureID texture;
+		RenderTargetAttachmentType type;
+	};
 
-static constexpr uint32_t MaxShaderTypeCount = ((int)ShaderType::Last - (int)ShaderType::First) + 1;
+	struct RenderTargetID {
+		uint32_t id;
+	};
 
-struct ShaderProgramID {
-	uint32_t id;
-};
+	struct RenderTarget {
+		constexpr static uint32_t MaxAttachmentCount = 16; // One depth, one stencil and 14 color attachments
+		union {
+			struct {
+				RenderTargetAttachment depth;
+				RenderTargetAttachment stencil;
+				RenderTargetAttachment color[14];
+			};
+			RenderTargetAttachment all[MaxAttachmentCount];
+		} attachments;
+		RenderTargetID id;
+		uint32_t colorAttachmentCount;
+		b32 hasDepthAttachment;
+		b32 hasStencilAttachment;
+	};
 
-struct ShaderProgram {
-	ShaderID shaders[MaxShaderTypeCount];
-	ShaderProgramID id;
-	uint32_t shaderCount;
-};
+	//
+	// Shader
+	//
 
-//
-// Uniform
-//
-enum class UniformType: int {
-	None = 0,
-	Float,
-	Vec2f,
-	Vec3f,
-	Vec4f,
-	Mat3f,
-	Mat4f,
-	Int,
-	Vec2i,
-	Vec3i,
-	Vec4i,
-	First = Float,
-	Last = Vec4i,
-};
+	// TODO(final): Add other shader types (Tessellation, Geometry, Compute)
+	enum class ShaderType: int {
+		None = 0,
+		Vertex,
+		Fragment,
+		First = Vertex,
+		Last = Fragment,
+	};
 
-static constexpr uint32_t MaxUniformTypeCount = ((int)UniformType::Last - (int)UniformType::First) + 1;
+	struct ShaderID {
+		uint32_t id;
+	};
 
-struct UniformID {
-	uint32_t id;
-};
+	struct Shader {
+		const char *source;
+		ShaderID id;
+		ShaderType type;
+	};
 
-struct Uniform {
-	const char *name;
-	size_t offset;
-	size_t size;
-	UniformID id;
-	UniformType type;
-};
+	static constexpr uint32_t MaxShaderTypeCount = ((int)ShaderType::Last - (int)ShaderType::First) + 1;
 
-//
-// BufferLayoutElement
-//
-enum class BufferLayoutElementType: int {
-	None = 0,
-	Float1,
-	Float2,
-	Float3,
-	Float4,
-	Int32,
-	Byte1,
-	Byte2,
-	Byte3,
-	Byte4,
-};
+	struct ShaderProgramID {
+		uint32_t id;
+	};
 
-struct BufferLayoutElementID {
-	uint32_t id;
-};
+	struct ShaderProgram {
+		ShaderID shaders[MaxShaderTypeCount];
+		ShaderProgramID id;
+		uint32_t shaderCount;
+	};
 
-struct BufferLayoutElement {
-	const char *name;
-	uint32_t offset;
-	uint32_t count;
-	uint32_t size;
-	BufferLayoutElementID id;
-	BufferLayoutElementType type;
-	bool isNormalized;
-};
+	//
+	// Uniform
+	//
+	enum class UniformType: int {
+		None = 0,
+		Float,
+		Vec2f,
+		Vec3f,
+		Vec4f,
+		Mat3f,
+		Mat4f,
+		Int,
+		Vec2i,
+		Vec3i,
+		Vec4i,
+		First = Float,
+		Last = Vec4i,
+	};
 
-//
-// Pipeline
-//
-enum class PipelineLayoutBindingType: int {
-	None = 0,
-	UniformBuffer,
-	StorageBuffer,
-	Sampler
-};
+	static constexpr uint32_t MaxUniformTypeCount = ((int)UniformType::Last - (int)UniformType::First) + 1;
 
-struct PipelineLayoutBindingID {
-	uint32_t id;
-};
+	struct UniformID {
+		uint32_t id;
+	};
 
-struct PipelineLayoutBinding {
-	size_t offset;
-	size_t size;
-	PipelineLayoutBindingID id;
-	PipelineLayoutBindingType type;
-};
+	struct Uniform {
+		const char *name;
+		size_t offset;
+		size_t size;
+		UniformID id;
+		UniformType type;
+	};
 
-struct PipelineLayoutID {
-	uint32_t id;
-};
+	//
+	// LayoutLocationElement
+	//
+	enum class LayoutLocationElementType: int {
+		None = 0,
+		Float,
+		Vec2f,
+		Vec3f,
+		Vec4f,
+	};
 
-struct PipelineLayout {
-	std::vector<UniformID> uniforms;
-	std::vector<PipelineLayoutBindingID> layoutBindings;
-	std::vector<BufferLayoutElementID> vertexLayouts;
-	PipelineLayoutID id;
-};
+	struct LayoutLocationElementID {
+		uint32_t id;
+	};
 
-enum class DepthTest: int {
-	Off = 0,
-	On = 1
-};
+	// Mirrors the layout(location = offset) in/out type name
+	struct LayoutLocationElement {
+		const char *name;
+		uint32_t offset;
+		uint32_t count;
+		uint32_t size;
+		LayoutLocationElementID id;
+		LayoutLocationElementType type;
+		b32 isNormalized;
+	};
 
-enum class CullMode: int {
-	None = 0,
-	ClockWise,
-	CounterClockWise,
-};
+	//
+	// Pipeline
+	//
+	struct PipelineLayoutID {
+		uint32_t id;
+	};
 
-enum class PrimitiveMode: int {
-	Triangle = 0,
-	TriangleLine = 0,
-	TriangleStrip = 0,
-	Point = 0,
-	Line = 0,
-	LineStrip = 0,
-};
+	struct PipelineLayout {
+		std::vector<Uniform> uniforms;
+		std::vector<LayoutLocationElement> locationElements;
+		PipelineLayoutID id;
+	};
 
-struct RendererRect {
-	int32_t x;
-	int32_t y;
-	int32_t width;
-	int32_t height;
-};
+	enum class DepthTest: int {
+		Off = 0,
+		On = 1
+	};
 
-struct PipelineSettings {
-	DepthTest depthTest;
-	CullMode cullMode;
-	PrimitiveMode drawMode;
-};
+	enum class CullMode: int {
+		None = 0,
+		ClockWise,
+		CounterClockWise,
+	};
 
-struct PipelineID {
-	uint32_t id;
-};
+	enum class ClearFlags: uint32_t {
+		None = 0,
+		Color = 1 << 0,
+		Depth = 1 << 1,
+		Stencil = 1 << 2,
+	};
+	FPL_ENUM_AS_FLAGS_OPERATORS(ClearFlags);
 
-struct Pipeline {
-	RendererRect viewport;
-	RendererRect scissor;
-	PipelineSettings pipelineSettings;
-	PipelineLayoutID pipelineLayout;
-	ShaderProgramID shaderProgram;
-	RenderTargetID renderTarget;
-	PipelineID id;
-};
+	enum class PrimitiveMode: int {
+		PointList = 0,
+		LineList,
+		LineStrip,
+		LineLoop,
+		TriangleList,
+		TriangleStrip,
+		TriangleFan,
+	};
 
-struct SamplerID {
-	uint32_t id;
-};
+	struct ClipRect {
+		int32_t x;
+		int32_t y;
+		int32_t width;
+		int32_t height;
+	};
 
-struct Sampler {
-	TextureID texture;
-	SamplerID id;
-};
+	struct Color4f {
+		float r, g, b, a;
+	};
 
-struct BindingID {
-	uint32_t id;
-};
+	struct DepthSettings {
+		b32 writeEnabled;
+		DepthTest testing;
+	};
 
-struct Binding {
-	std::vector<BufferID> buffers;
-	std::vector<SamplerID> samplers;
-	BindingID id;
-};
+	struct PipelineSettings {
+		Color4f clearColor;
+		DepthSettings depth;
+		CullMode cullMode;
+		PrimitiveMode drawMode;
+		ClearFlags clearFlags;
+	};
 
-enum class RendererType: int {
-	None = 0,
-	Null,
-	OpenGL
-};
+	struct PipelineID {
+		uint32_t id;
+	};
 
-class Renderer {
-public:
-	static Renderer *Create(const RendererType type);
+	struct Pipeline {
+		ClipRect viewport;
+		ClipRect scissor;
+		PipelineSettings pipelineSettings;
+		PipelineLayoutID pipelineLayout;
+		ShaderProgramID shaderProgram;
+		RenderTargetID renderTarget;
+		PipelineID id;
+	};
 
-	virtual Buffer *CreateBuffer(const BufferType type, const size_t size, const BufferAccess access, const BufferUsage usage) = 0;
-	virtual void DestroyBuffer(Buffer &buffer) = 0;
+	struct SamplerID {
+		uint32_t id;
+	};
 
-	virtual Texture *CreateTexture2D(const TextureFormat format, const uint32_t width, const uint32_t height, const uint8_t *data2D) = 0;
-	virtual Texture *CreateTextureCube(const TextureFormat format, const uint32_t faceWidth, const uint32_t faceHeight, const uint8_t *data2Dx6) = 0;
-	virtual void DestroyTexture(Texture &texture) = 0;
+	struct Sampler {
+		TextureID texture;
+		SamplerID id;
+	};
+
+	enum class RendererType: int {
+		None = 0,
+		Null,
+		OpenGL
+	};
+
+	class CommandBuffer {
+	public:
+		virtual bool Begin() = 0;
+		virtual void End() = 0;
+		virtual void SetViewport(const int x, const int y, const int width, const int height) = 0;
+		virtual void SetPipeline(const Pipeline &pipeline) = 0;
+		virtual void SetBuffer(const Buffer &buffer) = 0;
+		virtual void Draw(const size_t vertexCount, const size_t firstVertex = 0, const size_t instanceCount = 1, const size_t firstInstance = 0) = 0;
+	};
+
+	class CommandQueue {
+	public:
+		virtual bool Submit(CommandBuffer &commandBuffer) = 0;
+	};
+
+	class Renderer {
+	public:
+		static Renderer *Create(const RendererType type);
+
+		virtual CommandQueue *GetCommandQueue() = 0;
+
+		virtual CommandBuffer *CreateCommandBuffer() = 0;
+		virtual void DestroyCommandBuffer(CommandBuffer &commandBuffer) = 0;
+
+		virtual Buffer *CreateBuffer(const BufferType type, const size_t size, const BufferAccess access, const BufferUsage usage) = 0;
+		virtual void DestroyBuffer(Buffer &buffer) = 0;
+
+		virtual Texture *CreateTexture2D(const TextureFormat format, const uint32_t width, const uint32_t height, const uint8_t *data2D) = 0;
+		virtual Texture *CreateTextureCube(const TextureFormat format, const uint32_t faceWidth, const uint32_t faceHeight, const uint8_t *data2Dx6) = 0;
+		virtual void DestroyTexture(Texture &texture) = 0;
+
+		virtual void Present() = 0;
+	};
+
 };
