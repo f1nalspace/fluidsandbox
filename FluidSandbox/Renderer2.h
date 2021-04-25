@@ -19,18 +19,19 @@ namespace renderer {
 		Vertex,
 		Index,
 		Uniform,
-		Storage,
-	};
-
-	enum class BufferAccess: int {
-		ReadWrite = 0,
-		WriteOnly,
-		ReadOnly,
 	};
 
 	enum class BufferUsage {
-		Static = 0,
+		None = 0,
+		Static,
 		Dynamic,
+	};
+
+	enum class BufferAccess {
+		None = 0,
+		ReadOnly,
+		WriteOnly,
+		ReadWrite,
 	};
 
 	struct BufferID {
@@ -42,20 +43,29 @@ namespace renderer {
 		}
 	};
 
-	struct Buffer {
-		size_t size;
+	class Buffer {
+	public:
 		BufferID id;
+		size_t size;
 		BufferType type;
 		BufferAccess access;
 		BufferUsage usage;
 	protected:
-		inline Buffer(const BufferID id, const BufferType type, const size_t size, const BufferAccess access, const BufferUsage usage):
-			size(size),
+		Buffer(const BufferID id, const BufferType type, const BufferAccess access, const BufferUsage usage, const size_t size):
 			id(id),
 			type(type),
 			access(access),
-			usage() {
+			usage(usage),
+			size(size) {
 		}
+	public:
+		virtual bool Init(const uint8_t *data) = 0;
+		virtual void Release() = 0;
+
+		virtual void Write(const size_t offset, const size_t size, const uint8_t *data) = 0;
+
+		virtual void *Map() = 0;
+		virtual void Unmap() = 0;
 	};
 
 	//
@@ -65,7 +75,6 @@ namespace renderer {
 		None = 0,
 		T1D,
 		T2D,
-		T3D,
 		Cube,
 	};
 
@@ -92,32 +101,33 @@ namespace renderer {
 		}
 	};
 
-	struct Texture {
+	class Texture {
+	public:
 		uint32_t width;
 		uint32_t height;
-		uint32_t depth;
 		TextureID id;
 		TextureFormat format;
 		TextureType type;
 	protected:
-		inline Texture(const TextureID id, const TextureType type, const TextureFormat format, const uint32_t width, const uint32_t height, const uint32_t depth):
+		Texture(const TextureID id, const TextureType type, const TextureFormat format, const uint32_t width, const uint32_t height):
 			width(0),
 			height(0),
-			depth(0),
 			id(id),
 			format(format),
 			type(type) {
 		}
+	public:
+		virtual bool Write(const size_t size, const uint8_t *data) = 0;
 	};
 
 	//
 	// RenderTarget
 	//
-	enum class RenderTargetAttachmentType : int {
-		None = 0,
+	enum class RenderTargetAttachmentType: int {
+		Color = 0,
 		Depth,
-		Color,
-		Stencil
+		DepthStencil,
+		Stencil,
 	};
 
 	struct RenderTargetAttachment {
@@ -127,28 +137,35 @@ namespace renderer {
 
 	struct RenderTargetID {
 		uint32_t id;
+
+		bool operator<(const RenderTargetID &o)  const {
+			bool result = id < o.id;
+			return(result);
+		}
 	};
 
-	struct RenderTarget {
-		constexpr static uint32_t MaxAttachmentCount = 16; // One depth, one stencil and 14 color attachments
-		union {
-			struct {
-				RenderTargetAttachment depth;
-				RenderTargetAttachment stencil;
-				RenderTargetAttachment color[14];
-			};
-			RenderTargetAttachment all[MaxAttachmentCount];
-		} attachments;
-		RenderTargetID id;
-		uint32_t colorAttachmentCount;
-		b32 hasDepthAttachment;
-		b32 hasStencilAttachment;
+	struct RenderTargetParams {
+		constexpr static uint32_t MaxAttachmentCount = 16;
+		RenderTargetAttachment attachments[MaxAttachmentCount];
+		uint32_t attachmentCount;
+		uint32_t sampleCount;
+	};
+
+	class RenderTarget {
+	public:
+		const RenderTargetID id;
+	protected:
+		RenderTarget(const RenderTargetID &id):
+			id(id) {
+		}
+	public:
+		virtual bool Init(const RenderTargetParams &params) = 0;
+		virtual void Release() = 0;
 	};
 
 	//
 	// Shader
 	//
-
 	// TODO(final): Add other shader types (Tessellation, Geometry, Compute)
 	enum class ShaderType: int {
 		None = 0,
@@ -157,9 +174,15 @@ namespace renderer {
 		First = Vertex,
 		Last = Fragment,
 	};
+	static constexpr uint32_t MaxShaderTypeCount = ((int)ShaderType::Last - (int)ShaderType::First) + 1;
 
 	struct ShaderID {
 		uint32_t id;
+
+		bool operator<(const ShaderID &o)  const {
+			bool result = id < o.id;
+			return(result);
+		}
 	};
 
 	struct Shader {
@@ -168,10 +191,13 @@ namespace renderer {
 		ShaderType type;
 	};
 
-	static constexpr uint32_t MaxShaderTypeCount = ((int)ShaderType::Last - (int)ShaderType::First) + 1;
-
 	struct ShaderProgramID {
 		uint32_t id;
+
+		bool operator<(const ShaderProgramID &o)  const {
+			bool result = id < o.id;
+			return(result);
+		}
 	};
 
 	struct ShaderProgram {
@@ -186,29 +212,37 @@ namespace renderer {
 	enum class UniformType: int {
 		None = 0,
 		Float,
-		Vec2f,
-		Vec3f,
-		Vec4f,
-		Mat3f,
-		Mat4f,
+		Vec2,
+		Vec3,
+		Vec4,
+		Mat2,
+		Mat3,
+		Mat4,
 		Int,
 		Vec2i,
 		Vec3i,
 		Vec4i,
+		Sampler2D,
+		SamplerCube,
 		First = Float,
-		Last = Vec4i,
+		Last = SamplerCube,
 	};
 
 	static constexpr uint32_t MaxUniformTypeCount = ((int)UniformType::Last - (int)UniformType::First) + 1;
 
 	struct UniformID {
 		uint32_t id;
+
+		bool operator<(const UniformID &o)  const {
+			bool result = id < o.id;
+			return(result);
+		}
 	};
 
 	struct Uniform {
 		const char *name;
-		size_t offset;
-		size_t size;
+		uint32_t offset;
+		uint32_t size;
 		UniformID id;
 		UniformType type;
 	};
@@ -226,9 +260,14 @@ namespace renderer {
 
 	struct LayoutLocationElementID {
 		uint32_t id;
+
+		bool operator<(const LayoutLocationElementID &o)  const {
+			bool result = id < o.id;
+			return(result);
+		}
 	};
 
-	// Mirrors the layout(location = offset) in/out type name
+		// Mirrors the layout(location = offset) in/out type name
 	struct LayoutLocationElement {
 		const char *name;
 		uint32_t offset;
@@ -244,6 +283,11 @@ namespace renderer {
 	//
 	struct PipelineLayoutID {
 		uint32_t id;
+
+		bool operator<(const PipelineLayoutID &o)  const {
+			bool result = id < o.id;
+			return(result);
+		}
 	};
 
 	struct PipelineLayout {
@@ -251,25 +295,6 @@ namespace renderer {
 		std::vector<LayoutLocationElement> locationElements;
 		PipelineLayoutID id;
 	};
-
-	enum class DepthTest: int {
-		Off = 0,
-		On = 1
-	};
-
-	enum class CullMode: int {
-		None = 0,
-		ClockWise,
-		CounterClockWise,
-	};
-
-	enum class ClearFlags: uint32_t {
-		None = 0,
-		Color = 1 << 0,
-		Depth = 1 << 1,
-		Stencil = 1 << 2,
-	};
-	FPL_ENUM_AS_FLAGS_OPERATORS(ClearFlags);
 
 	enum class PrimitiveMode: int {
 		PointList = 0,
@@ -286,27 +311,110 @@ namespace renderer {
 		int32_t y;
 		int32_t width;
 		int32_t height;
+
+		ClipRect():
+			x(0),
+			y(0),
+			width(0),
+			height(0) {
+		}
+
+		ClipRect(const int x, const int y, const int width, const int height):
+			x(x),
+			y(y),
+			width(width),
+			height(height) {
+
+		}
 	};
 
-	struct Color4f {
-		float r, g, b, a;
+	enum class ClearFlags: uint32_t {
+		None = 0,
+		Color = 1 << 0,
+		Depth = 1 << 1,
+		Stencil = 1 << 2,
+	};
+	FPL_ENUM_AS_FLAGS_OPERATORS(ClearFlags);
+
+	struct ClearSettings {
+		float color[4];
+		ClearFlags flags;
+	};
+
+	struct ColorSettings {
+		b32 writeEnabled[4];
+	};
+
+	enum class DepthTest: int {
+		Off = 0,
+		On = 1
+	};
+
+	enum class DepthFunc: int {
+		Never = 0,
+		Equal,
+		NotEqual,
+		Less,
+		LessOrEqual,
+		Greater,
+		GreaterOrEqual,
+		Always,
 	};
 
 	struct DepthSettings {
+		float clearDepth;
 		b32 writeEnabled;
-		DepthTest testing;
+		DepthTest test;
+		DepthFunc func;
+	};
+
+	enum class BlendOp: int {
+		Zero = 0,
+		One,
+		SrcColor,
+		InvSrcColor,
+		SrcAlpha,
+		InvSrcAlpha,
+		DstColor,
+		InvDstColor,
+		DstAlpha,
+		InvDstAlpha,
+	};
+
+	struct BlendSettings {
+		BlendOp sourceColor;
+		BlendOp destColor;
+		b32 isEnabled;
+	};
+
+	enum class CullMode: int {
+		None = 0,
+		ClockWise,
+		CounterClockWise,
+	};
+
+	enum class PolygonMode: int {
+		Fill = 0,
+		Line,
+		Point
 	};
 
 	struct PipelineSettings {
-		Color4f clearColor;
+		ClearSettings clear;
+		ColorSettings color;
 		DepthSettings depth;
+		BlendSettings blend;
 		CullMode cullMode;
-		PrimitiveMode drawMode;
-		ClearFlags clearFlags;
+		PolygonMode polygonMode;
 	};
 
 	struct PipelineID {
 		uint32_t id;
+
+		bool operator<(const PipelineID &o)  const {
+			bool result = id < o.id;
+			return(result);
+		}
 	};
 
 	struct Pipeline {
@@ -316,16 +424,8 @@ namespace renderer {
 		PipelineLayoutID pipelineLayout;
 		ShaderProgramID shaderProgram;
 		RenderTargetID renderTarget;
+		PrimitiveMode primitive;
 		PipelineID id;
-	};
-
-	struct SamplerID {
-		uint32_t id;
-	};
-
-	struct Sampler {
-		TextureID texture;
-		SamplerID id;
 	};
 
 	enum class RendererType: int {
@@ -339,8 +439,11 @@ namespace renderer {
 		virtual bool Begin() = 0;
 		virtual void End() = 0;
 		virtual void SetViewport(const int x, const int y, const int width, const int height) = 0;
-		virtual void SetPipeline(const Pipeline &pipeline) = 0;
-		virtual void SetBuffer(const Buffer &buffer) = 0;
+		virtual void SetScissor(const int x, const int y, const int width, const int height) = 0;
+		virtual void SetPipeline(const PipelineID &pipelineId) = 0;
+		virtual void SetBuffer(const BufferID &bufferId) = 0;
+		virtual void SetTexture(const TextureID &textureId, const uint32_t index) = 0;
+		virtual void SetUniform(const UniformID &uniformId, const size_t size, const uint8_t *data) = 0;
 		virtual void Draw(const size_t vertexCount, const size_t firstVertex = 0, const size_t instanceCount = 1, const size_t firstInstance = 0) = 0;
 	};
 
@@ -350,20 +453,29 @@ namespace renderer {
 	};
 
 	class Renderer {
+	protected:
+		virtual bool Init() = 0;
+		virtual void Release() = 0;
 	public:
 		static Renderer *Create(const RendererType type);
 
 		virtual CommandQueue *GetCommandQueue() = 0;
 
 		virtual CommandBuffer *CreateCommandBuffer() = 0;
-		virtual void DestroyCommandBuffer(CommandBuffer &commandBuffer) = 0;
+		virtual void DestroyCommandBuffer(CommandBuffer *commandBuffer) = 0;
 
-		virtual Buffer *CreateBuffer(const BufferType type, const size_t size, const BufferAccess access, const BufferUsage usage) = 0;
-		virtual void DestroyBuffer(Buffer &buffer) = 0;
+		virtual BufferID CreateBuffer(const BufferType type, const BufferAccess access, const BufferUsage usage, const size_t size, const uint8_t *data) = 0;
+		virtual void DestroyBuffer(const BufferID bufferId) = 0;
 
-		virtual Texture *CreateTexture2D(const TextureFormat format, const uint32_t width, const uint32_t height, const uint8_t *data2D) = 0;
-		virtual Texture *CreateTextureCube(const TextureFormat format, const uint32_t faceWidth, const uint32_t faceHeight, const uint8_t *data2Dx6) = 0;
-		virtual void DestroyTexture(Texture &texture) = 0;
+		virtual RenderTargetID CreateRenderTarget(const RenderTargetParams &params) = 0;
+		virtual void DestroyRenderTarget(const RenderTargetID renderTargetId) = 0;
+
+		virtual PipelineID CreatePipeline() = 0;
+		virtual void DestroyPipeline(const PipelineID pipelineId) = 0;
+
+		virtual TextureID CreateTexture2D(const TextureFormat format, const uint32_t width, const uint32_t height, const uint8_t *data2D) = 0;
+		virtual TextureID CreateTextureCube(const TextureFormat format, const uint32_t faceWidth, const uint32_t faceHeight, const uint8_t *data2Dx6) = 0;
+		virtual void DestroyTexture(const TextureID textureId) = 0;
 
 		virtual void Present() = 0;
 	};

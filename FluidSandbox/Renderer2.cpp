@@ -2,37 +2,143 @@
 
 #include <map>
 #include <queue>
+#include <stdexcept>
+#include <assert.h>
 
 #include <glad/glad.h>
 
 #include <final_platform_layer.h>
 
-#include <assert.h>
-
 namespace renderer {
 
 	struct OpenGLBuffer: public Buffer {
-		GLuint bindId;
-		OpenGLBuffer(const BufferID id, const BufferType type, const size_t size, const BufferAccess access, const BufferUsage usage):
-			Buffer(id, type, size, access, usage),
-			bindId(0) {
+		GLuint nativeId;
+		GLenum nativeTarget;
+		GLenum nativeUsage;
+		GLenum nativeAccess;
+
+		OpenGLBuffer(const BufferID id, const BufferType type, const BufferAccess access, const BufferUsage usage, const size_t size):
+			Buffer(id, type, access, usage, size),
+			nativeId(0),
+			nativeTarget(0),
+			nativeUsage(0),
+			nativeAccess(0) {
 		}
+
+		void Write(const size_t offset, const size_t size, const uint8_t *data) override {
+			glBindBuffer(nativeTarget, nativeId);
+			glBufferSubData(nativeTarget, (GLintptr)offset, size, data);
+			glBindBuffer(nativeTarget, 0);
+		}
+
+		void *Map() {
+
+
+			glBindBuffer(nativeTarget, nativeId);
+			void *result = glMapBuffer(nativeTarget, nativeAccess);
+			return(result);
+		}
+
+		void Unmap() override {
+			glUnmapBuffer(nativeTarget);
+			glBindBuffer(nativeTarget, 0);
+		}
+
+		~OpenGLBuffer() {
+
+		}
+
+		bool Init(const uint8_t *data) override {
+			switch(type) {
+				case BufferType::Vertex:
+					nativeTarget = GL_ARRAY_BUFFER;
+					break;
+
+				case BufferType::Index:
+					nativeTarget = GL_ELEMENT_ARRAY_BUFFER;
+					break;
+
+				case BufferType::Uniform:
+					nativeTarget = GL_UNIFORM_BUFFER;
+					break;
+
+				default:
+					assert(!"Not supported buffer type");
+					nativeTarget = 0;
+					return(false);
+			}
+
+			switch(access) {
+				case BufferAccess::ReadWrite:
+					nativeAccess = GL_READ_WRITE;
+					break;
+
+				case BufferAccess::ReadOnly:
+					nativeAccess = GL_READ_ONLY;
+					break;
+
+				case BufferAccess::WriteOnly:
+					nativeAccess = GL_WRITE_ONLY;
+					break;
+
+				default:
+					nativeAccess = 0;
+					assert(!"Not supported buffer access");
+					return(false);
+			}
+
+			switch(usage) {
+				case BufferUsage::Static:
+					nativeUsage = GL_STATIC_DRAW;
+					break;
+
+				case BufferUsage::Dynamic:
+					nativeUsage = GL_DYNAMIC_DRAW;
+					break;
+
+				default:
+					nativeUsage = 0;
+					assert(!"Not supported buffer usage");
+					return(false);
+			}
+
+			glGenBuffers(1, &nativeId);
+			if(nativeId == 0) {
+				return(false);
+			}
+
+			glBindBuffer(nativeTarget, nativeId);
+			glBufferData(nativeTarget, size, data, nativeUsage);
+			glBindBuffer(nativeTarget, 0);
+			return(true);
+		}
+
+
+		void Release() override {
+			if(nativeId > 0) {
+				glDeleteBuffers(1, &nativeId);
+			}
+		}
+
 	};
 
 	struct OpenGLTexture: public Texture {
+	private:
 		GLuint nativeId;
 		GLenum nativeTarget;
 		GLenum nativeFormat;
 		GLenum nativeType;
 		GLint nativeInternalFormat;
-
-		OpenGLTexture(const TextureID id, const TextureType type, const TextureFormat format, const uint32_t width, const uint32_t height, const uint32_t depth, const uint8_t *data):
-			Texture(id, type, format, width, height, depth),
+		uint32_t bytesPerPixel;
+	public:
+		OpenGLTexture(const TextureID id, const TextureType type, const TextureFormat format, const uint32_t width, const uint32_t height, const uint8_t *data):
+			Texture(id, type, format, width, height),
 			nativeId(0),
 			nativeTarget(0),
 			nativeFormat(0),
 			nativeType(0),
-			nativeInternalFormat(0) {
+			nativeInternalFormat(0),
+			bytesPerPixel(0) {
 
 			switch(type) {
 				case TextureType::T2D:
@@ -43,7 +149,6 @@ namespace renderer {
 					break;
 			}
 
-			uint32_t bytesPerPixel = 0;
 			switch(format) {
 				case TextureFormat::AlphaU8:
 					nativeInternalFormat = GL_ALPHA8;
@@ -72,14 +177,19 @@ namespace renderer {
 			glBindTexture(nativeTarget, nativeId);
 			switch(type) {
 				case TextureType::T2D:
+				{
 					glTexImage2D(nativeTarget, 0, nativeInternalFormat, width, height, 0, nativeFormat, nativeType, static_cast<const void *>(data));
-					break;
+				} break;
 
 				case TextureType::Cube:
 				{
 					size_t faceSize = (size_t)width * (size_t)height * (size_t)bytesPerPixel;
 					for(uint32_t faceIndex = 0; faceIndex < 6; ++faceIndex) {
-						const uint8_t *facePixels = data + (faceSize * faceIndex);
+						const uint8_t *facePixels;
+						if(data != nullptr)
+							facePixels = data + (faceSize * faceIndex);
+						else
+							facePixels = nullptr;
 						GLuint texTarget = GL_TEXTURE_CUBE_MAP_POSITIVE_X + faceIndex;
 						glTexImage2D(texTarget, 0, nativeInternalFormat, width, height, 0, nativeFormat, nativeType, static_cast<const void *>(facePixels));
 					}
@@ -97,13 +207,72 @@ namespace renderer {
 				glDeleteTextures(1, &nativeId);
 			}
 		}
+
+		bool Write(const size_t size, const uint8_t *data) override {
+			size_t requiredSize = (size_t)(width * height * bytesPerPixel);
+			if(size != requiredSize || data == nullptr) {
+				return(false);
+			}
+			glBindTexture(nativeTarget, nativeId);
+			switch(type) {
+				case TextureType::T2D:
+				{
+					glTexImage2D(nativeTarget, 0, nativeInternalFormat, width, height, 0, nativeFormat, nativeType, static_cast<const void *>(data));
+				} break;
+
+				case TextureType::Cube:
+				{
+					size_t faceSize = (size_t)width * (size_t)height * (size_t)bytesPerPixel;
+					for(uint32_t faceIndex = 0; faceIndex < 6; ++faceIndex) {
+						const uint8_t *facePixels;
+						if(data != nullptr)
+							facePixels = data + (faceSize * faceIndex);
+						else
+							facePixels = nullptr;
+						GLuint texTarget = GL_TEXTURE_CUBE_MAP_POSITIVE_X + faceIndex;
+						glTexImage2D(texTarget, 0, nativeInternalFormat, width, height, 0, nativeFormat, nativeType, static_cast<const void *>(facePixels));
+					}
+				} break;
+
+				default:
+					assert(!"Unsupported texture type!");
+					break;
+			}
+			glBindTexture(nativeTarget, 0);
+			return(true);
+		}
+	};
+
+	struct OpenGLRenderTarget: public RenderTarget {
+	private:
+		GLuint nativeId;
+	public:
+		OpenGLRenderTarget(const RenderTargetID &id):
+			RenderTarget(id),
+			nativeId(0) {
+		}
+
+		bool Init(const RenderTargetParams &params) override {
+			if(params.attachmentCount == 0) return(false); // No attachment
+			glGenFramebuffers(1, &nativeId);
+		}
+
+		void Release() override {
+			if(nativeId > 0) {
+				glDeleteFramebuffers(1, &nativeId);
+				nativeId = 0;
+			}
+		}
 	};
 
 	enum class CommandType {
 		None = 0,
 		SetViewport,
+		SetScissor,
 		SetPipeline,
 		SetBuffer,
+		SetTexture,
+		SetUniform,
 		Draw,
 	};
 
@@ -112,11 +281,32 @@ namespace renderer {
 		size_t size;
 	};
 
-	struct ViewportCommand {
-		int32_t x;
-		int32_t y;
-		int32_t width;
-		int32_t height;
+	struct SetViewportCommand {
+		ClipRect viewportRect;
+	};
+
+	struct SetScissorCommand {
+		ClipRect scissorRect;
+	};
+
+	struct SetPipelineCommand {
+		PipelineID pipelineId;
+	};
+
+	struct SetBufferCommand {
+		BufferID bufferId;
+	};
+
+	struct SetTextureCommand {
+		TextureID textureId;
+		uint32_t index;
+	};
+
+	struct SetUniformCommand {
+		constexpr static uint32_t MaxUniformDataSize = sizeof(float) * 4 * 4; // 4x4 Matrix is max
+		uint8_t uniformData[MaxUniformDataSize];
+		size_t size;
+		UniformID uniformId;
 	};
 
 	struct DrawCommand {
@@ -124,14 +314,6 @@ namespace renderer {
 		size_t firstVertex;
 		size_t instanceCount;
 		size_t firstInstance;
-	};
-
-	struct SetPipelineCommand {
-		PipelineID pipeline;
-	};
-
-	struct SetBufferCommand {
-		BufferID buffer;
 	};
 
 	struct CommandBufferChunk {
@@ -255,19 +437,49 @@ namespace renderer {
 
 		void SetViewport(const int x, const int y, const int width, const int height) override {
 			if(state != CommandBufferRecordingState::Recording) return;
-			ViewportCommand cmd = {};
-			cmd.x = x;
-			cmd.y = y;
-			cmd.width = width;
-			cmd.height = height;
-			const uint8_t *data = (const uint8_t *)&cmd;
-			Push(CommandType::SetViewport, sizeof(cmd), data);
+			SetViewportCommand cmd = {};
+			cmd.viewportRect = ClipRect(x, y, width, height);
+			Push(CommandType::SetViewport, sizeof(cmd), (const uint8_t *)&cmd);
 		}
 
-		void SetPipeline(const Pipeline &pipeline) override {
+		void SetScissor(const int x, const int y, const int width, const int height) override {
 			if(state != CommandBufferRecordingState::Recording) return;
-			const uint8_t *data = (const uint8_t *)&pipeline;
-			Push(CommandType::SetPipeline, sizeof(pipeline), data);
+			SetScissorCommand cmd = {};
+			cmd.scissorRect = ClipRect(x, y, width, height);
+			Push(CommandType::SetViewport, sizeof(cmd), (const uint8_t *)&cmd);
+		}
+
+		void SetPipeline(const PipelineID &pipelineId) override {
+			if(state != CommandBufferRecordingState::Recording) return;
+			SetPipelineCommand cmd = {};
+			cmd.pipelineId = pipelineId;
+			Push(CommandType::SetPipeline, sizeof(cmd), (const uint8_t *)&cmd);
+		}
+
+		void SetBuffer(const BufferID &bufferId) override {
+			if(state != CommandBufferRecordingState::Recording) return;
+			SetBufferCommand cmd = {};
+			cmd.bufferId = bufferId;
+			Push(CommandType::SetBuffer, sizeof(cmd), (const uint8_t *)&cmd);
+		}
+
+		void SetTexture(const TextureID &textureId, const uint32_t index) override {
+			if(state != CommandBufferRecordingState::Recording) return;
+			SetTextureCommand cmd = {};
+			cmd.textureId = textureId;
+			cmd.index = index;
+			Push(CommandType::SetTexture, sizeof(cmd), (const uint8_t *)&cmd);
+		}
+
+		void SetUniform(const UniformID &uniformId, const size_t size, const uint8_t *data) override {
+			if(state != CommandBufferRecordingState::Recording) return;
+			assert(size > 0 && size <= SetUniformCommand::MaxUniformDataSize);
+			assert(data != nullptr);
+			SetUniformCommand cmd = {};
+			cmd.size = size;
+			cmd.uniformId = uniformId;
+			std::memcpy(cmd.uniformData, data, size);
+			Push(CommandType::SetUniform, sizeof(cmd), (const uint8_t *)&cmd);
 		}
 
 		void Draw(const size_t vertexCount, const size_t firstVertex, const size_t instanceCount, const size_t firstInstance) override {
@@ -277,15 +489,8 @@ namespace renderer {
 			cmd.firstVertex = firstVertex;
 			cmd.instanceCount = instanceCount;
 			cmd.firstInstance = firstInstance;
-			const uint8_t *data = (const uint8_t *)&cmd;
-			Push(CommandType::Draw, sizeof(cmd), data);
+			Push(CommandType::Draw, sizeof(cmd), (const uint8_t *)&cmd);
 		}
-
-
-		void SetBuffer(const Buffer &buffer) override {
-			if(state != CommandBufferRecordingState::Recording) return;
-		}
-
 	};
 
 	class BaseRenderer: public Renderer {
@@ -293,11 +498,30 @@ namespace renderer {
 		volatile uint32_t _idCounter;
 		std::map<BufferID, Buffer *> _buffersMap;
 		std::map<TextureID, Texture *> _texturesMap;
+		std::map<RenderTargetID, RenderTarget *> _renderTargetMap;
+		std::map<PipelineID, Pipeline *> _pipelineMap;
 		std::vector<CommandBuffer *> _commandBuffers;
 	protected:
 		~BaseRenderer() {
+			Release();
+		}
+
+		virtual bool Init() override {
+			_idCounter = 0;
+			return(true);
+		}
+
+		virtual void Release() override {
 			for(auto commandBuffer : _commandBuffers) {
 				delete commandBuffer;
+			}
+			for(auto pipelinePair : _pipelineMap) {
+				Pipeline *pipeline = pipelinePair.second;
+				delete pipeline;
+			}
+			for(auto renderTargetPair : _renderTargetMap) {
+				RenderTarget *renderTarget = renderTargetPair.second;
+				delete renderTarget;
 			}
 			for(auto texturePair : _texturesMap) {
 				Texture *texture = texturePair.second;
@@ -314,23 +538,84 @@ namespace renderer {
 			return(result);
 		}
 
-		void AddBuffer(Buffer &buffer) {
-			_buffersMap.insert(std::pair<BufferID, Buffer *>(buffer.id, &buffer));
+		void AddBuffer(Buffer *buffer) {
+			assert(buffer != nullptr);
+			_buffersMap.insert(std::pair<BufferID, Buffer *>(buffer->id, buffer));
 		}
-		void RemoveBuffer(const BufferID id) {
-			_buffersMap.erase(id);
+		Buffer *RemoveBuffer(const BufferID bufferId) {
+			std::map<BufferID, Buffer *>::iterator found = _buffersMap.find(bufferId);
+			if(found != _buffersMap.end()) {
+				Buffer *buffer = found->second;
+				_buffersMap.erase(bufferId);
+				return(buffer);
+			}
+			return(nullptr);
 		}
-		void AddTexture(Texture &texture) {
-			_texturesMap.insert(std::pair<TextureID, Texture *>(texture.id, &texture));
+
+		void AddTexture(Texture *texture) {
+			assert(texture != nullptr);
+			_texturesMap.insert(std::pair<TextureID, Texture *>(texture->id, texture));
 		}
-		void RemoveTexture(const TextureID id) {
-			_texturesMap.erase(id);
+		Texture *RemoveTexture(const TextureID textureId) {
+			std::map<TextureID, Texture *>::iterator found = _texturesMap.find(textureId);
+			if(found != _texturesMap.end()) {
+				Texture *texture = found->second;
+				_texturesMap.erase(textureId);
+				return(texture);
+			}
+			return(nullptr);
 		}
-		void AddCommandBuffer(CommandBuffer &commandBuffer) {
-			_commandBuffers.push_back(&commandBuffer);
+
+		void AddRenderTarget(RenderTarget *renderTarget) {
+			assert(renderTarget != nullptr);
+			_renderTargetMap.insert(std::pair<RenderTargetID, RenderTarget *>(renderTarget->id, renderTarget));
 		}
-		void RemoveCommandBuffer(CommandBuffer &commandBuffer) {
-			_commandBuffers.erase(std::remove(_commandBuffers.begin(), _commandBuffers.end(), &commandBuffer));
+		RenderTarget *RemoveRenderTarget(const RenderTargetID renderTargetId) {
+			std::map<RenderTargetID, RenderTarget *>::iterator found = _renderTargetMap.find(renderTargetId);
+			if(found != _renderTargetMap.end()) {
+				RenderTarget *renderTarget = found->second;
+				_renderTargetMap.erase(renderTargetId);
+				return(renderTarget);
+			}
+			return(nullptr);
+		}
+
+		void AddPipeline(Pipeline *pipeline) {
+			assert(pipeline != nullptr);
+			_pipelineMap.insert(std::pair<PipelineID, Pipeline *>(pipeline->id, pipeline));
+		}
+		Pipeline *RemovePipeline(const PipelineID pipelineId) {
+			std::map<PipelineID, Pipeline *>::iterator found = _pipelineMap.find(pipelineId);
+			if(found != _pipelineMap.end()) {
+				Pipeline *pipeline = found->second;
+				_pipelineMap.erase(pipelineId);
+				return(pipeline);
+			}
+			return(nullptr);
+		}
+
+		void AddCommandBuffer(CommandBuffer *commandBuffer) {
+			assert(commandBuffer != nullptr);
+			_commandBuffers.push_back(commandBuffer);
+		}
+		void RemoveCommandBuffer(CommandBuffer *commandBuffer) {
+			assert(commandBuffer != nullptr);
+			_commandBuffers.erase(std::remove(_commandBuffers.begin(), _commandBuffers.end(), commandBuffer));
+		}
+	public:
+		Buffer *GetBuffer(const BufferID bufferId) {
+			Buffer *result = _buffersMap[bufferId];
+			return(result);
+		}
+
+		Texture *GetTexture(const TextureID textureID) {
+			Texture *result = _texturesMap[textureID];
+			return(result);
+		}
+
+		RenderTarget *GetRenderTarget(const RenderTargetID renderTargetId) {
+			RenderTarget *result = _renderTargetMap[renderTargetId];
+			return(result);
 		}
 	};
 
@@ -356,8 +641,16 @@ namespace renderer {
 			switch(type) {
 				case CommandType::SetViewport:
 				{
-					const ViewportCommand *vpCmd = (const ViewportCommand *)data;
-					glViewport(vpCmd->x, vpCmd->y, vpCmd->width, vpCmd->height);
+					const SetViewportCommand *vpCmd = (const SetViewportCommand *)data;
+					ClipRect viewport = vpCmd->viewportRect;
+					glViewport(viewport.x, viewport.y, viewport.width, viewport.height);
+				} break;
+
+				case CommandType::SetScissor:
+				{
+					const SetScissorCommand *vpCmd = (const SetScissorCommand *)data;
+					ClipRect scissor = vpCmd->scissorRect;
+					glScissor(scissor.x, scissor.y, scissor.width, scissor.height);
 				} break;
 
 				default:
@@ -405,38 +698,44 @@ namespace renderer {
 			delete _commandQueue;
 		}
 
-		Buffer *CreateBuffer(const BufferType type, const size_t size, const BufferAccess access, const BufferUsage usage) override {
-			BufferID id = { NextID() };
-			OpenGLBuffer *newBuffer = new OpenGLBuffer(id, type, size, access, usage);
-			AddBuffer(*newBuffer);
-			return(newBuffer);
+		BufferID CreateBuffer(const BufferType type, const BufferAccess access, const BufferUsage usage, const size_t size, const uint8_t *data) override {
+			BufferID id = BufferID { NextID() };
+			OpenGLBuffer *newBuffer = new OpenGLBuffer(id, type, access, usage, size);
+			if(!newBuffer->Init(data)) {
+				delete newBuffer;
+				return(BufferID { 0 });
+			}
+			AddBuffer(newBuffer);
+			return(id);
 		}
 
-		void DestroyBuffer(Buffer &buffer) override {
-			OpenGLBuffer *nativeBuffer = reinterpret_cast<OpenGLBuffer *>(&buffer);
-			RemoveBuffer(nativeBuffer->id);
-			delete nativeBuffer;
+		void DestroyBuffer(const BufferID bufferId) override {
+			Buffer *buffer = RemoveBuffer(bufferId);
+			if(buffer != nullptr) {
+				buffer->Release();
+				delete buffer;
+			}
 		}
 
-		Texture *CreateTexture2D(const TextureFormat format, const uint32_t width, const uint32_t height, const uint8_t *data2D) override {
-			TextureID id = { NextID() };
-			OpenGLTexture *newTexture = new OpenGLTexture(id, TextureType::T2D, format, width, height, 0, data2D);
-			AddTexture(*newTexture);
-			return(newTexture);
+		TextureID CreateTexture2D(const TextureFormat format, const uint32_t width, const uint32_t height, const uint8_t *data2D) override {
+			TextureID id = TextureID { NextID() };
+			OpenGLTexture *newTexture = new OpenGLTexture(id, TextureType::T2D, format, width, height, data2D);
+			AddTexture(newTexture);
+			return(id);
 		}
 
-
-		Texture *CreateTextureCube(const TextureFormat format, const uint32_t faceWidth, const uint32_t faceHeight, const uint8_t *data2Dx6) override {
-			TextureID id = { NextID() };
-			OpenGLTexture *newTexture = new OpenGLTexture(id, TextureType::Cube, format, faceWidth, faceHeight, 0, data2Dx6);
-			AddTexture(*newTexture);
-			return(newTexture);
+		TextureID CreateTextureCube(const TextureFormat format, const uint32_t faceWidth, const uint32_t faceHeight, const uint8_t *data2Dx6) override {
+			TextureID id = TextureID { NextID() };
+			OpenGLTexture *newTexture = new OpenGLTexture(id, TextureType::Cube, format, faceWidth, faceHeight, data2Dx6);
+			AddTexture(newTexture);
+			return(id);
 		}
 
-		void DestroyTexture(Texture &texture) override {
-			OpenGLTexture *nativeTexture = reinterpret_cast<OpenGLTexture *>(&texture);
-			RemoveTexture(nativeTexture->id);
-			delete nativeTexture;
+		void DestroyTexture(const TextureID textureId) override {
+			Texture *texture = RemoveTexture(textureId);
+			if(texture != nullptr) {
+				delete texture;
+			}
 		}
 
 		CommandQueue *GetCommandQueue() override {
@@ -446,32 +745,71 @@ namespace renderer {
 
 		CommandBuffer *CreateCommandBuffer() override {
 			OpenGLCommandBuffer *commandBuffer = new OpenGLCommandBuffer(this);
-			AddCommandBuffer(*commandBuffer);
+			AddCommandBuffer(commandBuffer);
 			return(commandBuffer);
 		}
 
 
-		void DestroyCommandBuffer(CommandBuffer &commandBuffer) override {
-			OpenGLCommandBuffer *nativeCommandBuffer = static_cast<OpenGLCommandBuffer *>(&commandBuffer);
-			RemoveCommandBuffer(*nativeCommandBuffer);
-			delete nativeCommandBuffer;
+		void DestroyCommandBuffer(CommandBuffer *commandBuffer) override {
+			if(commandBuffer == nullptr) return;
+			RemoveCommandBuffer(commandBuffer);
+			delete commandBuffer;
 		}
 
+		RenderTargetID CreateRenderTarget(const RenderTargetParams &params) override {
+			RenderTargetID id = RenderTargetID { NextID() };
+			OpenGLRenderTarget *renderTarget = new OpenGLRenderTarget(id);
+			if(!renderTarget->Init(params)) {
+				delete renderTarget;
+				return(RenderTargetID { 0 });
+			}
+			AddRenderTarget(renderTarget);
+			return(id);
+		}
+
+
+		void DestroyRenderTarget(const RenderTargetID renderTargetId) override {
+			RenderTarget *renderTarget = RemoveRenderTarget(renderTargetId);
+			if(renderTarget != nullptr) {
+				renderTarget->Release();
+				delete renderTarget;
+			}
+		}
+
+		PipelineID CreatePipeline() override {
+			PipelineID id = PipelineID { NextID() };
+			Pipeline *pipeline = new Pipeline();
+			AddPipeline(pipeline);
+			return(id);
+		}
+
+		void DestroyPipeline(const PipelineID pipelineId) override {
+			Pipeline *pipeline = RemovePipeline(pipelineId);
+			if(pipeline != nullptr) {
+				delete pipeline;
+			}
+		}
 
 		void Present() override {
 		}
-
 	};
 
 	Renderer *Renderer::Create(const RendererType type) {
+		Renderer *result = nullptr;
 		switch(type) {
 			case RendererType::OpenGL:
-				return new OpenGLRenderer();
+				result = new OpenGLRenderer();
+				break;
+
 			default:
 				assert(!"Renderer type not supported!");
 				break;
 		}
-		return(nullptr);
+		if(result != nullptr && !result->Init()) {
+			delete result;
+			return(nullptr);
+		}
+		return(result);
 	}
 
 };
