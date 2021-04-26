@@ -44,7 +44,7 @@ static const char *glErrorToString(GLuint code) {
 enum class ClearFlags: int {
 	None = 0,
 	Color = 1 << 0,
-	Depth = 1 << 1
+	Depth = 1 << 1,
 };
 
 inline ClearFlags operator | (ClearFlags a, ClearFlags b) {

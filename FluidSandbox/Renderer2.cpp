@@ -9,7 +9,7 @@
 
 #include <final_platform_layer.h>
 
-namespace renderer {
+namespace fsr {
 
 	struct OpenGLBuffer: public Buffer {
 		GLuint nativeId;
@@ -252,9 +252,11 @@ namespace renderer {
 			nativeId(0) {
 		}
 
-		bool Init(const RenderTargetParams &params) override {
-			if(params.attachmentCount == 0) return(false); // No attachment
+		bool Init(const RenderTargetDescriptor &renderTargetDesc) override {
+			if(renderTargetDesc.attachmentCount == 0) return(false); // No attachment
 			glGenFramebuffers(1, &nativeId);
+			if(nativeId == 0) return(false);
+			return(true);
 		}
 
 		void Release() override {
@@ -267,6 +269,7 @@ namespace renderer {
 
 	enum class CommandType {
 		None = 0,
+		Clear,
 		SetViewport,
 		SetScissor,
 		SetPipeline,
@@ -281,12 +284,16 @@ namespace renderer {
 		size_t size;
 	};
 
+	struct ClearCommand {
+		ClearFlags flags;
+	};
+
 	struct SetViewportCommand {
-		ClipRect viewportRect;
+		Viewport viewportRect;
 	};
 
 	struct SetScissorCommand {
-		ClipRect scissorRect;
+		ScissorRect scissorRect;
 	};
 
 	struct SetPipelineCommand {
@@ -411,6 +418,7 @@ namespace renderer {
 			if(state != CommandBufferRecordingState::WaitingForSubmit) return(nullptr);
 			if(chunks.empty()) return(nullptr);
 			CommandBufferChunk *chunk = chunks.front();
+			chunks.pop();
 			if(chunks.empty()) {
 				// We have cleared the chunks queue, we can now accept new stuff
 				state = CommandBufferRecordingState::Ready;
@@ -435,17 +443,24 @@ namespace renderer {
 			state = CommandBufferRecordingState::WaitingForSubmit;
 		}
 
-		void SetViewport(const int x, const int y, const int width, const int height) override {
+		void Clear(const ClearFlags flags) override {
+			if(state != CommandBufferRecordingState::Recording) return;
+			ClearCommand cmd = {};
+			cmd.flags = flags;
+			Push(CommandType::Clear, sizeof(cmd), (const uint8_t *)&cmd);
+		}
+
+		void SetViewport(const float x, const float y, const float width, const float height, const float minDepth, const float maxDepth) override {
 			if(state != CommandBufferRecordingState::Recording) return;
 			SetViewportCommand cmd = {};
-			cmd.viewportRect = ClipRect(x, y, width, height);
+			cmd.viewportRect = Viewport(x, y, width, height, minDepth, maxDepth);
 			Push(CommandType::SetViewport, sizeof(cmd), (const uint8_t *)&cmd);
 		}
 
 		void SetScissor(const int x, const int y, const int width, const int height) override {
 			if(state != CommandBufferRecordingState::Recording) return;
 			SetScissorCommand cmd = {};
-			cmd.scissorRect = ClipRect(x, y, width, height);
+			cmd.scissorRect = ScissorRect(x, y, width, height);
 			Push(CommandType::SetViewport, sizeof(cmd), (const uint8_t *)&cmd);
 		}
 
@@ -471,15 +486,33 @@ namespace renderer {
 			Push(CommandType::SetTexture, sizeof(cmd), (const uint8_t *)&cmd);
 		}
 
-		void SetUniform(const UniformID &uniformId, const size_t size, const uint8_t *data) override {
+		void SetUniform(const UniformID &uniformId, const size_t size, const uint8_t *value) override {
 			if(state != CommandBufferRecordingState::Recording) return;
 			assert(size > 0 && size <= SetUniformCommand::MaxUniformDataSize);
-			assert(data != nullptr);
+			assert(value != nullptr);
 			SetUniformCommand cmd = {};
 			cmd.size = size;
 			cmd.uniformId = uniformId;
-			std::memcpy(cmd.uniformData, data, size);
+			std::memcpy(cmd.uniformData, value, size);
 			Push(CommandType::SetUniform, sizeof(cmd), (const uint8_t *)&cmd);
+		}
+		void SetUniformInt(const UniformID &uniformId, const int value) override {
+			SetUniform(uniformId, sizeof(int), (uint8_t *)&value);
+		}
+		void SetUniformVec2i(const UniformID &uniformId, const glm::ivec2 &value) override {
+			SetUniform(uniformId, sizeof(glm::ivec2), (uint8_t *)&value[0]);
+		}
+		void SetUniformVec2(const UniformID &uniformId, const glm::vec2 &value) override {
+			SetUniform(uniformId, sizeof(glm::vec2), (uint8_t *)&value[0]);
+		}
+		void SetUniformVec3(const UniformID &uniformId, const glm::vec3 &value) override {
+			SetUniform(uniformId, sizeof(glm::vec3), (uint8_t *)&value[0]);
+		}
+		void SetUniformVec4(const UniformID &uniformId, const glm::vec4 &value) override {
+			SetUniform(uniformId, sizeof(glm::vec4), (uint8_t *)&value[0]);
+		}
+		void SetUniformMat4(const UniformID &uniformId, const glm::mat4 &mat) override {
+			SetUniform(uniformId, sizeof(glm::mat4), (uint8_t *)&mat[0][0]);
 		}
 
 		void Draw(const size_t vertexCount, const size_t firstVertex, const size_t instanceCount, const size_t firstInstance) override {
@@ -502,6 +535,11 @@ namespace renderer {
 		std::map<PipelineID, Pipeline *> _pipelineMap;
 		std::vector<CommandBuffer *> _commandBuffers;
 	protected:
+		BaseRenderer(): 
+			_idCounter(0) {
+
+		}
+
 		~BaseRenderer() {
 			Release();
 		}
@@ -608,6 +646,11 @@ namespace renderer {
 			return(result);
 		}
 
+		Pipeline *GetPipeline(const PipelineID pipelineId) {
+			Pipeline *result = _pipelineMap[pipelineId];
+			return(result);
+		}
+
 		Texture *GetTexture(const TextureID textureID) {
 			Texture *result = _texturesMap[textureID];
 			return(result);
@@ -631,31 +674,74 @@ namespace renderer {
 	class OpenGLCommandQueue: public CommandQueue {
 	private:
 		OpenGLRenderer *renderer;
-	public:
-		OpenGLCommandQueue(OpenGLRenderer *renderer):
-			CommandQueue(),
-			renderer(renderer) {
+		Pipeline *activePipeline;
+
+		void ChangePipeline(const PipelineID pipelineId) {
+			BaseRenderer *baseRenderer = reinterpret_cast<BaseRenderer *>(renderer);
+
+			Pipeline *pipeline = baseRenderer->GetPipeline(pipelineId);
+			assert(pipeline != nullptr);
+			activePipeline = pipeline;
+
+			Viewport viewport = pipeline->viewport;
+			ScissorRect scissor = pipeline->scissor;
+
+			glm::vec4 clearColor = pipeline->pipelineSettings.clear.color;
+			glClearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
+
+			glDepthRange(viewport.minDepth, viewport.maxDepth);
+
+			glViewport((int)viewport.x, (int)viewport.y, (int)viewport.width, (int)viewport.height);
+			glScissor(scissor.x, scissor.y, scissor.width, scissor.height);
 		}
 
 		void ExecuteCommand(const CommandType type, const uint8_t *data, const size_t size) {
 			switch(type) {
+				case CommandType::Clear:
+				{
+					const ClearCommand *cmd = (const ClearCommand *)data;
+					ClearFlags flags = cmd->flags;
+					GLbitfield c = 0;
+					if((flags & ClearFlags::Color) == ClearFlags::Color)
+						c |= GL_COLOR_BUFFER_BIT;
+					if((flags & ClearFlags::Depth) == ClearFlags::Depth)
+						c |= GL_DEPTH_BUFFER_BIT;
+					if((flags & ClearFlags::Stencil) == ClearFlags::Stencil)
+						c |= GL_STENCIL_BUFFER_BIT;
+					glClear(c);
+				} break;
+
 				case CommandType::SetViewport:
 				{
-					const SetViewportCommand *vpCmd = (const SetViewportCommand *)data;
-					ClipRect viewport = vpCmd->viewportRect;
+					const SetViewportCommand *cmd = (const SetViewportCommand *)data;
+					Viewport viewport = cmd->viewportRect;
 					glViewport(viewport.x, viewport.y, viewport.width, viewport.height);
 				} break;
 
 				case CommandType::SetScissor:
 				{
-					const SetScissorCommand *vpCmd = (const SetScissorCommand *)data;
-					ClipRect scissor = vpCmd->scissorRect;
+					const SetScissorCommand *cmd = (const SetScissorCommand *)data;
+					ScissorRect scissor = cmd->scissorRect;
 					glScissor(scissor.x, scissor.y, scissor.width, scissor.height);
 				} break;
 
+				case CommandType::SetPipeline:
+				{
+					const SetPipelineCommand *cmd = (const SetPipelineCommand *)data;
+					PipelineID pipelineId = cmd->pipelineId;
+					ChangePipeline(pipelineId);
+				} break;
+
 				default:
+					assert(!"Unsupported command type!");
 					break;
 			}
+		}
+	public:
+		OpenGLCommandQueue(OpenGLRenderer *renderer):
+			CommandQueue(),
+			renderer(renderer),
+			activePipeline(nullptr) {
 		}
 
 		bool Submit(CommandBuffer &commandBuffer) override {
@@ -672,15 +758,19 @@ namespace renderer {
 					CommandType cmdType = header->type;
 					size_t dataSize = header->size;
 
-					start += sizeof(header);
 					remaining -= sizeof(CommandHeader);
+					offset += sizeof(CommandHeader);
 
 					if(dataSize > 0) {
-						ExecuteCommand(cmdType, start, dataSize);
+						const uint8_t *dataStart = (const uint8_t *)header + sizeof(CommandHeader);
+						ExecuteCommand(cmdType, dataStart, dataSize);
 						remaining -= dataSize;
+						offset += dataSize;
 					}
 				}
+				int x = 0;
 			}
+			activePipeline = nullptr;
 			return(true);
 		}
 
@@ -689,9 +779,41 @@ namespace renderer {
 	class OpenGLRenderer: public BaseRenderer {
 	private:
 		OpenGLCommandQueue *_commandQueue;
+
+		void SetDefault() {
+			glEnable(GL_DEPTH_TEST);
+			glDepthFunc(GL_LESS);
+			glDepthMask(GL_TRUE);
+			glDepthRange(0.0f, 1.0f);
+
+			glClearDepth(1.0f);
+			glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+
+			glFrontFace(GL_CCW);
+			glCullFace(GL_BACK);
+			glEnable(GL_CULL_FACE);
+
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+			glDisable(GL_TEXTURE_3D);
+			glDisable(GL_TEXTURE_2D);
+			glDisable(GL_TEXTURE_1D);
+			glDisable(GL_TEXTURE_CUBE_MAP);
+
+			glShadeModel(GL_SMOOTH);
+
+			glLineWidth(1.0f);
+			glPointSize(1.0f);
+
+			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+			glMatrixMode(GL_MODELVIEW);
+		}
 	public:
 		OpenGLRenderer(): BaseRenderer() {
 			_commandQueue = new	OpenGLCommandQueue(this);
+			SetDefault();
 		}
 
 		~OpenGLRenderer() {
@@ -756,10 +878,10 @@ namespace renderer {
 			delete commandBuffer;
 		}
 
-		RenderTargetID CreateRenderTarget(const RenderTargetParams &params) override {
+		RenderTargetID CreateRenderTarget(const RenderTargetDescriptor &renderTargetDesc) override {
 			RenderTargetID id = RenderTargetID { NextID() };
 			OpenGLRenderTarget *renderTarget = new OpenGLRenderTarget(id);
-			if(!renderTarget->Init(params)) {
+			if(!renderTarget->Init(renderTargetDesc)) {
 				delete renderTarget;
 				return(RenderTargetID { 0 });
 			}
@@ -776,9 +898,16 @@ namespace renderer {
 			}
 		}
 
-		PipelineID CreatePipeline() override {
+		PipelineID CreatePipeline(const PipelineDescriptor &pipelineDesc) override {
 			PipelineID id = PipelineID { NextID() };
-			Pipeline *pipeline = new Pipeline();
+			Pipeline *pipeline = new Pipeline(id);
+			pipeline->pipelineLayout = pipelineDesc.pipelineLayout;
+			pipeline->pipelineSettings = pipelineDesc.pipelineSettings;
+			pipeline->primitive = pipelineDesc.primitive;
+			pipeline->renderTarget = pipelineDesc.renderTarget;
+			pipeline->scissor = pipelineDesc.scissor;
+			pipeline->viewport = pipelineDesc.viewport;
+			pipeline->shaderProgram = pipelineDesc.shaderProgram;
 			AddPipeline(pipeline);
 			return(id);
 		}
@@ -791,6 +920,7 @@ namespace renderer {
 		}
 
 		void Present() override {
+			fplVideoFlip();
 		}
 	};
 

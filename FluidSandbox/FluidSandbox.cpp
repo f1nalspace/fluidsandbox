@@ -913,12 +913,12 @@ void DrawBounds(const glm::mat4 &cameraMVP, const PhysicsBoundingBox &bounds) {
 	glm::mat4 translation = glm::translate(glm::mat4(1.0f), center);
 	glm::mat4 scaled = glm::scale(translation, ext);
 	glm::mat4 mvp = cameraMVP * scaled;
-	
+
 	gLineShader->enable();
 	gLineShader->uniform4f(gLineShader->ulocColor, &color[0]);
 	gLineShader->uniformMatrix4(gLineShader->ulocMVP, &mvp[0][0]);
 	DrawPrimitive(gBoxVBO, true);
-	gLineShader->disable();	
+	gLineShader->disable();
 }
 
 void DrawActorBounds(const glm::mat4 &mvp, const PhysicsActor &physicsActor) {
@@ -1438,6 +1438,86 @@ void RenderSceneFBO(const glm::mat4 &mvp, const int windowWidth, const int windo
 	gSceneFBO->setDrawBuffer(latestDrawBuffer);
 
 	gRenderer->SetViewport(0, 0, windowWidth, windowHeight);
+}
+
+struct FluidSandbox {
+	fsr::Renderer *renderer;
+	fsr::CommandQueue *queue;
+	fsr::CommandBuffer *commandBuffer;
+
+	fsr::PipelineID pipelineId;
+
+	int lastWidth;
+	int lastHeight;
+};
+
+static void DestroyPipeline(FluidSandbox &app) {
+	fsr::Renderer *r = app.renderer;
+
+	r->DestroyPipeline(app.pipelineId);
+	app.pipelineId = {};
+}
+
+static void CreatePipeline(FluidSandbox &app, const int width, const int height) {
+	fsr::Renderer *r = app.renderer;
+
+	fsr::PipelineDescriptor pipelineDesc = {};
+	pipelineDesc.viewport = fsr::Viewport(0, 0, width, height);
+	pipelineDesc.scissor = fsr::ScissorRect(0, 0, width, height);
+	pipelineDesc.pipelineSettings.clear.color = glm::vec4(0.1f, 0.2f, 0.6f, 1.0f);
+	pipelineDesc.pipelineSettings.clear.flags = fsr::ClearFlags::ColorAndDepth;
+	app.pipelineId = r->CreatePipeline(pipelineDesc);
+}
+
+
+static void InitRenderer2(FluidSandbox &app, const int initWidth, const int initHeight) {
+	fsr::Renderer *r = app.renderer = fsr::Renderer::Create(fsr::RendererType::OpenGL);
+	app.queue = app.renderer->GetCommandQueue();
+	app.commandBuffer = app.renderer->CreateCommandBuffer();
+	app.lastWidth = app.lastHeight = 0;
+	CreatePipeline(app, initWidth, initHeight);
+}
+
+
+static void ReleaseRenderer2(FluidSandbox &app) {
+	fsr::Renderer *r = app.renderer;
+
+	DestroyPipeline(app);
+
+	r->DestroyCommandBuffer(app.commandBuffer);
+	app.commandBuffer = nullptr;
+
+	delete r;
+	app.renderer = nullptr;
+}
+
+static void ResizeRenderer2(FluidSandbox &app, const int newWidth, const int newHeight) {
+	DestroyPipeline(app);
+	CreatePipeline(app, newWidth, newHeight);
+}
+
+static void OnRender2(FluidSandbox &app, const int windowWidth, const int windowHeight, const float frametime) {
+	if(app.lastWidth != windowWidth || app.lastHeight != windowHeight) {
+		app.lastWidth = windowWidth;
+		app.lastHeight = windowHeight;
+		ResizeRenderer2(app, windowWidth, windowHeight);
+	}
+
+	fsr::CommandQueue *queue = app.queue;
+
+	fsr::CommandBuffer *cmd = app.commandBuffer;
+
+	cmd->Begin();
+
+	cmd->SetPipeline(app.pipelineId);
+
+	cmd->Clear(fsr::ClearFlags::ColorAndDepth);
+
+	cmd->End();
+
+	queue->Submit(*cmd);
+
+	app.renderer->Present();
 }
 
 void OnRender(const int windowWidth, const int windowHeight, const float frametime) {
@@ -2158,7 +2238,8 @@ void ReleaseResources() {
 	if(gTexMng != nullptr)
 		delete gTexMng;
 	if(gFontAtlas32 != nullptr) {
-		delete gFontAtlas32;}
+		delete gFontAtlas32;
+	}
 	if(gFontAtlas16 != nullptr) {
 		delete gFontAtlas16;
 	}
@@ -2270,6 +2351,12 @@ int main(int argc, char **argv) {
 		fplConsoleFormatOut("Load Fluid Scenario\n");
 		ResetScene(*gPhysics);
 
+		fplWindowSize initialWinSize;
+		fplGetWindowSize(&initialWinSize);
+
+		FluidSandbox app = {};
+		InitRenderer2(app, initialWinSize.width, initialWinSize.height);
+
 		fplEvent ev;
 
 		float frametime = 1.0f / 60.0f;
@@ -2307,12 +2394,14 @@ int main(int argc, char **argv) {
 			fplWindowSize winSize;
 			fplGetWindowSize(&winSize);
 
-			OnRender(winSize.width, winSize.height, frametime);
+			OnRender2(app, winSize.width, winSize.height, frametime);
 
 			fplWallClock endTime = fplGetWallClock();
 			double wallDelta = fplGetWallDelta(lastTime, endTime);
 			lastTime = endTime;
 		}
+
+		ReleaseRenderer2(app);
 
 		OnShutdown();
 

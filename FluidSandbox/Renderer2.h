@@ -8,7 +8,7 @@
 
 #include <final_platform_layer.h>
 
-namespace renderer {
+namespace fsr {
 	typedef int32_t b32;
 
 	//
@@ -144,7 +144,7 @@ namespace renderer {
 		}
 	};
 
-	struct RenderTargetParams {
+	struct RenderTargetDescriptor {
 		constexpr static uint32_t MaxAttachmentCount = 16;
 		RenderTargetAttachment attachments[MaxAttachmentCount];
 		uint32_t attachmentCount;
@@ -159,7 +159,7 @@ namespace renderer {
 			id(id) {
 		}
 	public:
-		virtual bool Init(const RenderTargetParams &params) = 0;
+		virtual bool Init(const RenderTargetDescriptor &params) = 0;
 		virtual void Release() = 0;
 	};
 
@@ -306,38 +306,65 @@ namespace renderer {
 		TriangleFan,
 	};
 
-	struct ClipRect {
+	struct Viewport {
+		float x;
+		float y;
+		float width;
+		float height;
+		float minDepth;
+		float maxDepth;
+
+		Viewport():
+			x(0.0f),
+			y(0.0f),
+			width(0.0f),
+			height(0.0f),
+			minDepth(0.0f),
+			maxDepth(1.0f) {
+		}
+
+		Viewport(const float x, const float y, const float width, const float height, const float minWidth = 0.0f, const float maxDepth = 1.0f):
+			x(x),
+			y(y),
+			width(width),
+			height(height),
+			minDepth(minDepth),
+			maxDepth(maxDepth) {
+		}
+	};
+
+	struct ScissorRect {
 		int32_t x;
 		int32_t y;
 		int32_t width;
 		int32_t height;
 
-		ClipRect():
+		ScissorRect():
 			x(0),
 			y(0),
 			width(0),
 			height(0) {
 		}
 
-		ClipRect(const int x, const int y, const int width, const int height):
+		ScissorRect(const int32_t x, const int32_t y, const int32_t width, const int32_t height):
 			x(x),
 			y(y),
 			width(width),
 			height(height) {
-
 		}
 	};
 
-	enum class ClearFlags: uint32_t {
+	enum class ClearFlags: int32_t {
 		None = 0,
 		Color = 1 << 0,
 		Depth = 1 << 1,
 		Stencil = 1 << 2,
+		ColorAndDepth = Color | Depth,
 	};
 	FPL_ENUM_AS_FLAGS_OPERATORS(ClearFlags);
 
 	struct ClearSettings {
-		float color[4];
+		glm::vec4 color;
 		ClearFlags flags;
 	};
 
@@ -417,15 +444,37 @@ namespace renderer {
 		}
 	};
 
+	struct PipelineDescriptor {
+		Viewport viewport;
+		ScissorRect scissor;
+		PipelineSettings pipelineSettings;
+		PipelineLayoutID pipelineLayout;
+		ShaderProgramID shaderProgram;
+		RenderTargetID renderTarget;
+		PrimitiveMode primitive;
+	};
+
 	struct Pipeline {
-		ClipRect viewport;
-		ClipRect scissor;
+		Viewport viewport;
+		ScissorRect scissor;
 		PipelineSettings pipelineSettings;
 		PipelineLayoutID pipelineLayout;
 		ShaderProgramID shaderProgram;
 		RenderTargetID renderTarget;
 		PrimitiveMode primitive;
 		PipelineID id;
+
+		Pipeline(const PipelineID &id):
+			viewport(Viewport()),
+			scissor(ScissorRect()),
+			pipelineSettings(PipelineSettings()),
+			pipelineLayout(PipelineLayoutID { 0 }),
+			shaderProgram(ShaderProgramID { 0 }),
+			renderTarget(RenderTargetID { 0 }),
+			primitive(PrimitiveMode::TriangleList),
+			id(id) {
+
+		}
 	};
 
 	enum class RendererType: int {
@@ -438,12 +487,19 @@ namespace renderer {
 	public:
 		virtual bool Begin() = 0;
 		virtual void End() = 0;
-		virtual void SetViewport(const int x, const int y, const int width, const int height) = 0;
+		virtual void Clear(const ClearFlags flags) = 0;
+		virtual void SetViewport(const float x, const float y, const float width, const float height, const float minDepth = 0.0f, const float maxDepth = 1.0f) = 0;
 		virtual void SetScissor(const int x, const int y, const int width, const int height) = 0;
 		virtual void SetPipeline(const PipelineID &pipelineId) = 0;
 		virtual void SetBuffer(const BufferID &bufferId) = 0;
 		virtual void SetTexture(const TextureID &textureId, const uint32_t index) = 0;
-		virtual void SetUniform(const UniformID &uniformId, const size_t size, const uint8_t *data) = 0;
+		virtual void SetUniform(const UniformID &uniformId, const size_t size, const uint8_t *value) = 0;
+		virtual void SetUniformInt(const UniformID &uniformId, const int value) = 0;
+		virtual void SetUniformVec2i(const UniformID &uniformId, const glm::ivec2 &value) = 0;
+		virtual void SetUniformVec2(const UniformID &uniformId, const glm::vec2 &value) = 0;
+		virtual void SetUniformVec3(const UniformID &uniformId, const glm::vec3 &value) = 0;
+		virtual void SetUniformVec4(const UniformID &uniformId, const glm::vec4 &value) = 0;
+		virtual void SetUniformMat4(const UniformID &uniformId, const glm::mat4 &value) = 0;
 		virtual void Draw(const size_t vertexCount, const size_t firstVertex = 0, const size_t instanceCount = 1, const size_t firstInstance = 0) = 0;
 	};
 
@@ -467,10 +523,10 @@ namespace renderer {
 		virtual BufferID CreateBuffer(const BufferType type, const BufferAccess access, const BufferUsage usage, const size_t size, const uint8_t *data) = 0;
 		virtual void DestroyBuffer(const BufferID bufferId) = 0;
 
-		virtual RenderTargetID CreateRenderTarget(const RenderTargetParams &params) = 0;
+		virtual RenderTargetID CreateRenderTarget(const RenderTargetDescriptor &renderTargetDesc) = 0;
 		virtual void DestroyRenderTarget(const RenderTargetID renderTargetId) = 0;
 
-		virtual PipelineID CreatePipeline() = 0;
+		virtual PipelineID CreatePipeline(const PipelineDescriptor &pipelineDesc) = 0;
 		virtual void DestroyPipeline(const PipelineID pipelineId) = 0;
 
 		virtual TextureID CreateTexture2D(const TextureFormat format, const uint32_t width, const uint32_t height, const uint8_t *data2D) = 0;
