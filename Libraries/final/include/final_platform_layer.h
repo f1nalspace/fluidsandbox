@@ -120,7 +120,7 @@ SOFTWARE.
 
 /*!
 	@file final_platform_layer.h
-	@version v0.9.6-beta
+	@version v0.9.7-beta
 	@author Torsten Spaete
 	@brief Final Platform Layer (FPL) - A C99 Single-Header-File Platform Abstraction Library
 */
@@ -133,7 +133,14 @@ SOFTWARE.
 	@tableofcontents
 
 	## v0.9.7-beta
-	- XXX
+	- New[#105]: [Win32] Added support for creating and using a console in addition to a window
+
+	- Fixed[#109]: Fixed fplS32ToString was not working anymore
+
+	- Fixed[#98]: [Win32] Fixed fplThreadYield was not using YieldProcessor()
+	- Fixed[#110]: [Win32] Fixed preventing of erasing the background for non-video systems hides window always
+
+	- Changed[#113]: [Win32] Properly show window on initialize (Foreground, Focus)
 
 	## v0.9.6-beta
 	### Features
@@ -4252,7 +4259,7 @@ typedef uint32_t fplThreadState;
 typedef enum fplThreadPriority {
 	//! Unknown priority
 	fplThreadPriority_Unknown = -10,
-	
+
 	//! Idle priority (Only when nothing is going on)
 	fplThreadPriority_Idle = -2,
 	//! Low priority
@@ -6753,7 +6760,7 @@ fplStaticAssert(sizeof(fpl__LinuxSignalHandle) >= sizeof(int));
 // Internal memory
 //
 fpl_internal void *fpl__AllocateMemory(const fplMemoryAllocationSettings *allocSettings, const size_t size, const size_t alignment);
-fpl_internal void fpl__ReleaseMemory(const fplMemoryAllocationSettings * allocSettings, void *ptr); 
+fpl_internal void fpl__ReleaseMemory(const fplMemoryAllocationSettings *allocSettings, void *ptr);
 
 //
 // Internal logging system
@@ -7369,6 +7376,14 @@ typedef FPL__FUNC_WIN32_SetCapture(fpl__win32_func_SetCapture);
 typedef FPL__FUNC_WIN32_ReleaseCapture(fpl__win32_func_ReleaseCapture);
 #define FPL__FUNC_WIN32_ScreenToClient(name) BOOL WINAPI name(HWND hWnd, LPPOINT lpPoint)
 typedef FPL__FUNC_WIN32_ScreenToClient(fpl__win32_func_ScreenToClient);
+#define FPL__FUNC_WIN32_BeginPaint(name) HDC WINAPI name(_In_ HWND hWnd, _Out_ LPPAINTSTRUCT lpPaint)
+typedef FPL__FUNC_WIN32_BeginPaint(fpl__win32_func_BeginPaint);
+#define FPL__FUNC_WIN32_EndPaint(name) BOOL WINAPI name(_In_ HWND hWnd, _In_ CONST PAINTSTRUCT *lpPaint)
+typedef FPL__FUNC_WIN32_EndPaint(fpl__win32_func_EndPaint);
+#define FPL__FUNC_WIN32_SetForegroundWindow(name) BOOL WINAPI name(_In_ HWND hWnd)
+typedef FPL__FUNC_WIN32_SetForegroundWindow(fpl__win32_func_SetForegroundWindow);
+#define FPL__FUNC_WIN32_SetFocus(name) HWND WINAPI name(_In_opt_ HWND hWnd)
+typedef FPL__FUNC_WIN32_SetFocus(fpl__win32_func_SetFocus);
 
 // OLE32
 #define FPL__FUNC_WIN32_CoInitializeEx(name) HRESULT WINAPI name(LPVOID pvReserved, DWORD  dwCoInit)
@@ -7469,6 +7484,10 @@ typedef struct fpl__Win32UserApi {
 	fpl__win32_func_SetCapture *SetCapture;
 	fpl__win32_func_ReleaseCapture *ReleaseCapture;
 	fpl__win32_func_ScreenToClient *ScreenToClient;
+	fpl__win32_func_BeginPaint *BeginPaint;
+	fpl__win32_func_EndPaint *EndPaint;
+	fpl__win32_func_SetForegroundWindow *SetForegroundWindow;
+	fpl__win32_func_SetFocus *SetFocus;
 } fpl__Win32UserApi;
 
 typedef struct fpl__Win32OleApi {
@@ -7594,6 +7613,10 @@ fpl_internal bool fpl__Win32LoadApi(fpl__Win32Api *wapi) {
 		FPL__WIN32_GET_FUNCTION_ADDRESS(FPL__MODULE_WIN32, userLibrary, userLibraryName, &wapi->user, fpl__win32_func_SetCapture, SetCapture);
 		FPL__WIN32_GET_FUNCTION_ADDRESS(FPL__MODULE_WIN32, userLibrary, userLibraryName, &wapi->user, fpl__win32_func_ReleaseCapture, ReleaseCapture);
 		FPL__WIN32_GET_FUNCTION_ADDRESS(FPL__MODULE_WIN32, userLibrary, userLibraryName, &wapi->user, fpl__win32_func_ScreenToClient, ScreenToClient);
+		FPL__WIN32_GET_FUNCTION_ADDRESS(FPL__MODULE_WIN32, userLibrary, userLibraryName, &wapi->user, fpl__win32_func_BeginPaint, BeginPaint);
+		FPL__WIN32_GET_FUNCTION_ADDRESS(FPL__MODULE_WIN32, userLibrary, userLibraryName, &wapi->user, fpl__win32_func_EndPaint, EndPaint);
+		FPL__WIN32_GET_FUNCTION_ADDRESS(FPL__MODULE_WIN32, userLibrary, userLibraryName, &wapi->user, fpl__win32_func_SetForegroundWindow, SetForegroundWindow);
+		FPL__WIN32_GET_FUNCTION_ADDRESS(FPL__MODULE_WIN32, userLibrary, userLibraryName, &wapi->user, fpl__win32_func_SetFocus, SetFocus);
 
 		// GDI32
 		const char *gdiLibraryName = "gdi32.dll";
@@ -7834,20 +7857,20 @@ typedef FPL__FUNC_PTHREAD_sem_getvalue(fpl__pthread_func_sem_getvalue);
 
 typedef struct fpl__PThreadApi {
 	void *libHandle;
-	
+
 	// pthread_t
 	fpl__pthread_func_pthread_self *pthread_self;
 	fpl__pthread_func_pthread_setschedparam *pthread_setschedparam;
 	fpl__pthread_func_pthread_getschedparam *pthread_getschedparam;
 	fpl__pthread_func_pthread_setschedprio *pthread_setschedprio;
-	
+
 	fpl__pthread_func_pthread_create *pthread_create;
 	fpl__pthread_func_pthread_kill *pthread_kill;
 	fpl__pthread_func_pthread_join *pthread_join;
 	fpl__pthread_func_pthread_exit *pthread_exit;
 	fpl__pthread_func_pthread_yield *pthread_yield;
 	fpl__pthread_func_pthread_timedjoin_np *pthread_timedjoin_np;
-	
+
 	// pthread_attr_t
 	fpl__pthread_func_pthread_attr_init *pthread_attr_init;
 	fpl__pthread_func_pthread_attr_getschedparam *pthread_attr_getschedparam;
@@ -7916,7 +7939,7 @@ fpl_internal bool fpl__PThreadLoadApi(fpl__PThreadApi *pthreadApi) {
 			FPL__POSIX_GET_FUNCTION_ADDRESS(FPL__MODULE_PTHREAD, libHandle, libName, pthreadApi, fpl__pthread_func_pthread_exit, pthread_exit);
 			FPL__POSIX_GET_FUNCTION_ADDRESS(FPL__MODULE_PTHREAD, libHandle, libName, pthreadApi, fpl__pthread_func_pthread_yield, pthread_yield);
 			FPL__POSIX_GET_FUNCTION_ADDRESS_OPTIONAL(FPL__MODULE_PTHREAD, libHandle, libName, pthreadApi, fpl__pthread_func_pthread_timedjoin_np, pthread_timedjoin_np);
-			
+
 			// pthread_attr_t
 			FPL__POSIX_GET_FUNCTION_ADDRESS(FPL__MODULE_PTHREAD, libHandle, libName, pthreadApi, fpl__pthread_func_pthread_attr_init, pthread_attr_init);
 			FPL__POSIX_GET_FUNCTION_ADDRESS(FPL__MODULE_PTHREAD, libHandle, libName, pthreadApi, fpl__pthread_func_pthread_attr_getschedparam, pthread_attr_getschedparam);
@@ -9178,6 +9201,7 @@ fpl_common_api size_t fplS32ToString(const int32_t value, char *buffer, const si
 			*p++ = '-';
 		}
 		p += digitCount;// Go back to the very end, because we are writing the digits back in reverse order
+		char *lastP = p;
 
 		const char *digits = "0123456789";
 		tmp = value;
@@ -9186,7 +9210,7 @@ fpl_common_api size_t fplS32ToString(const int32_t value, char *buffer, const si
 			tmp /= 10;
 		} while(tmp != 0);
 
-		*p = 0;
+		*lastP = 0;
 	}
 
 	return (result);
@@ -10954,13 +10978,22 @@ LRESULT CALLBACK fpl__Win32MessageProc(HWND hwnd, UINT msg, WPARAM wParam, LPARA
 				msgData.wParam = wParam;
 				msgData.lParam = lParam;
 				appState->currentSettings.window.callbacks.exposedCallback(fplGetPlatformType(), win32Window, &msgData, appState->currentSettings.window.callbacks.exposedUserData);
+			} else {
+				if(appState->currentSettings.video.driver == fplVideoDriverType_None) {
+					PAINTSTRUCT ps;
+					HDC hdc = wapi->user.BeginPaint(hwnd, &ps);
+					wapi->user.EndPaint(hwnd, &ps);
+					return(0);
+				}
 			}
 		} break;
 
 		case WM_ERASEBKGND:
 		{
-			// Prevent erasing of the background always
-			return 1;
+			// Prevent erasing of the background always, but only if a video driver is being used
+			if(appState->currentSettings.video.driver != fplVideoDriverType_None) {
+				return 1;
+			}
 		} break;
 
 		default:
@@ -11142,7 +11175,8 @@ fpl_internal bool fpl__Win32InitWindow(const fplSettings *initSettings, fplWindo
 
 	// Show window
 	wapi->user.ShowWindow(windowState->windowHandle, SW_SHOW);
-	wapi->user.UpdateWindow(windowState->windowHandle);
+	wapi->user.SetForegroundWindow(windowState->windowHandle);
+	wapi->user.SetFocus(windowState->windowHandle);
 
 	// Cursor is visible at start
 	windowState->defaultCursor = windowClass.hCursor;
@@ -11567,10 +11601,20 @@ fpl_internal bool fpl__Win32InitPlatform(const fplInitFlags initFlags, const fpl
 	}
 
 	// Init console
-	if(!(initFlags & fplInitFlags_Window) && (initFlags & fplInitFlags_Console)) {
+	if(initFlags & fplInitFlags_Console) {
 		HWND consoleHandle = GetConsoleWindow();
 		if(consoleHandle == fpl_null) {
+			// Create or attach console
 			AllocConsole();
+			AttachConsole(GetCurrentProcessId());
+
+			// Redirect out/in/err to console
+			HANDLE hConOut = CreateFileW(L"CONOUT$", GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+			HANDLE hConIn = CreateFileW(L"CONIN$", GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+			SetStdHandle(STD_OUTPUT_HANDLE, hConOut);
+			SetStdHandle(STD_ERROR_HANDLE, hConOut);
+			SetStdHandle(STD_INPUT_HANDLE, hConIn);
+
 			win32AppState->console.isAllocated = true;
 		}
 	}
@@ -11991,7 +12035,7 @@ fpl_internal DWORD WINAPI fpl__Win32ThreadProc(void *data) {
 
 	fplThreadParameters parameters = thread->parameters;
 
-	
+
 
 	if(parameters.runFunc != fpl_null) {
 		parameters.runFunc(thread, parameters.userData);
@@ -12121,8 +12165,8 @@ fpl_platform_api void fplThreadSleep(const uint32_t milliseconds) {
 }
 
 fpl_platform_api bool fplThreadYield() {
-	bool result = SwitchToThread() == TRUE;
-	return(result);
+	YieldProcessor();
+	return(true);
 }
 
 fpl_platform_api bool fplThreadTerminate(fplThreadHandle *thread) {
@@ -14359,29 +14403,29 @@ fpl_platform_api fplThreadHandle *fplThreadCreateWithParameters(fplThreadParamet
 		thread->parameters = *parameters;
 		thread->isValid = false;
 		thread->isStopping = false;
-		
+
 		fplThreadPriority initialPriority = parameters->priority;
 
 		// Setup attributes
 		pthread_attr_t *attrPtr = fpl_null;
 		pthread_attr_t attr;
-		if (pthreadApi->pthread_attr_init(&attr) == 0) {
+		if(pthreadApi->pthread_attr_init(&attr) == 0) {
 			// Scheduler policy
 			int scheduler = -1;
-			if (initialPriority == fplThreadPriority_Idle) {
+			if(initialPriority == fplThreadPriority_Idle) {
 #if defined(SCHED_IDLE)
-				if (pthreadApi->pthread_attr_setschedpolicy(&attr, SCHED_IDLE) == 0) {
+				if(pthreadApi->pthread_attr_setschedpolicy(&attr, SCHED_IDLE) == 0) {
 					scheduler = SCHED_IDLE;
 				}
 #endif
-			} else if (initialPriority >= fplThreadPriority_High){
+			} else if(initialPriority >= fplThreadPriority_High) {
 #if defined(SCHED_FIFO)
-				if ((scheduler == -1) && (pthreadApi->pthread_attr_setschedpolicy(&attr, SCHED_FIFO) == 0)) {
+				if((scheduler == -1) && (pthreadApi->pthread_attr_setschedpolicy(&attr, SCHED_FIFO) == 0)) {
 					scheduler = SCHED_FIFO;
 				}
 #endif
 #if defined(SCHED_RR)
-				if ((scheduler == -1) && (pthreadApi->pthread_attr_setschedpolicy(&attr, SCHED_RR) == 0)) {
+				if((scheduler == -1) && (pthreadApi->pthread_attr_setschedpolicy(&attr, SCHED_RR) == 0)) {
 					scheduler = SCHED_RR;
 				}
 #endif
@@ -14389,35 +14433,35 @@ fpl_platform_api fplThreadHandle *fplThreadCreateWithParameters(fplThreadParamet
 				// @TODO(final): Is sched_getscheduler supported for all POSIX standards?
 				scheduler = sched_getscheduler(0);
 			}
-			
+
 			// Stack size
-			if (parameters->stackSize > 0) {
+			if(parameters->stackSize > 0) {
 				pthreadApi->pthread_attr_setstacksize(&attr, parameters->stackSize);
 			}
-			
+
 			// Priority
-			if (scheduler != -1) {
+			if(scheduler != -1) {
 				struct sched_param sched;
-				if (pthreadApi->pthread_attr_getschedparam(&attr, &sched) == 0) {
+				if(pthreadApi->pthread_attr_getschedparam(&attr, &sched) == 0) {
 					int maxThreadPrioCount = (fplThreadPriority_Last - fplThreadPriority_First) + 1;
 					fplAssert(maxThreadPrioCount > 0);
-					
+
 					int minPrio = sched_get_priority_min(scheduler);
 					int maxPrio = sched_get_priority_max(scheduler);
 					int range = maxPrio - minPrio;
 					int step = range / maxThreadPrioCount;
-					
+
 					int priority;
-					if (initialPriority == fplThreadPriority_Lowest) {
+					if(initialPriority == fplThreadPriority_Lowest) {
 						priority = minPrio;
-					} else if (initialPriority == fplThreadPriority_Highest) {
+					} else if(initialPriority == fplThreadPriority_Highest) {
 						priority = maxPrio;
 					} else {
 						int threadPrioNumber = (int)(initialPriority - fplThreadPriority_First) + 1;
 						priority = minPrio + threadPrioNumber * step;
-						if (priority < minPrio){
+						if(priority < minPrio) {
 							priority = minPrio;
-						} else if (priority > maxPrio){
+						} else if(priority > maxPrio) {
 							priority = maxPrio;
 						}
 					}
@@ -14426,10 +14470,10 @@ fpl_platform_api fplThreadHandle *fplThreadCreateWithParameters(fplThreadParamet
 					pthreadApi->pthread_attr_setschedparam(&attr, &sched);
 				}
 			}
-			
+
 			attrPtr = &attr;
 		}
-			
+
 		// Create thread
 		thread->currentState = fplThreadState_Starting;
 		int threadRes;
@@ -14467,57 +14511,57 @@ fpl_platform_api fplThreadPriority fplGetThreadPriority(fplThreadHandle *thread)
 	const fpl__PThreadApi *pthreadApi = &appState->posix.pthreadApi;
 
 	pthread_t curThread = pthreadApi->pthread_self();
-	
+
 	int currentSchedulerPolicy;
 	struct sched_param params;
-	if (pthreadApi->pthread_getschedparam(curThread, &currentSchedulerPolicy, &params) != 0) {
+	if(pthreadApi->pthread_getschedparam(curThread, &currentSchedulerPolicy, &params) != 0) {
 		FPL__ERROR(FPL__MODULE_THREADING, "Failed getting scheduler parameters for pthread '%d'", curThread);
 		return(fplThreadPriority_Unknown);
 	}
-	
+
 	int maxThreadPrioCount = (fplThreadPriority_Last - fplThreadPriority_First) + 1;
 	fplAssert(maxThreadPrioCount > 0);
-	
+
 	int minPrio = sched_get_priority_min(currentSchedulerPolicy);
 	int maxPrio = sched_get_priority_max(currentSchedulerPolicy);
 	int range = maxPrio - minPrio;
 	int step = range / maxThreadPrioCount;
-	
+
 	int currentPrio = params.sched_priority;
-	
+
 	fplThreadPriority result;
-	if (minPrio == maxPrio || currentPrio == minPrio) {
+	if(minPrio == maxPrio || currentPrio == minPrio) {
 		result = fplThreadPriority_Lowest;
-	} else if (currentPrio == maxPrio) {
+	} else if(currentPrio == maxPrio) {
 		result = fplThreadPriority_Highest;
 	} else {
 		int index = (currentPrio - minPrio) / step;
 		fplAssert(index >= 0 && index < maxThreadPrioCount);
 		result = (fplThreadPriority)index;
 	}
-	
+
 	return(result);
 }
 
 fpl_platform_api bool fplSetThreadPriority(fplThreadHandle *thread, const fplThreadPriority newPriority) {
-	if (newPriority == fplThreadPriority_Unknown) return(false);
+	if(newPriority == fplThreadPriority_Unknown) return(false);
 	FPL__CheckPlatform(false);
 	const fpl__PlatformAppState *appState = fpl__global__AppState;
 	const fpl__PThreadApi *pthreadApi = &appState->posix.pthreadApi;
 
 	pthread_t curThread = pthreadApi->pthread_self();
-	
+
 	int currentSchedulerPolicy;
 	struct sched_param params;
-	if (pthreadApi->pthread_getschedparam(curThread, &currentSchedulerPolicy, &params) != 0) {
+	if(pthreadApi->pthread_getschedparam(curThread, &currentSchedulerPolicy, &params) != 0) {
 		FPL__ERROR(FPL__MODULE_THREADING, "Failed getting scheduler parameters for pthread '%d'", curThread);
 		return(false);
 	}
-	
+
 	// Build policy table
 	int newSchedulerPolicies[3];
 	int schedulerPolicyCount = 0;
-	switch (newPriority){
+	switch(newPriority) {
 		case fplThreadPriority_Idle:
 		case fplThreadPriority_Low:
 		case fplThreadPriority_Normal:
@@ -14541,41 +14585,41 @@ fpl_platform_api bool fplSetThreadPriority(fplThreadHandle *thread, const fplThr
 		default:
 			break;
 	}
-	
+
 	int maxThreadPrioCount = (fplThreadPriority_Last - fplThreadPriority_First) + 1;
 	fplAssert(maxThreadPrioCount > 0);
-	
+
 	// Bring priority in range of 1-N
 	int threadPrioNumber = (int)(newPriority - fplThreadPriority_First) + 1;
-	
-	for (int i = 0; i < schedulerPolicyCount; ++i) {
+
+	for(int i = 0; i < schedulerPolicyCount; ++i) {
 		int policy = newSchedulerPolicies[i];
 		int minPrio = sched_get_priority_min(policy);
 		int maxPrio = sched_get_priority_max(policy);
 		int range = maxPrio - minPrio;
 		int step = range / maxThreadPrioCount;
-		
+
 		int priority;
-		if (newPriority == fplThreadPriority_Lowest) {
+		if(newPriority == fplThreadPriority_Lowest) {
 			priority = minPrio;
-		} else if (newPriority == fplThreadPriority_Highest) {
+		} else if(newPriority == fplThreadPriority_Highest) {
 			priority = maxPrio;
 		} else {
 			priority = minPrio + threadPrioNumber * step;
-			if (priority < minPrio){
+			if(priority < minPrio) {
 				priority = minPrio;
-			} else if (priority > maxPrio){
+			} else if(priority > maxPrio) {
 				priority = maxPrio;
 			}
 		}
 		params.sched_priority = priority;
-		if (pthreadApi->pthread_setschedparam(curThread, policy, &params) == 0) {
+		if(pthreadApi->pthread_setschedparam(curThread, policy, &params) == 0) {
 			return(true); // Finally we found a policy and priority which is supported		
 		} else {
 			FPL__WARNING(FPL__MODULE_THREADING, "Failed to set thread priority '%d' with policy '%d'", priority, policy);
 		}
 	}
-	
+
 	return(false);
 }
 
@@ -14584,7 +14628,7 @@ fpl_platform_api bool fplThreadWaitForOne(fplThreadHandle *thread, const fplTime
 	const fpl__PlatformAppState *appState = fpl__global__AppState;
 	const fpl__PThreadApi *pthreadApi = &appState->posix.pthreadApi;
 	bool result = false;
-	if((thread != fpl_null) && (fplGetThreadState(thread) != fplThreadState_Stopped)) {	
+	if((thread != fpl_null) && (fplGetThreadState(thread) != fplThreadState_Stopped)) {
 		pthread_t threadHandle = thread->internalHandle.posixThread;
 
 		// @NOTE(final): We optionally use the GNU extension "pthread_timedjoin_np" to support joining with a timeout.
@@ -14801,7 +14845,7 @@ fpl_platform_api bool fplSemaphoreInit(fplSemaphoreHandle *semaphore, const uint
 		return false;
 	}
 	FPL__CheckPlatform(false);
-	
+
 	const fpl__PlatformAppState *appState = fpl__global__AppState;
 	const fpl__PThreadApi *pthreadApi = &appState->posix.pthreadApi;
 	sem_t handle;
@@ -19733,7 +19777,7 @@ fpl_internal fplAudioFormatType fpl__MapAlsaFormatToAudioFormat(snd_pcm_format_t
 fpl_internal fplAudioResultType fpl__AudioInitAlsa(const fplAudioSettings *audioSettings, const fplAudioDeviceFormat *targetFormat, fpl__CommonAudioState *commonAudio, fpl__AlsaAudioState *alsaState) {
 	snd_pcm_hw_params_t *hardwareParams = fpl_null;
 	snd_pcm_sw_params_t *softwareParams = fpl_null;
-	
+
 #	define FPL__ALSA_INIT_ERROR(ret, format, ...) do { \
 		if (softwareParams != fpl_null) fpl__ReleaseTemporaryMemory(softwareParams); \
 		if (hardwareParams != fpl_null) fpl__ReleaseTemporaryMemory(hardwareParams); \
@@ -19878,7 +19922,7 @@ fpl_internal fplAudioResultType fpl__AudioInitAlsa(const fplAudioSettings *audio
 	if(!audioSettings->specific.alsa.noMMap) {
 		if(alsaApi->snd_pcm_hw_params_set_access(alsaState->pcmDevice, hardwareParams, SND_PCM_ACCESS_MMAP_INTERLEAVED) == 0) {
 			alsaState->isUsingMMap = true;
-		} else {		
+		} else {
 			FPL_LOG_ERROR("ALSA", "Failed setting MMap access mode for device '%s', trying fallback to standard mode!", deviceName);
 		}
 	}
@@ -19924,9 +19968,9 @@ fpl_internal fplAudioResultType fpl__AudioInitAlsa(const fplAudioSettings *audio
 	} else {
 		foundFormat = preferredFormat;
 	}
-	
+
 	fpl__ReleaseTemporaryMemory(formatMask);
-	
+
 	if(foundFormat == SND_PCM_FORMAT_UNKNOWN) {
 		FPL__ALSA_INIT_ERROR(fplAudioResultType_Failed, "No supported audio format for device '%s' found!", deviceName);
 	}
@@ -20030,7 +20074,7 @@ fpl_internal fplAudioResultType fpl__AudioInitAlsa(const fplAudioSettings *audio
 	fplAssert(internalFormat.channels <= 2);
 
 #undef FPL__ALSA_INIT_ERROR
-	
+
 	fpl__ReleaseTemporaryMemory(softwareParams);
 	fpl__ReleaseTemporaryMemory(hardwareParams);
 
@@ -21562,17 +21606,25 @@ fpl_common_api bool fplPlatformInit(const fplInitFlags initFlags, const fplSetti
 
 	FPL_LOG_DEBUG(FPL__MODULE_CORE, "Successfully allocated Platform App State Memory of size '%zu'", platformAppStateSize);
 
-	// Window is required for video always
+	// Application types
+#	if defined(FPL_APPTYPE_WINDOW)
+	appState->initFlags |= fplInitFlags_Window;
+#	elif defined(FPL_APPTYPE_CONSOLE)
+	appState->initFlags |= fplInitFlags_Console;
+#	endif
+
+	// Force the inclusion of window when Video flags is set or remove the video flags when video is disabled
 #	if defined(FPL__ENABLE_VIDEO)
 	if(appState->initFlags & fplInitFlags_Video) {
 		appState->initFlags |= fplInitFlags_Window;
 	}
+#	else
+	appState->initFlags = (fplInitFlags)(appState->initFlags & ~fplInitFlags_Video);
 #	endif
+
+	// Window flag are removed when windowing is disabled
 #	if !defined(FPL__ENABLE_WINDOW)
 	appState->initFlags = (fplInitFlags)(appState->initFlags & ~fplInitFlags_Window);
-#	endif
-#	if defined(FPL_APPTYPE_CONSOLE)
-	appState->initFlags |= fplInitFlags_Console;
 #	endif
 
 	// Initialize sub-platforms
