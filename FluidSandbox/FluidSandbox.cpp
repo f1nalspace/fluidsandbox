@@ -2396,7 +2396,11 @@ int main(int argc, char **argv) {
 			fplWindowSize winSize;
 			fplGetWindowSize(&winSize);
 
+#if 1
+			OnRender(winSize.width, winSize.height, frametime);
+#else
 			OnRender2(app, winSize.width, winSize.height, frametime);
+#endif
 
 			fplWallClock endTime = fplGetWallClock();
 			double wallDelta = fplGetWallDelta(lastTime, endTime);
