@@ -1441,6 +1441,8 @@ void RenderSceneFBO(const glm::mat4 &mvp, const int windowWidth, const int windo
 }
 
 struct FluidSandbox {
+	CCamera camera;
+
 	fsr::Renderer *renderer;
 	fsr::CommandQueue *queue;
 	fsr::CommandBuffer *commandBuffer;
@@ -1462,10 +1464,10 @@ static void CreatePipeline(FluidSandbox &app, const int width, const int height)
 	fsr::Renderer *r = app.renderer;
 
 	fsr::PipelineDescriptor pipelineDesc = {};
-	pipelineDesc.viewport = fsr::Viewport(0, 0, width, height);
+	pipelineDesc.viewport = fsr::Viewport(0, 0, (float)width, (float)height);
 	pipelineDesc.scissor = fsr::ScissorRect(0, 0, width, height);
-	pipelineDesc.pipelineSettings.clear.color = glm::vec4(0.1f, 0.2f, 0.6f, 1.0f);
-	pipelineDesc.pipelineSettings.clear.flags = fsr::ClearFlags::ColorAndDepth;
+	pipelineDesc.settings.clear.value.color.v4 = glm::vec4(0.1f, 0.2f, 0.6f, 1.0f);
+	pipelineDesc.settings.clear.flags = fsr::ClearFlags::ColorAndDepth;
 	app.pipelineId = r->CreatePipeline(pipelineDesc);
 }
 
@@ -1503,18 +1505,18 @@ static void OnRender2(FluidSandbox &app, const int windowWidth, const int window
 		ResizeRenderer2(app, windowWidth, windowHeight);
 	}
 
+	// FIX(final): Bullshit design how to update the camera O_o
+	app.camera = CCamera(0.0f, 4.0f, gCameraDistance, glm::radians(gCamRotation.x), glm::radians(gCamRotation.y), DefaultZNear, DefaultZFar, glm::radians(DefaultFov), (float)windowWidth / (float)windowHeight);
+	app.camera.Update();
+	const glm::mat4 &mvp = app.camera.mvp;
+
 	fsr::CommandQueue *queue = app.queue;
-
 	fsr::CommandBuffer *cmd = app.commandBuffer;
-
 	cmd->Begin();
 
-	cmd->SetPipeline(app.pipelineId);
-
-	cmd->Clear(fsr::ClearFlags::ColorAndDepth);
+	cmd->BindPipeline(app.pipelineId);
 
 	cmd->End();
-
 	queue->Submit(*cmd);
 
 	app.renderer->Present();

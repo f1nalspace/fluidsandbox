@@ -243,17 +243,17 @@ namespace fsr {
 		}
 	};
 
-	struct OpenGLRenderTarget: public RenderTarget {
+	struct OpenGLRenderTarget: public FrameBuffer {
 	private:
 		GLuint nativeId;
 	public:
-		OpenGLRenderTarget(const RenderTargetID &id):
-			RenderTarget(id),
+		OpenGLRenderTarget(const FrameBufferID &id, const uint32_t sampleCount):
+			FrameBuffer(id, sampleCount),
 			nativeId(0) {
 		}
 
-		bool Init(const RenderTargetDescriptor &renderTargetDesc) override {
-			if(renderTargetDesc.attachmentCount == 0) return(false); // No attachment
+		bool Init(const std::initializer_list<FrameBufferAttachment> &attachments) override {
+			if(attachments.size() == 0) return(false); // No attachment
 			glGenFramebuffers(1, &nativeId);
 			if(nativeId == 0) return(false);
 			return(true);
@@ -269,13 +269,13 @@ namespace fsr {
 
 	enum class CommandType {
 		None = 0,
-		Clear,
+		BindPipeline,
 		SetViewport,
 		SetScissor,
-		SetPipeline,
-		SetBuffer,
-		SetTexture,
-		SetUniform,
+		BindVertexBuffers,
+		BindIndexBuffers,
+		BeginRenderPass,
+		EndRenderPass,
 		Draw,
 	};
 
@@ -288,6 +288,10 @@ namespace fsr {
 		ClearFlags flags;
 	};
 
+	struct BindPipelineCommand {
+		PipelineID pipelineId;
+	};
+
 	struct SetViewportCommand {
 		Viewport viewportRect;
 	};
@@ -296,24 +300,19 @@ namespace fsr {
 		ScissorRect scissorRect;
 	};
 
-	struct SetPipelineCommand {
-		PipelineID pipelineId;
+	struct BindBuffersCommand {
+		BufferType bufferType;
+		size_t bufferCount;
+		// The data are a array of BufferIDs
 	};
 
-	struct SetBufferCommand {
-		BufferID bufferId;
-	};
-
-	struct SetTextureCommand {
-		TextureID textureId;
-		uint32_t index;
-	};
-
-	struct SetUniformCommand {
-		constexpr static uint32_t MaxUniformDataSize = sizeof(float) * 4 * 4; // 4x4 Matrix is max
-		uint8_t uniformData[MaxUniformDataSize];
-		size_t size;
-		UniformID uniformId;
+	struct BeginRenderPassCommand {
+		constexpr static uint32_t MaxClearValueCount = 8;
+		RenderArea renderArea;
+		RenderPassID renderPassId;
+		FrameBufferID renderTargetId;
+		ClearValue clearValues[MaxClearValueCount];
+		uint32_t clearValueCount;
 	};
 
 	struct DrawCommand {
@@ -348,19 +347,30 @@ namespace fsr {
 			return(result);
 		}
 
-		void Push(const CommandType type, const size_t commandSize, const uint8_t *commandData) {
+		CommandHeader *PushHeader(const CommandType type, const size_t commandSize) {
 			size_t requiredSize = sizeof(CommandHeader) + commandSize;
 			assert(requiredSize > 0 && (offset + requiredSize) <= capacity);
-			assert(commandData != nullptr);
 			size_t start = offset;
 			uint8_t *target = data + start;
 			CommandHeader header = {};
 			header.type = type;
 			header.size = commandSize;
 			std::memcpy(target + 0, &header, sizeof(CommandHeader));
-			std::memcpy(target + sizeof(CommandHeader), commandData, commandSize);
 			offset += requiredSize;
 			used += requiredSize;
+			CommandHeader *result = reinterpret_cast<CommandHeader *>(target);
+			return(result);
+		}
+
+		void PushData(CommandHeader *header, const size_t offset, const size_t commandSize, const uint8_t *commandData) {
+			uint8_t *target = (uint8_t *)header + sizeof(CommandHeader) + offset;
+			std::memcpy(target, commandData, commandSize);
+		}
+
+		void Push(const CommandType type, const size_t commandSize, const uint8_t *commandData) {
+			CommandHeader *header = PushHeader(type, commandSize);
+			assert(header != nullptr);
+			PushData(header, 0, commandSize, commandData);
 		}
 
 		~CommandBufferChunk() {
@@ -392,26 +402,37 @@ namespace fsr {
 			}
 		}
 	protected:
-		void Push(const CommandType type, const size_t size, const uint8_t *data) {
+		void Push(const CommandType type, const size_t size, const uint8_t *data, const size_t additionalDataSize = 0, const uint8_t *additionalData = nullptr) {
 			assert(type != CommandType::None && size > 0 && data != nullptr);
+
+			size_t requiredSize = size;
+			if(additionalDataSize > 0 && additionalData != fpl_null) {
+				requiredSize += additionalDataSize;
+			}
 
 			if(chunks.empty()) {
 				// TODO(final): Memory arena (Push)
-				CommandBufferChunk *newChunk = new CommandBufferChunk(size);
+				CommandBufferChunk *newChunk = new CommandBufferChunk(requiredSize);
 				chunks.push(newChunk);
 			}
 
 			CommandBufferChunk *chunk = chunks.back();
 			assert(chunk != nullptr);
-			if(!chunk->DoesFit(size)) {
+			if(!chunk->DoesFit(requiredSize)) {
 				// TODO(final): Memory arena (Push)
-				CommandBufferChunk *newChunk = chunk = new CommandBufferChunk(size);
+				CommandBufferChunk *newChunk = chunk = new CommandBufferChunk(requiredSize);
 				chunks.push(newChunk);
 			}
 
 			assert(chunk != nullptr);
 
-			chunk->Push(type, size, data);
+			if(additionalDataSize > 0 && additionalData != fpl_null) {
+				CommandHeader *header = chunk->PushHeader(type, requiredSize);
+				chunk->PushData(header, 0, size, data);
+				chunk->PushData(header, size, additionalDataSize, additionalData);
+			} else {
+				chunk->Push(type, requiredSize, data);
+			}
 		}
 	public:
 		CommandBufferChunk *Pop() {
@@ -443,13 +464,6 @@ namespace fsr {
 			state = CommandBufferRecordingState::WaitingForSubmit;
 		}
 
-		void Clear(const ClearFlags flags) override {
-			if(state != CommandBufferRecordingState::Recording) return;
-			ClearCommand cmd = {};
-			cmd.flags = flags;
-			Push(CommandType::Clear, sizeof(cmd), (const uint8_t *)&cmd);
-		}
-
 		void SetViewport(const float x, const float y, const float width, const float height, const float minDepth, const float maxDepth) override {
 			if(state != CommandBufferRecordingState::Recording) return;
 			SetViewportCommand cmd = {};
@@ -464,55 +478,39 @@ namespace fsr {
 			Push(CommandType::SetViewport, sizeof(cmd), (const uint8_t *)&cmd);
 		}
 
-		void SetPipeline(const PipelineID &pipelineId) override {
+		void BindPipeline(const PipelineID &pipelineId) override {
 			if(state != CommandBufferRecordingState::Recording) return;
-			SetPipelineCommand cmd = {};
+			BindPipelineCommand cmd = {};
 			cmd.pipelineId = pipelineId;
-			Push(CommandType::SetPipeline, sizeof(cmd), (const uint8_t *)&cmd);
+			Push(CommandType::BindPipeline, sizeof(cmd), (const uint8_t *)&cmd);
 		}
 
-		void SetBuffer(const BufferID &bufferId) override {
-			if(state != CommandBufferRecordingState::Recording) return;
-			SetBufferCommand cmd = {};
-			cmd.bufferId = bufferId;
-			Push(CommandType::SetBuffer, sizeof(cmd), (const uint8_t *)&cmd);
+		void BindVertexBuffers(const std::initializer_list<const BufferID> &ids) override {
+			if(state != CommandBufferRecordingState::Recording || ids.size() == 0) return;
+			BindBuffersCommand cmd = {};
+			cmd.bufferType = BufferType::Vertex;
+			cmd.bufferCount = ids.size();
+			size_t dataSize = sizeof(BufferID) * cmd.bufferCount;
+			const uint8_t *data = (const uint8_t *)ids.begin();
+			Push(CommandType::BindVertexBuffers, sizeof(cmd), (const uint8_t *)&cmd, dataSize, data);
 		}
 
-		void SetTexture(const TextureID &textureId, const uint32_t index) override {
-			if(state != CommandBufferRecordingState::Recording) return;
-			SetTextureCommand cmd = {};
-			cmd.textureId = textureId;
-			cmd.index = index;
-			Push(CommandType::SetTexture, sizeof(cmd), (const uint8_t *)&cmd);
+		void BindIndexBuffers(const std::initializer_list<const BufferID> &ids) override {
+			if(state != CommandBufferRecordingState::Recording || ids.size() == 0) return;
+			BindBuffersCommand cmd = {};
+			cmd.bufferType = BufferType::Index;
+			cmd.bufferCount = ids.size();
+			size_t dataSize = sizeof(BufferID) * cmd.bufferCount;
+			const uint8_t *data = (const uint8_t *)ids.begin();
+			Push(CommandType::BindIndexBuffers, sizeof(cmd), (const uint8_t *)&cmd, dataSize, data);
 		}
 
-		void SetUniform(const UniformID &uniformId, const size_t size, const uint8_t *value) override {
+		void BeginRenderPass(const RenderPassID &renderPassId, const FrameBufferID &frameBufferId, const RenderArea *renderArea, const std::initializer_list<const ClearValue> &clearValues) {
 			if(state != CommandBufferRecordingState::Recording) return;
-			assert(size > 0 && size <= SetUniformCommand::MaxUniformDataSize);
-			assert(value != nullptr);
-			SetUniformCommand cmd = {};
-			cmd.size = size;
-			cmd.uniformId = uniformId;
-			std::memcpy(cmd.uniformData, value, size);
-			Push(CommandType::SetUniform, sizeof(cmd), (const uint8_t *)&cmd);
 		}
-		void SetUniformInt(const UniformID &uniformId, const int value) override {
-			SetUniform(uniformId, sizeof(int), (uint8_t *)&value);
-		}
-		void SetUniformVec2i(const UniformID &uniformId, const glm::ivec2 &value) override {
-			SetUniform(uniformId, sizeof(glm::ivec2), (uint8_t *)&value[0]);
-		}
-		void SetUniformVec2(const UniformID &uniformId, const glm::vec2 &value) override {
-			SetUniform(uniformId, sizeof(glm::vec2), (uint8_t *)&value[0]);
-		}
-		void SetUniformVec3(const UniformID &uniformId, const glm::vec3 &value) override {
-			SetUniform(uniformId, sizeof(glm::vec3), (uint8_t *)&value[0]);
-		}
-		void SetUniformVec4(const UniformID &uniformId, const glm::vec4 &value) override {
-			SetUniform(uniformId, sizeof(glm::vec4), (uint8_t *)&value[0]);
-		}
-		void SetUniformMat4(const UniformID &uniformId, const glm::mat4 &mat) override {
-			SetUniform(uniformId, sizeof(glm::mat4), (uint8_t *)&mat[0][0]);
+
+		void EndRenderPass() {
+			if(state != CommandBufferRecordingState::Recording) return;
 		}
 
 		void Draw(const size_t vertexCount, const size_t firstVertex, const size_t instanceCount, const size_t firstInstance) override {
@@ -531,7 +529,7 @@ namespace fsr {
 		volatile uint32_t _idCounter;
 		std::map<BufferID, Buffer *> _buffersMap;
 		std::map<TextureID, Texture *> _texturesMap;
-		std::map<RenderTargetID, RenderTarget *> _renderTargetMap;
+		std::map<FrameBufferID, FrameBuffer *> _renderTargetMap;
 		std::map<PipelineID, Pipeline *> _pipelineMap;
 		std::vector<CommandBuffer *> _commandBuffers;
 	protected:
@@ -558,7 +556,7 @@ namespace fsr {
 				delete pipeline;
 			}
 			for(auto renderTargetPair : _renderTargetMap) {
-				RenderTarget *renderTarget = renderTargetPair.second;
+				FrameBuffer *renderTarget = renderTargetPair.second;
 				delete renderTarget;
 			}
 			for(auto texturePair : _texturesMap) {
@@ -604,14 +602,14 @@ namespace fsr {
 			return(nullptr);
 		}
 
-		void AddRenderTarget(RenderTarget *renderTarget) {
+		void AddRenderTarget(FrameBuffer *renderTarget) {
 			assert(renderTarget != nullptr);
-			_renderTargetMap.insert(std::pair<RenderTargetID, RenderTarget *>(renderTarget->id, renderTarget));
+			_renderTargetMap.insert(std::pair<FrameBufferID, FrameBuffer *>(renderTarget->id, renderTarget));
 		}
-		RenderTarget *RemoveRenderTarget(const RenderTargetID renderTargetId) {
-			std::map<RenderTargetID, RenderTarget *>::iterator found = _renderTargetMap.find(renderTargetId);
+		FrameBuffer *RemoveRenderTarget(const FrameBufferID renderTargetId) {
+			std::map<FrameBufferID, FrameBuffer *>::iterator found = _renderTargetMap.find(renderTargetId);
 			if(found != _renderTargetMap.end()) {
-				RenderTarget *renderTarget = found->second;
+				FrameBuffer *renderTarget = found->second;
 				_renderTargetMap.erase(renderTargetId);
 				return(renderTarget);
 			}
@@ -656,8 +654,8 @@ namespace fsr {
 			return(result);
 		}
 
-		RenderTarget *GetRenderTarget(const RenderTargetID renderTargetId) {
-			RenderTarget *result = _renderTargetMap[renderTargetId];
+		FrameBuffer *GetRenderTarget(const FrameBufferID renderTargetId) {
+			FrameBuffer *result = _renderTargetMap[renderTargetId];
 			return(result);
 		}
 	};
@@ -674,20 +672,29 @@ namespace fsr {
 	class OpenGLCommandQueue: public CommandQueue {
 	private:
 		OpenGLRenderer *renderer;
-		Pipeline *activePipeline;
 
-		void ChangePipeline(const PipelineID pipelineId) {
+		struct PipelineSubmitState {
+			Pipeline *activePipeline;
+		};
+
+		void ChangePipeline(PipelineSubmitState *submitState, const PipelineID pipelineId) {
 			BaseRenderer *baseRenderer = reinterpret_cast<BaseRenderer *>(renderer);
 
 			Pipeline *pipeline = baseRenderer->GetPipeline(pipelineId);
 			assert(pipeline != nullptr);
-			activePipeline = pipeline;
+			submitState->activePipeline = pipeline;
 
 			Viewport viewport = pipeline->viewport;
 			ScissorRect scissor = pipeline->scissor;
 
-			glm::vec4 clearColor = pipeline->pipelineSettings.clear.color;
+			ClearValue clearValue = pipeline->settings.clear.value;
+			glm::vec4 clearColor = clearValue.color.v4;
+			float clearDepth = clearValue.depthStencil.depth;
+			int clearStencil = clearValue.depthStencil.stencil;
+
 			glClearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
+			glClearDepth(clearDepth);
+			glClearStencil(clearStencil);
 
 			glDepthRange(viewport.minDepth, viewport.maxDepth);
 
@@ -695,27 +702,13 @@ namespace fsr {
 			glScissor(scissor.x, scissor.y, scissor.width, scissor.height);
 		}
 
-		void ExecuteCommand(const CommandType type, const uint8_t *data, const size_t size) {
+		void ExecuteCommand(PipelineSubmitState *submitState, const CommandType type, const uint8_t *data, const size_t size) {
 			switch(type) {
-				case CommandType::Clear:
-				{
-					const ClearCommand *cmd = (const ClearCommand *)data;
-					ClearFlags flags = cmd->flags;
-					GLbitfield c = 0;
-					if((flags & ClearFlags::Color) == ClearFlags::Color)
-						c |= GL_COLOR_BUFFER_BIT;
-					if((flags & ClearFlags::Depth) == ClearFlags::Depth)
-						c |= GL_DEPTH_BUFFER_BIT;
-					if((flags & ClearFlags::Stencil) == ClearFlags::Stencil)
-						c |= GL_STENCIL_BUFFER_BIT;
-					glClear(c);
-				} break;
-
 				case CommandType::SetViewport:
 				{
 					const SetViewportCommand *cmd = (const SetViewportCommand *)data;
 					Viewport viewport = cmd->viewportRect;
-					glViewport(viewport.x, viewport.y, viewport.width, viewport.height);
+					glViewport((int)viewport.x, (int)viewport.y, (int)viewport.width, (int)viewport.height);
 				} break;
 
 				case CommandType::SetScissor:
@@ -725,11 +718,11 @@ namespace fsr {
 					glScissor(scissor.x, scissor.y, scissor.width, scissor.height);
 				} break;
 
-				case CommandType::SetPipeline:
+				case CommandType::BindPipeline:
 				{
-					const SetPipelineCommand *cmd = (const SetPipelineCommand *)data;
+					const BindPipelineCommand *cmd = (const BindPipelineCommand *)data;
 					PipelineID pipelineId = cmd->pipelineId;
-					ChangePipeline(pipelineId);
+					ChangePipeline(submitState, pipelineId);
 				} break;
 
 				default:
@@ -740,11 +733,11 @@ namespace fsr {
 	public:
 		OpenGLCommandQueue(OpenGLRenderer *renderer):
 			CommandQueue(),
-			renderer(renderer),
-			activePipeline(nullptr) {
+			renderer(renderer) {
 		}
 
 		bool Submit(CommandBuffer &commandBuffer) override {
+			PipelineSubmitState submitState = {};
 			OpenGLCommandBuffer *nativeCommandBuffer = static_cast<OpenGLCommandBuffer *>(&commandBuffer);
 			CommandBufferChunk *chunk;
 			while((chunk = nativeCommandBuffer->Pop()) != nullptr) {
@@ -763,14 +756,13 @@ namespace fsr {
 
 					if(dataSize > 0) {
 						const uint8_t *dataStart = (const uint8_t *)header + sizeof(CommandHeader);
-						ExecuteCommand(cmdType, dataStart, dataSize);
+						ExecuteCommand(&submitState, cmdType, dataStart, dataSize);
 						remaining -= dataSize;
 						offset += dataSize;
 					}
 				}
 				int x = 0;
 			}
-			activePipeline = nullptr;
 			return(true);
 		}
 
@@ -878,20 +870,20 @@ namespace fsr {
 			delete commandBuffer;
 		}
 
-		RenderTargetID CreateRenderTarget(const RenderTargetDescriptor &renderTargetDesc) override {
-			RenderTargetID id = RenderTargetID { NextID() };
-			OpenGLRenderTarget *renderTarget = new OpenGLRenderTarget(id);
-			if(!renderTarget->Init(renderTargetDesc)) {
+		FrameBufferID CreateFrameBuffer(const std::initializer_list<FrameBufferAttachment> &attachments, const uint32_t sampleCount) override {
+			FrameBufferID id = FrameBufferID { NextID() };
+			OpenGLRenderTarget *renderTarget = new OpenGLRenderTarget(id, sampleCount);
+			if(!renderTarget->Init(attachments)) {
 				delete renderTarget;
-				return(RenderTargetID { 0 });
+				return(FrameBufferID { 0 });
 			}
 			AddRenderTarget(renderTarget);
 			return(id);
 		}
 
 
-		void DestroyRenderTarget(const RenderTargetID renderTargetId) override {
-			RenderTarget *renderTarget = RemoveRenderTarget(renderTargetId);
+		void DestroyFrameBuffer(const FrameBufferID renderTargetId) override {
+			FrameBuffer *renderTarget = RemoveRenderTarget(renderTargetId);
 			if(renderTarget != nullptr) {
 				renderTarget->Release();
 				delete renderTarget;
@@ -901,13 +893,13 @@ namespace fsr {
 		PipelineID CreatePipeline(const PipelineDescriptor &pipelineDesc) override {
 			PipelineID id = PipelineID { NextID() };
 			Pipeline *pipeline = new Pipeline(id);
-			pipeline->pipelineLayout = pipelineDesc.pipelineLayout;
-			pipeline->pipelineSettings = pipelineDesc.pipelineSettings;
+			pipeline->layoutId = pipelineDesc.layoutId;
+			pipeline->settings = pipelineDesc.settings;
 			pipeline->primitive = pipelineDesc.primitive;
-			pipeline->renderTarget = pipelineDesc.renderTarget;
+			pipeline->frameBufferId = pipelineDesc.frameBuffertId;
 			pipeline->scissor = pipelineDesc.scissor;
 			pipeline->viewport = pipelineDesc.viewport;
-			pipeline->shaderProgram = pipelineDesc.shaderProgram;
+			pipeline->shaderProgramId = pipelineDesc.shaderProgramId;
 			AddPipeline(pipeline);
 			return(id);
 		}

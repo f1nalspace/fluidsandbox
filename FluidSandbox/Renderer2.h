@@ -121,45 +121,42 @@ namespace fsr {
 	};
 
 	//
-	// RenderTarget
+	// FrameBuffer
 	//
-	enum class RenderTargetAttachmentType: int {
+	enum class FrameBufferAttachmentType: int {
 		Color = 0,
 		Depth,
 		DepthStencil,
 		Stencil,
 	};
 
-	struct RenderTargetAttachment {
+	struct FrameBufferAttachment {
 		TextureID texture;
-		RenderTargetAttachmentType type;
+		FrameBufferAttachmentType type;
 	};
 
-	struct RenderTargetID {
+	struct FrameBufferID {
 		uint32_t id;
 
-		bool operator<(const RenderTargetID &o)  const {
+		bool operator<(const FrameBufferID &o)  const {
 			bool result = id < o.id;
 			return(result);
 		}
 	};
 
-	struct RenderTargetDescriptor {
-		constexpr static uint32_t MaxAttachmentCount = 16;
-		RenderTargetAttachment attachments[MaxAttachmentCount];
-		uint32_t attachmentCount;
-		uint32_t sampleCount;
-	};
-
-	class RenderTarget {
+	class FrameBuffer {
 	public:
-		const RenderTargetID id;
+		const FrameBufferID id;
 	protected:
-		RenderTarget(const RenderTargetID &id):
-			id(id) {
+		std::vector<FrameBufferAttachment> attachments;
+		uint32_t sampleCount;
+
+		FrameBuffer(const FrameBufferID &id, const uint32_t sampleCount):
+			id(id),
+			sampleCount(sampleCount) {
 		}
 	public:
-		virtual bool Init(const RenderTargetDescriptor &params) = 0;
+		virtual bool Init(const std::initializer_list<FrameBufferAttachment> &attachments) = 0;
 		virtual void Release() = 0;
 	};
 
@@ -267,7 +264,7 @@ namespace fsr {
 		}
 	};
 
-		// Mirrors the layout(location = offset) in/out type name
+	// Mirrors the layout(location = offset) in/out type name
 	struct LayoutLocationElement {
 		const char *name;
 		uint32_t offset;
@@ -291,8 +288,6 @@ namespace fsr {
 	};
 
 	struct PipelineLayout {
-		std::vector<Uniform> uniforms;
-		std::vector<LayoutLocationElement> locationElements;
 		PipelineLayoutID id;
 	};
 
@@ -360,11 +355,29 @@ namespace fsr {
 		Depth = 1 << 1,
 		Stencil = 1 << 2,
 		ColorAndDepth = Color | Depth,
+		DepthAndStencil = Depth | Stencil,
 	};
 	FPL_ENUM_AS_FLAGS_OPERATORS(ClearFlags);
 
+	union ClearColorValue {
+		glm::vec4 v4;
+		float f32[4];
+		int32_t s32[4];
+		uint32_t u32[4];
+	};
+
+	struct ClearDepthStencilValue {
+		float depth;
+		uint32_t stencil;
+	};
+
+	struct ClearValue {
+		ClearColorValue color;
+		ClearDepthStencilValue depthStencil;
+	};
+
 	struct ClearSettings {
-		glm::vec4 color;
+		ClearValue value;
 		ClearFlags flags;
 	};
 
@@ -447,32 +460,62 @@ namespace fsr {
 	struct PipelineDescriptor {
 		Viewport viewport;
 		ScissorRect scissor;
-		PipelineSettings pipelineSettings;
-		PipelineLayoutID pipelineLayout;
-		ShaderProgramID shaderProgram;
-		RenderTargetID renderTarget;
+		PipelineSettings settings;
+		PipelineLayoutID layoutId;
+		ShaderProgramID shaderProgramId;
+		FrameBufferID frameBuffertId;
 		PrimitiveMode primitive;
 	};
 
 	struct Pipeline {
 		Viewport viewport;
 		ScissorRect scissor;
-		PipelineSettings pipelineSettings;
-		PipelineLayoutID pipelineLayout;
-		ShaderProgramID shaderProgram;
-		RenderTargetID renderTarget;
+		PipelineSettings settings;
+		PipelineLayoutID layoutId;
+		ShaderProgramID shaderProgramId;
+		FrameBufferID frameBufferId;
 		PrimitiveMode primitive;
 		PipelineID id;
 
 		Pipeline(const PipelineID &id):
-			viewport(Viewport()),
-			scissor(ScissorRect()),
-			pipelineSettings(PipelineSettings()),
-			pipelineLayout(PipelineLayoutID { 0 }),
-			shaderProgram(ShaderProgramID { 0 }),
-			renderTarget(RenderTargetID { 0 }),
+			viewport(Viewport {}),
+			scissor(ScissorRect {}),
+			settings(PipelineSettings {}),
+			layoutId(PipelineLayoutID {}),
+			shaderProgramId(ShaderProgramID {}),
+			frameBufferId(FrameBufferID {}),
 			primitive(PrimitiveMode::TriangleList),
 			id(id) {
+
+		}
+	};
+
+	struct RenderPassID {
+		uint32_t id;
+
+		bool operator<(const PipelineID &o)  const {
+			bool result = id < o.id;
+			return(result);
+		}
+	};
+
+	struct RenderArea {
+		float x;
+		float y;
+		float width;
+		float height;
+	};
+
+	struct RenderPass {
+		std::vector<ClearValue> clearValues;
+		RenderArea renderArea;
+		FrameBufferID frameBufferId;
+		RenderPassID id;
+
+		RenderPass():
+			renderArea(RenderArea {}),
+			frameBufferId(FrameBufferID {}),
+			id(RenderPassID {}) {
 
 		}
 	};
@@ -487,19 +530,13 @@ namespace fsr {
 	public:
 		virtual bool Begin() = 0;
 		virtual void End() = 0;
-		virtual void Clear(const ClearFlags flags) = 0;
+		virtual void BindPipeline(const PipelineID &pipelineId) = 0;
 		virtual void SetViewport(const float x, const float y, const float width, const float height, const float minDepth = 0.0f, const float maxDepth = 1.0f) = 0;
 		virtual void SetScissor(const int x, const int y, const int width, const int height) = 0;
-		virtual void SetPipeline(const PipelineID &pipelineId) = 0;
-		virtual void SetBuffer(const BufferID &bufferId) = 0;
-		virtual void SetTexture(const TextureID &textureId, const uint32_t index) = 0;
-		virtual void SetUniform(const UniformID &uniformId, const size_t size, const uint8_t *value) = 0;
-		virtual void SetUniformInt(const UniformID &uniformId, const int value) = 0;
-		virtual void SetUniformVec2i(const UniformID &uniformId, const glm::ivec2 &value) = 0;
-		virtual void SetUniformVec2(const UniformID &uniformId, const glm::vec2 &value) = 0;
-		virtual void SetUniformVec3(const UniformID &uniformId, const glm::vec3 &value) = 0;
-		virtual void SetUniformVec4(const UniformID &uniformId, const glm::vec4 &value) = 0;
-		virtual void SetUniformMat4(const UniformID &uniformId, const glm::mat4 &value) = 0;
+		virtual void BindVertexBuffers(const std::initializer_list<const BufferID> &ids) = 0;
+		virtual void BindIndexBuffers(const std::initializer_list<const BufferID> &ids) = 0;
+		virtual void BeginRenderPass(const RenderPassID &renderPassId, const FrameBufferID &frameBufferId, const RenderArea *renderArea, const std::initializer_list<const ClearValue> &clearValues) = 0;
+		virtual void EndRenderPass() = 0;
 		virtual void Draw(const size_t vertexCount, const size_t firstVertex = 0, const size_t instanceCount = 1, const size_t firstInstance = 0) = 0;
 	};
 
@@ -523,8 +560,8 @@ namespace fsr {
 		virtual BufferID CreateBuffer(const BufferType type, const BufferAccess access, const BufferUsage usage, const size_t size, const uint8_t *data) = 0;
 		virtual void DestroyBuffer(const BufferID bufferId) = 0;
 
-		virtual RenderTargetID CreateRenderTarget(const RenderTargetDescriptor &renderTargetDesc) = 0;
-		virtual void DestroyRenderTarget(const RenderTargetID renderTargetId) = 0;
+		virtual FrameBufferID CreateFrameBuffer(const std::initializer_list<FrameBufferAttachment> &attachments, const uint32_t sampleCount) = 0;
+		virtual void DestroyFrameBuffer(const FrameBufferID renderTargetId) = 0;
 
 		virtual PipelineID CreatePipeline(const PipelineDescriptor &pipelineDesc) = 0;
 		virtual void DestroyPipeline(const PipelineID pipelineId) = 0;
