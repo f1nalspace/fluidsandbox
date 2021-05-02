@@ -45,13 +45,13 @@ namespace fsr {
 
 	class Buffer {
 	public:
-		BufferID id;
 		size_t size;
 		BufferType type;
 		BufferAccess access;
 		BufferUsage usage;
+		const BufferID id;
 	protected:
-		Buffer(const BufferID id, const BufferType type, const BufferAccess access, const BufferUsage usage, const size_t size):
+		Buffer(const BufferID &id, const BufferType type, const BufferAccess access, const BufferUsage usage, const size_t size):
 			id(id),
 			type(type),
 			access(access),
@@ -105,11 +105,11 @@ namespace fsr {
 	public:
 		uint32_t width;
 		uint32_t height;
-		TextureID id;
 		TextureFormat format;
 		TextureType type;
+		const TextureID id;
 	protected:
-		Texture(const TextureID id, const TextureType type, const TextureFormat format, const uint32_t width, const uint32_t height):
+		Texture(const TextureID &id, const TextureType type, const TextureFormat format, const uint32_t width, const uint32_t height):
 			width(0),
 			height(0),
 			id(id),
@@ -184,8 +184,14 @@ namespace fsr {
 
 	struct Shader {
 		const char *source;
-		ShaderID id;
 		ShaderType type;
+		const ShaderID id;
+
+		Shader(const ShaderID &id):
+			id(id),
+			source(nullptr),
+			type(ShaderType::None) {
+		}
 	};
 
 	struct ShaderProgramID {
@@ -199,13 +205,26 @@ namespace fsr {
 
 	struct ShaderProgram {
 		ShaderID shaders[MaxShaderTypeCount];
-		ShaderProgramID id;
 		uint32_t shaderCount;
+		const ShaderProgramID id;
+
+		ShaderProgram(const ShaderProgramID &id):
+			id(id),
+			shaderCount(0),
+			shaders() {
+
+		}
 	};
 
 	//
-	// Uniform
+	// DescriptorLayout
 	//
+	enum class DescriptorLayoutElementType: int {
+		None = 0,
+		Buffer,
+		Uniform
+	};
+
 	enum class UniformType: int {
 		None = 0,
 		Float,
@@ -225,54 +244,46 @@ namespace fsr {
 		Last = SamplerCube,
 	};
 
-	static constexpr uint32_t MaxUniformTypeCount = ((int)UniformType::Last - (int)UniformType::First) + 1;
-
-	struct UniformID {
-		uint32_t id;
-
-		bool operator<(const UniformID &o)  const {
-			bool result = id < o.id;
-			return(result);
-		}
-	};
-
-	struct Uniform {
+	struct ShaderLayoutElement {
 		const char *name;
-		uint32_t offset;
-		uint32_t size;
-		UniformID id;
-		UniformType type;
-	};
-
-	//
-	// LayoutLocationElement
-	//
-	enum class LayoutLocationElementType: int {
-		None = 0,
-		Float,
-		Vec2f,
-		Vec3f,
-		Vec4f,
-	};
-
-	struct LayoutLocationElementID {
-		uint32_t id;
-
-		bool operator<(const LayoutLocationElementID &o)  const {
-			bool result = id < o.id;
-			return(result);
-		}
-	};
-
-	// Mirrors the layout(location = offset) in/out type name
-	struct LayoutLocationElement {
-		const char *name;
+		uint32_t binding;
 		uint32_t offset;
 		uint32_t count;
 		uint32_t size;
-		LayoutLocationElementID id;
-		LayoutLocationElementType type;
+		DescriptorLayoutElementType elementType;
+		UniformType uniformType;
 		b32 isNormalized;
+	};
+
+	// @TEMPORARY(final): Replace with correct ShaderLayoutElement (Buffer)
+	struct ShaderUniformElement {
+		const char *name;
+		uint32_t location;
+		uint32_t offset;
+		uint32_t count;
+		uint32_t size;
+		UniformType uniformType;
+		b32 isNormalized;
+	};
+
+	struct ShaderLayoutID {
+		uint32_t id;
+
+		bool operator<(const ShaderLayoutID &o)  const {
+			bool result = id < o.id;
+			return(result);
+		}
+	};
+
+	// Is the same as VkDescriptorSetLayout
+	struct ShaderLayout {
+		std::vector<ShaderLayoutElement> elements;
+		std::vector<ShaderUniformElement> uniforms; // @TEMPORARY(final): Remove when we switch to vulkan, because there is no uniforms in vulkan!
+		const ShaderLayoutID id;
+
+		ShaderLayout(const ShaderLayoutID &id):
+			id(id) {
+		}
 	};
 
 	//
@@ -288,7 +299,12 @@ namespace fsr {
 	};
 
 	struct PipelineLayout {
-		PipelineLayoutID id;
+		const PipelineLayoutID id;
+
+		PipelineLayout(const PipelineLayoutID &id):
+			id(id) {
+
+		}
 	};
 
 	enum class PrimitiveMode: int {
@@ -493,7 +509,7 @@ namespace fsr {
 	struct RenderPassID {
 		uint32_t id;
 
-		bool operator<(const PipelineID &o)  const {
+		bool operator<(const RenderPassID &o)  const {
 			bool result = id < o.id;
 			return(result);
 		}
