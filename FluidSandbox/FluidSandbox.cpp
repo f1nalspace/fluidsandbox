@@ -199,12 +199,13 @@ License:
 #include "AllShaders.hpp"
 #include "AllFBOs.hpp"
 #include "AllActors.hpp"
+#include "AllVBOs.hpp"
 
 #include "Renderer2.h"
 
 // Application
 #define APPLICATION_NAME "Fluid Sandbox"
-#define APPLICATION_VERSION "1.8.0"
+#define APPLICATION_VERSION "1.9.0"
 #define APPLICATION_AUTHOR "Torsten Spaete"
 #define APPLICATION_COPYRIGHT "(C) 2015-2021 Torsten Spaete - All rights reserved"
 
@@ -257,7 +258,7 @@ enum class ActorCreationKind: int {
 	Max = FluidSphere
 };
 static const char *GetActorCreationKindName(const ActorCreationKind kind) {
-	switch(kind) {
+	switch (kind) {
 		case ActorCreationKind::RigidBox:
 			return "Rigid / Box";
 		case ActorCreationKind::RigidSphere:
@@ -374,6 +375,7 @@ static Frustum gFrustum;
 static CColoredShader *gColoredShader = nullptr;
 static CLineShader *gLineShader = nullptr;
 static CLightingShader *gLightingShader = nullptr;
+static CFontShader *gFontShader = nullptr;
 
 static CSceneFBO *gSceneFBO = nullptr;
 static GeometryVBO *gSkyboxVBO = nullptr;
@@ -390,6 +392,11 @@ static FontAtlas *gFontAtlas16 = nullptr;
 static FontAtlas *gFontAtlas32 = nullptr;
 static CTextureFont *gFontTexture16 = nullptr;
 static CTextureFont *gFontTexture32 = nullptr;
+
+constexpr static uint32_t MaxFontVBOQuadCount = 4096;
+constexpr static uint32_t MaxFontVBOVertexCount = MaxFontVBOQuadCount * 4;
+constexpr static uint32_t MaxFontVBOIndexCount = MaxFontVBOQuadCount * 6;
+static DynamicVBO *gFontVBO = nullptr;
 
 // Timing
 static float gTotalTimeElapsed = 0;
@@ -446,7 +453,7 @@ static void AddFluid(PhysicsParticleSystem &particleSys, const FluidActor &conta
 	float sizeZ = container.size.z;
 
 	float radius = container.radius;
-	if(radius < 0.00001f) {
+	if (radius < 0.00001f) {
 		radius = ((sizeX + sizeY + sizeZ) / 3.0f) / 2.0f;
 	}
 
@@ -462,20 +469,20 @@ static void AddFluid(PhysicsParticleSystem &particleSys, const FluidActor &conta
 
 	std::vector<glm::vec3> positions;
 	std::vector<glm::vec3> velocities;
-	if(type == FluidType::Drop) {
+	if (type == FluidType::Drop) {
 		// Single drop
 		numParticles++;
 		positions.push_back(glm::vec3(centerX, centerY, centerZ));
 		velocities.push_back(vel);
-	} else if(type == FluidType::Plane) {
+	} else if (type == FluidType::Plane) {
 		// Water plane
 		float zpos = centerZ - (dZ / 2.0f);
 		idx = 0;
 
-		for(long z = 0; z < numZ; z++) {
+		for (long z = 0; z < numZ; z++) {
 			float xpos = centerX - (dX / 2.0f);
 
-			for(long x = 0; x < numX; x++) {
+			for (long x = 0; x < numX; x++) {
 				numParticles++;
 				positions.push_back(glm::vec3(xpos, centerY, zpos));
 				velocities.push_back(vel);
@@ -485,18 +492,18 @@ static void AddFluid(PhysicsParticleSystem &particleSys, const FluidActor &conta
 
 			zpos += distance;
 		}
-	} else if(type == FluidType::Box) {
+	} else if (type == FluidType::Box) {
 		// Water box
 		float zpos = centerZ - (dZ / 2.0f);
 		idx = 0;
 
-		for(long z = 0; z < numZ; z++) {
+		for (long z = 0; z < numZ; z++) {
 			float ypos = centerY - (dY / 2.0f);
 
-			for(long y = 0; y < numY; y++) {
+			for (long y = 0; y < numY; y++) {
 				float xpos = centerX - (dX / 2.0f);
 
-				for(long x = 0; x < numX; x++) {
+				for (long x = 0; x < numX; x++) {
 					numParticles++;
 					positions.push_back(glm::vec3(xpos, ypos, zpos));
 					velocities.push_back(vel);
@@ -509,23 +516,23 @@ static void AddFluid(PhysicsParticleSystem &particleSys, const FluidActor &conta
 
 			zpos += distance;
 		}
-	} else if(type == FluidType::Sphere) {
+	} else if (type == FluidType::Sphere) {
 		// Water sphere
 		glm::vec3 center = glm::vec3(centerX, centerY, centerZ);
 
 		float zpos = centerZ - (dZ / 2.0f);
 		idx = 0;
 
-		for(long z = 0; z < numZ; z++) {
+		for (long z = 0; z < numZ; z++) {
 			float ypos = centerY - (dY / 2.0f);
 
-			for(long y = 0; y < numY; y++) {
+			for (long y = 0; y < numY; y++) {
 				float xpos = centerX - (dX / 2.0f);
 
-				for(long x = 0; x < numX; x++) {
+				for (long x = 0; x < numX; x++) {
 					glm::vec3 point = glm::vec3(xpos, ypos, zpos);
 
-					if(PointInSphere(center, radius, point, gCurrentProperties.sim.particleRadius)) {
+					if (PointInSphere(center, radius, point, gCurrentProperties.sim.particleRadius)) {
 						numParticles++;
 						positions.push_back(point);
 						velocities.push_back(vel);
@@ -551,11 +558,11 @@ static void AddFluid(PhysicsParticleSystem &particleSys, const FluidActor &conta
 }
 
 static void AddFluids(PhysicsParticleSystem &particleSys, const FluidType type) {
-	for(size_t i = 0, count = gActors.size(); i < count; i++) {
+	for (size_t i = 0, count = gActors.size(); i < count; i++) {
 		Actor *actor = gActors[i];
-		if(actor->type == ActorType::Fluid) {
+		if (actor->type == ActorType::Fluid) {
 			FluidActor *fluidActor = static_cast<FluidActor *>(actor);
-			if(fluidActor->time <= 0) {
+			if (fluidActor->time <= 0) {
 				AddFluid(particleSys, *fluidActor, type);
 			}
 		}
@@ -570,7 +577,7 @@ static PhysicsParticleSystem *CreateParticleFluidSystem(PhysicsEngine &engine) {
 }
 
 static PhysicsRigidBody::MotionKind ToMotionKind(const ActorMovementType movementType) {
-	switch(movementType) {
+	switch (movementType) {
 		case ActorMovementType::Dynamic:
 			return PhysicsRigidBody::MotionKind::Dynamic;
 		default:
@@ -607,16 +614,16 @@ static void AddPlane(PhysicsEngine &physics, PlaneActor &plane) {
 }
 
 static void AddScenarioActor(PhysicsEngine &physics, Actor *actor) {
-	if(actor->type == ActorType::Cube) {
+	if (actor->type == ActorType::Cube) {
 		CubeActor *cube = static_cast<CubeActor *>(actor);
 		AddBox(physics, *cube);
-	} else if(actor->type == ActorType::Sphere) {
+	} else if (actor->type == ActorType::Sphere) {
 		SphereActor *sphere = static_cast<SphereActor *>(actor);
 		AddSphere(physics, *sphere);
-	} else if(actor->type == ActorType::Capsule) {
+	} else if (actor->type == ActorType::Capsule) {
 		CapsuleActor *capsule = static_cast<CapsuleActor *>(actor);
 		AddCapsule(physics, *capsule);
-	} else if(actor->type == ActorType::Plane) {
+	} else if (actor->type == ActorType::Plane) {
 		PlaneActor *plane = static_cast<PlaneActor *>(actor);
 		AddPlane(physics, *plane);
 	} else {
@@ -637,7 +644,7 @@ static void SingleStepPhysX(const float frametime) {
 	gActiveParticleCount = gPhysicsParticles->activeParticleCount;
 
 	// Save fluid positions
-	if(gSSFRenderMode != SSFRenderMode::Disabled)
+	if (gSSFRenderMode != SSFRenderMode::Disabled)
 		SaveFluidPositions(*gPhysicsParticles);
 }
 
@@ -648,7 +655,7 @@ static void ClearScene(PhysicsEngine &physics) {
 	gActiveParticleCount = 0;
 
 	// Delete all actors
-	for(size_t index = 0, count = gActors.size(); index < count; ++index) {
+	for (size_t index = 0, count = gActors.size(); index < count; ++index) {
 		Actor *actor = gActors[index];
 		delete actor;
 	}
@@ -657,7 +664,7 @@ static void ClearScene(PhysicsEngine &physics) {
 
 static Actor *CloneBodyActor(const Actor *actor) {
 	assert(actor != nullptr);
-	switch(actor->type) {
+	switch (actor->type) {
 		case ActorType::Plane:
 		{
 			const PlaneActor *sourceActor = static_cast<const PlaneActor *>(actor);
@@ -726,20 +733,20 @@ static void ResetScene(PhysicsEngine &physics) {
 	physics.SetGPUAcceleration(gPhysicsUseGPUAcceleration);
 
 	// Add bodies immediately from scenario
-	for(size_t i = 0, count = gActiveScenario->bodies.size(); i < count; i++) {
+	for (size_t i = 0, count = gActiveScenario->bodies.size(); i < count; i++) {
 		const Actor *sourceActor = gActiveScenario->bodies[i];
 		Actor *targetActor = CloneBodyActor(sourceActor);
 		gActors.push_back(targetActor);
-		if(targetActor != nullptr) {
+		if (targetActor != nullptr) {
 			targetActor->timeElapsed = 0.0f;
-			if(targetActor->time == -1) {
+			if (targetActor->time == -1) {
 				AddScenarioActor(physics, targetActor);
 			}
 		}
 	}
 
 	// Add waters immediately from scenario
-	for(size_t i = 0, count = gActiveScenario->fluids.size(); i < count; i++) {
+	for (size_t i = 0, count = gActiveScenario->fluids.size(); i < count; i++) {
 		const FluidActor *sourceActor = gActiveScenario->fluids[i];
 		FluidActor *targetActor = new FluidActor(sourceActor->size, sourceActor->radius, sourceActor->fluidType);
 		targetActor->Assign(sourceActor);
@@ -748,7 +755,7 @@ static void ResetScene(PhysicsEngine &physics) {
 		targetActor->emitterCoolDownElapsed = 0.0f;
 		targetActor->emitterCoolDownActive = false;
 		gActors.push_back(targetActor);
-		if(targetActor->time == -1 && !targetActor->isEmitter && gWaterAddBySceneChange) {
+		if (targetActor->time == -1 && !targetActor->isEmitter && gWaterAddBySceneChange) {
 			AddFluid(*gPhysicsParticles, *targetActor, targetActor->fluidType);
 		}
 	}
@@ -774,13 +781,36 @@ void InitializePhysics() {
 	gPhysicsUseGPUAcceleration = gPhysics->IsGPUAcceleration();
 }
 
+void DrawFontsVBO(const glm::mat4 &mvp, DynamicVBO *vbo, const uint32_t triangleIndexCount) {
+	size_t stride = vbo->reservedVertexStride;
+
+	// Vertex (vec4, vec2, vec2)
+	vbo->Bind();
+
+	glEnableClientState(GL_COLOR_ARRAY);
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+	glColorPointer(4, GL_FLOAT, (GLsizei)stride, (void *)(offsetof(FontVertex, color)));
+	glVertexPointer(2, GL_FLOAT, (GLsizei)stride, (void *)(offsetof(FontVertex, pos)));
+	glTexCoordPointer(2, GL_FLOAT, (GLsizei)stride, (void *)(offsetof(FontVertex, uv)));
+	gRenderer->DrawVBO(vbo, GL_TRIANGLES, triangleIndexCount, 0);
+	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+	glDisableClientState(GL_VERTEX_ARRAY);
+	glDisableClientState(GL_COLOR_ARRAY);
+
+	vbo->Unbind();
+
+	GLenum err = glGetError();
+	assert(err == GL_NO_ERROR);
+}
+
 void DrawPrimitive(GeometryVBO *vbo, const bool asLines) {
 	// NOTE(final): Expect that a shader is already bound
 
 	// Vertex (vec3, vec3, vec2)
 	vbo->Bind();
 
-	if(!asLines || vbo->lineIndexCount == 0) {
+	if (!asLines || vbo->lineIndexCount == 0) {
 		glEnableClientState(GL_VERTEX_ARRAY);
 		glEnableClientState(GL_NORMAL_ARRAY);
 		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
@@ -813,16 +843,16 @@ static void DrawGrid(const glm::mat4 &mvp) {
 
 void UpdatePhysX(const float frametime) {
 	// Update water external direction if required
-	if(gFluidLatestExternalAccelerationTime > -1) {
+	if (gFluidLatestExternalAccelerationTime > -1) {
 		uint64_t current = fplGetTimeInMillisecondsLP();
-		if((int64_t)current > gFluidLatestExternalAccelerationTime) {
+		if ((int64_t)current > gFluidLatestExternalAccelerationTime) {
 			gPhysicsParticles->SetExternalAcceleration(glm::vec3(0.0f, 0.0f, 0.0f));
 			gFluidLatestExternalAccelerationTime = -1;
 		}
 	}
 
 	// Update PhysX
-	if(!gPaused) {
+	if (!gPaused) {
 		SingleStepPhysX(frametime);
 	}
 }
@@ -891,7 +921,7 @@ void DrawCapsuleShape(const glm::mat4 &cameraMVP, const PhysicsTransform &bodyTr
 }
 
 void DrawShape(const glm::mat4 &mvp, const PhysicsTransform &bodyTransform, const PhysicsShape &shape, const glm::vec4 &color) {
-	switch(shape.type) {
+	switch (shape.type) {
 		case PhysicsShape::Type::Box:
 			DrawBoxShape(mvp, bodyTransform, shape.local, shape.box, color);
 			break;
@@ -924,7 +954,7 @@ void DrawBounds(const glm::mat4 &cameraMVP, const PhysicsBoundingBox &bounds) {
 
 void DrawActorBounds(const glm::mat4 &mvp, const PhysicsActor &physicsActor) {
 	PhysicsBoundingBox bounds = physicsActor.bounds;
-	if(gFrustum.containsBounds(bounds.min, bounds.max)) {
+	if (gFrustum.containsBounds(bounds.min, bounds.max)) {
 		gDrawedActors++;
 		DrawBounds(mvp, bounds);
 	}
@@ -932,23 +962,23 @@ void DrawActorBounds(const glm::mat4 &mvp, const PhysicsActor &physicsActor) {
 
 void DrawRigidBody(const glm::mat4 &mvp, const Actor &actor, const PhysicsRigidBody &rigidBody, const bool isVisible, const bool isBlending) {
 	PhysicsBoundingBox bounds = rigidBody.bounds;
-	if(gFrustum.containsBounds(bounds.min, bounds.max)) {
-		if(isVisible) {
+	if (gFrustum.containsBounds(bounds.min, bounds.max)) {
+		if (isVisible) {
 
-			if(rigidBody.motionKind == PhysicsRigidBody::MotionKind::Dynamic && !gHideDynamicRigidBodies ||
+			if (rigidBody.motionKind == PhysicsRigidBody::MotionKind::Dynamic && !gHideDynamicRigidBodies ||
 				rigidBody.motionKind == PhysicsRigidBody::MotionKind::Static && !gHideStaticRigidBodies) {
 
-				if(isBlending) {
+				if (isBlending) {
 					gRenderer->SetBlending(true);
 					gRenderer->SetDepthTest(false);
 				}
 
-				for(size_t shapeIndex = 0; shapeIndex < rigidBody.shapeCount; ++shapeIndex) {
+				for (size_t shapeIndex = 0; shapeIndex < rigidBody.shapeCount; ++shapeIndex) {
 					const PhysicsShape &shape = rigidBody.shapes[shapeIndex];
 					DrawShape(mvp, rigidBody.transform, shape, actor.color);
 				}
 
-				if(isBlending) {
+				if (isBlending) {
 					gRenderer->SetBlending(false);
 					gRenderer->SetDepthTest(true);
 				}
@@ -961,11 +991,11 @@ void DrawRigidBody(const glm::mat4 &mvp, const Actor &actor, const PhysicsRigidB
 
 void RenderActors(const glm::mat4 &mvp) {
 	// Render all the actors in the scene
-	for(size_t index = 0, count = gActors.size(); index < count; ++index) {
+	for (size_t index = 0, count = gActors.size(); index < count; ++index) {
 		Actor *actor = gActors[index];
-		if(actor->physicsData != nullptr) {
+		if (actor->physicsData != nullptr) {
 			PhysicsActor *pactor = static_cast<PhysicsActor *>(actor->physicsData);
-			if(pactor->type == PhysicsActor::Type::RigidBody) {
+			if (pactor->type == PhysicsActor::Type::RigidBody) {
 				PhysicsRigidBody *rigidBody = static_cast<PhysicsRigidBody *>(pactor);
 				DrawRigidBody(mvp, *actor, *rigidBody, actor->visible, actor->blending);
 			}
@@ -975,9 +1005,9 @@ void RenderActors(const glm::mat4 &mvp) {
 
 void RenderActorBoundings(const glm::mat4 &mvp) {
 	// Render all the actors in the scene as bounding volume
-	for(size_t index = 0, count = gActors.size(); index < count; ++index) {
+	for (size_t index = 0, count = gActors.size(); index < count; ++index) {
 		Actor *actor = gActors[index];
-		if(actor->physicsData != nullptr) {
+		if (actor->physicsData != nullptr) {
 			PhysicsActor *pactor = static_cast<PhysicsActor *>(actor->physicsData);
 			DrawActorBounds(mvp, *pactor);
 		}
@@ -985,7 +1015,7 @@ void RenderActorBoundings(const glm::mat4 &mvp) {
 }
 
 const char *GetFluidProperty(const FluidProperty prop) {
-	switch(prop) {
+	switch (prop) {
 		case FluidProperty::Viscosity:
 			return "Viscosity\0";
 
@@ -1037,7 +1067,7 @@ const char *GetFluidProperty(const FluidProperty prop) {
 }
 
 const char *GetFluidRenderMode(const SSFRenderMode mode) {
-	switch(mode) {
+	switch (mode) {
 		case SSFRenderMode::Disabled:
 			return "Disabled\0";
 
@@ -1056,7 +1086,7 @@ const char *GetFluidRenderMode(const SSFRenderMode mode) {
 }
 
 const char *GetFluidDebugType(const FluidDebugType type) {
-	switch(type) {
+	switch (type) {
 		case FluidDebugType::Final:
 			return "Final\0";
 
@@ -1111,13 +1141,13 @@ void CreateActorsBasedOnTime(const float frametime) {
 	// Add not fallen fluids from active scenario
 
 	// Add actors
-	for(size_t i = 0, count = gActors.size(); i < count; i++) {
+	for (size_t i = 0, count = gActors.size(); i < count; i++) {
 		Actor *actor = gActors[i];
-		if(actor->type != ActorType::Fluid) {
-			if(actor->time > 0) {
-				if(actor->timeElapsed < (float)actor->time) {
+		if (actor->type != ActorType::Fluid) {
+			if (actor->time > 0) {
+				if (actor->timeElapsed < (float)actor->time) {
 					actor->timeElapsed += frametime;
-					if(actor->timeElapsed >= (float)actor->time) {
+					if (actor->timeElapsed >= (float)actor->time) {
 						AddScenarioActor(*gPhysics, actor);
 					}
 				}
@@ -1126,53 +1156,53 @@ void CreateActorsBasedOnTime(const float frametime) {
 	}
 
 	// Add fluids
-	for(size_t i = 0, count = gActors.size(); i < count; i++) {
+	for (size_t i = 0, count = gActors.size(); i < count; i++) {
 		Actor *actor = gActors[i];
-		if(actor->type != ActorType::Fluid) continue;
+		if (actor->type != ActorType::Fluid) continue;
 
 		FluidActor *fluid = static_cast<FluidActor *>(actor);
 
 		float time;
 
-		if(!fluid->isEmitter) {
+		if (!fluid->isEmitter) {
 			// Einmaliger partikel emitter
-			if(fluid->time > 0) {
+			if (fluid->time > 0) {
 				time = (float)fluid->time;
 
-				if(fluid->timeElapsed < time) {
+				if (fluid->timeElapsed < time) {
 					fluid->timeElapsed += frametime;
 
-					if(fluid->timeElapsed >= time) {
+					if (fluid->timeElapsed >= time) {
 						AddFluid(*gPhysicsParticles, *fluid, fluid->fluidType);
 					}
 				}
 			}
-		} else if(!gStoppedEmitter) {
+		} else if (!gStoppedEmitter) {
 			time = fluid->emitterTime;
 			float duration = (float)fluid->emitterDuration;
 
-			if(time > 0.0f) {
+			if (time > 0.0f) {
 				fluid->emitterElapsed += frametime;
 
-				if((fluid->emitterElapsed < duration) || (fluid->emitterDuration == 0)) {
-					if(fluid->timeElapsed < time) {
+				if ((fluid->emitterElapsed < duration) || (fluid->emitterDuration == 0)) {
+					if (fluid->timeElapsed < time) {
 						fluid->timeElapsed += frametime;
 
-						if(fluid->timeElapsed >= time) {
+						if (fluid->timeElapsed >= time) {
 							fluid->timeElapsed = 0.0f;
 							AddFluid(*gPhysicsParticles, *fluid, fluid->fluidType);
 						}
 					}
-				} else if(fluid->emitterCoolDown > 0.0f) {
-					if(!fluid->emitterCoolDownActive) {
+				} else if (fluid->emitterCoolDown > 0.0f) {
+					if (!fluid->emitterCoolDownActive) {
 						fluid->emitterCoolDownActive = true;
 						fluid->emitterCoolDownElapsed = 0.0f;
 					}
 
-					if(fluid->emitterCoolDownActive) {
+					if (fluid->emitterCoolDownActive) {
 						fluid->emitterCoolDownElapsed += frametime;
 
-						if(fluid->emitterCoolDownElapsed >= (float)fluid->emitterCoolDown) {
+						if (fluid->emitterCoolDownElapsed >= (float)fluid->emitterCoolDown) {
 							// Cool down finished
 							fluid->emitterCoolDownActive = false;
 							fluid->emitterElapsed = 0.0f;
@@ -1190,7 +1220,7 @@ void Update(const glm::mat4 &proj, const glm::mat4 &modl, const float frametime)
 	gFrustum.update(&proj[0][0], &modl[0][0]);
 
 	// Create actor based on time
-	if(!gPaused) {
+	if (!gPaused) {
 		CreateActorsBasedOnTime(frametime * 1000.0f);
 	}
 
@@ -1199,16 +1229,24 @@ void Update(const glm::mat4 &proj, const glm::mat4 &modl, const float frametime)
 }
 
 struct OSDRenderPosition {
+	CTextureFont *fontTexture;
+	VBOWritter *writer;
 	float x;
 	float y;
 	float fontHeight;
 	float lineHeight;
 
-	OSDRenderPosition(const float fontHeight, const float lineHeight):
+	OSDRenderPosition(VBOWritter *writer, const float fontHeight, const float lineHeight):
+		fontTexture(nullptr),
+		writer(writer),
 		x(0),
 		y(0),
 		fontHeight(fontHeight),
 		lineHeight(lineHeight) {
+		if (fontHeight <= 32)
+			fontTexture = gFontTexture16;
+		else
+			fontTexture = gFontTexture32;
 	}
 
 	void newLine() {
@@ -1217,13 +1255,11 @@ struct OSDRenderPosition {
 };
 
 void RenderOSDLine(OSDRenderPosition &osdpos, char *value) {
-	CTextureFont *font;
-	if(osdpos.fontHeight <= 32)
-		font = gFontTexture16;
-	else
-		font = gFontTexture32;
-	gRenderer->DrawString(0, font, osdpos.x, osdpos.y, osdpos.fontHeight, value, glm::vec4(0.0f, 0.0f, 0.0f, 1.0f));
-	gRenderer->DrawString(0, font, osdpos.x + 1, osdpos.y + 1, osdpos.fontHeight, value, glm::vec4(1, 1, 1, 1));
+	assert(osdpos.fontTexture != nullptr);
+	assert(osdpos.writer != nullptr);
+	const FontAtlas *fontAtlas = &osdpos.fontTexture->GetAtlas();
+	gRenderer->DrawString(fontAtlas, osdpos.x, osdpos.y, osdpos.fontHeight, value, glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), *osdpos.writer);
+	gRenderer->DrawString(fontAtlas, osdpos.x + 1, osdpos.y + 1, osdpos.fontHeight, value, glm::vec4(1, 1, 1, 1), *osdpos.writer);
 	osdpos.newLine();
 }
 
@@ -1242,7 +1278,7 @@ void RenderOSD(const int windowWidth, const int windowHeight) {
 	// Enable blending
 	gRenderer->SetBlending(true);
 
-	if(gShowOSD) {
+	if (gShowOSD) {
 		// Draw background
 		glm::vec4 backColor = glm::vec4(0.1f, 0.1f, 0.1f, 0.3f);
 		glm::vec3 backScale = glm::vec3((float)windowWidth * 0.25f, (float)windowHeight, 1.0f);
@@ -1260,12 +1296,11 @@ void RenderOSD(const int windowWidth, const int windowHeight) {
 	const float targetFontScale = 0.0225f;
 	float fontHeight = (float)windowHeight * targetFontScale;
 
-	OSDRenderPosition osdPos = OSDRenderPosition(fontHeight, fontHeight * 0.9f);
+	VBOWritter fontWriter = gFontVBO->BeginWrite();
+
+	OSDRenderPosition osdPos = OSDRenderPosition(&fontWriter, fontHeight, fontHeight * 0.9f);
 	osdPos.x = 20;
 	osdPos.y = 20;
-
-	// TODO(final): Remove this!
-	gRenderer->LoadMatrix(orthoProj);
 
 	// Render text
 	sprintf_s(buffer, "FPS: %3.2f", gFps);
@@ -1273,7 +1308,7 @@ void RenderOSD(const int windowWidth, const int windowHeight) {
 	sprintf_s(buffer, "Show osd: %s (T)", gShowOSD ? "yes" : "no");
 	RenderOSDLine(osdPos, buffer);
 
-	if(gShowOSD) {
+	if (gShowOSD) {
 		sprintf_s(buffer, "Drawed actors: %zu of %zu", gDrawedActors, gTotalActors);
 		RenderOSDLine(osdPos, buffer);
 		sprintf_s(buffer, "Total fluid particles: %lu", gActiveParticleCount);
@@ -1368,6 +1403,24 @@ void RenderOSD(const int windowWidth, const int windowHeight) {
 		RenderOSDLine(osdPos, buffer);
 	}
 
+	gFontVBO->EndWrite(fontWriter);
+
+	//
+	// Draw Font VBO
+	//
+	CTextureFont *fontTexture = osdPos.fontTexture;
+	uint32_t triangleIndexCount = fontWriter.indexOffset;
+
+	gRenderer->EnableTexture(0, fontTexture);
+
+	gFontShader->enable();
+	gFontShader->uniform1i(gFontShader->ulocFontTex, 0);
+	gFontShader->uniformMatrix4(gFontShader->ulocMVP, &orthoProj[0][0]);
+	DrawFontsVBO(orthoProj, gFontVBO, triangleIndexCount);
+	gFontShader->disable();
+
+	gRenderer->DisableTexture(0, fontTexture);
+
 	// Disable blending
 	gRenderer->SetBlending(false);
 
@@ -1376,9 +1429,9 @@ void RenderOSD(const int windowWidth, const int windowHeight) {
 }
 
 void RenderSkybox(const glm::mat4 &mvp) {
-	if(!gSkyboxVBO) return;
-	if(!gSkyboxShader) return;
-	if(!gSkyboxCubemap) return;
+	if (!gSkyboxVBO) return;
+	if (!gSkyboxShader) return;
+	if (!gSkyboxCubemap) return;
 
 	gRenderer->SetDepthMask(false);
 
@@ -1402,24 +1455,24 @@ void RenderScene(const glm::mat4 &mvp) {
 	// Draw the grid
 	DrawGrid(mvp);
 
-	if(gDrawWireframe)
+	if (gDrawWireframe)
 		gRenderer->SetWireframe(true);
 
 	// Render actors
 	RenderActors(mvp);
 
 	// Render actor boundings if required
-	if(gDrawBoundBox) {
-		if(!gDrawWireframe)
+	if (gDrawBoundBox) {
+		if (!gDrawWireframe)
 			gRenderer->SetWireframe(true);
 
 		RenderActorBoundings(mvp);
 
-		if(!gDrawWireframe)
+		if (!gDrawWireframe)
 			gRenderer->SetWireframe(false);
 	}
 
-	if(gDrawWireframe)
+	if (gDrawWireframe)
 		gRenderer->SetWireframe(false);
 }
 
@@ -1430,7 +1483,7 @@ void RenderSceneFBO(const glm::mat4 &mvp, const int windowWidth, const int windo
 	gRenderer->SetViewport(0, 0, windowWidth, windowHeight);
 
 	// Resize FBO if required
-	if(gSceneFBO->getWidth() != windowWidth || gSceneFBO->getHeight() != windowHeight) {
+	if (gSceneFBO->getWidth() != windowWidth || gSceneFBO->getHeight() != windowHeight) {
 		gSceneFBO->resize(windowWidth, windowHeight);
 	}
 
@@ -1510,7 +1563,7 @@ static void ResizeRenderer2(FluidSandbox &app, const int newWidth, const int new
 }
 
 static void OnRender2(FluidSandbox &app, const int windowWidth, const int windowHeight, const float frametime) {
-	if(app.lastWidth != windowWidth || app.lastHeight != windowHeight) {
+	if (app.lastWidth != windowWidth || app.lastHeight != windowHeight) {
 		app.lastWidth = windowWidth;
 		app.lastHeight = windowHeight;
 		ResizeRenderer2(app, windowWidth, windowHeight);
@@ -1538,7 +1591,7 @@ void OnRender(const int windowWidth, const int windowHeight, const float frameti
 
 	// TODO(final): Revisit any time / delta computation, because its not correct
 	gTotalFrames++;
-	if((realFrametimeStart - gAppStartTime) > 1000.0f) {
+	if ((realFrametimeStart - gAppStartTime) > 1000.0f) {
 		float elapsedTime = float(realFrametimeStart - gAppStartTime);
 		gFps = (((float)gTotalFrames * 1000.0f) / elapsedTime);
 		gAppStartTime = realFrametimeStart;
@@ -1584,16 +1637,16 @@ void OnRender(const int windowWidth, const int windowHeight, const float frameti
 	bool drawFluidParticles = gSSFRenderMode != SSFRenderMode::Disabled;
 
 	// Render scene to FBO
-	if(drawFluidParticles)
+	if (drawFluidParticles)
 		RenderSceneFBO(mvp, windowWidth, windowHeight);
 
 	// Render scene
 	gDrawedActors = 0;
-	if(!drawFluidParticles || options.debugType == FluidDebugType::Final)
+	if (!drawFluidParticles || options.debugType == FluidDebugType::Final)
 		RenderScene(mvp);
 
 	// Render fluid
-	if(drawFluidParticles) {
+	if (drawFluidParticles) {
 		gFluidRenderer->Render(gCamera, gActiveParticleCount, options, windowWidth, windowHeight, gCurrentProperties.sim.particleRadius * gCurrentProperties.render.particleRenderFactor);
 	}
 
@@ -1623,18 +1676,18 @@ static int gMouseOldX = -1;
 static int gMouseOldY = -1;
 
 static void OnMouseButton(const fplMouseButtonType button, fplButtonState s, int x, int y) {
-	if(s == fplButtonState::fplButtonState_Press) {
+	if (s == fplButtonState::fplButtonState_Press) {
 		gMouseOldX = x;
 		gMouseOldY = y;
-		if(button == fplMouseButtonType::fplMouseButtonType_Left)
+		if (button == fplMouseButtonType::fplMouseButtonType_Left)
 			gMouseAction = MouseAction::Rotate;
-		else if(button == fplMouseButtonType::fplMouseButtonType_Right)
+		else if (button == fplMouseButtonType::fplMouseButtonType_Right)
 			gMouseAction = MouseAction::Zoom;
 		else
 			gMouseAction = MouseAction::None;
 		gMouseButton = button;
 		gMouseDown = true;
-	} else if(s == fplButtonState::fplButtonState_Release) {
+	} else if (s == fplButtonState::fplButtonState_Release) {
 		gMouseOldX = x;
 		gMouseOldY = y;
 		gMouseAction = MouseAction::None;
@@ -1643,10 +1696,10 @@ static void OnMouseButton(const fplMouseButtonType button, fplButtonState s, int
 }
 
 void OnMouseMove(const fplMouseButtonType button, const fplButtonState state, const int x, const int y) {
-	if(gMouseDown) {
-		if(gMouseAction == MouseAction::Zoom) {
+	if (gMouseDown) {
+		if (gMouseAction == MouseAction::Zoom) {
 			gCameraDistance *= (1 + (y - gMouseOldY) / 60.0f);
-		} else if(gMouseAction == MouseAction::Rotate) {
+		} else if (gMouseAction == MouseAction::Rotate) {
 			gCamRotation.y += (x - gMouseOldX) / 5.0f;
 			gCamRotation.x += (y - gMouseOldY) / 5.0f;
 		}
@@ -1660,7 +1713,7 @@ static void AddDynamicActor(PhysicsEngine &physics, PhysicsParticleSystem &parti
 	glm::vec3 vel = DefaultRigidBodyVelocity;
 	float density = DefaultRigidBodyDensity;
 	glm::quat rotation = Utils::RotateQuat(RandomAngle(), glm::vec3(0, 1, 0));
-	switch(kind) {
+	switch (kind) {
 		case ActorCreationKind::RigidBox:
 		{
 			CubeActor *box = new CubeActor(ActorMovementType::Dynamic, glm::vec3(0.5, 0.5, 0.5));
@@ -1730,7 +1783,7 @@ static void SetFluidExternalAcceleration(const glm::vec3 &acc) {
 
 static void OnKeyUp(const fplKey key, const int x, const int y) {
 	assert(gPhysics != nullptr);
-	switch(key) {
+	switch (key) {
 		case fplKey_Escape: // Escape
 		{
 			fplWindowShutdown();
@@ -1781,7 +1834,7 @@ static void OnKeyUp(const fplKey key, const int x, const int y) {
 #if 0
 			gHideRigidBodies++;
 
-			if(gHideRigidBodies > HideRigidBody_MAX)
+			if (gHideRigidBodies > HideRigidBody_MAX)
 				gHideRigidBodies = 0;
 #endif
 
@@ -1798,7 +1851,7 @@ static void OnKeyUp(const fplKey key, const int x, const int y) {
 		{
 			int index = (int)gFluidCurrentProperty;
 			index++;
-			if(index > (int)FluidProperty::Last) index = (int)FluidProperty::None;
+			if (index > (int)FluidProperty::Last) index = (int)FluidProperty::None;
 			gFluidCurrentProperty = (FluidProperty)index;
 
 			break;
@@ -1818,10 +1871,10 @@ static void OnKeyUp(const fplKey key, const int x, const int y) {
 
 		case fplKey_L: // l
 		{
-			if(gScenarios.size() > 0) {
+			if (gScenarios.size() > 0) {
 				gActiveScenarioIdx++;
 
-				if(gActiveScenarioIdx > (int)gScenarios.size() - 1) gActiveScenarioIdx = 0;
+				if (gActiveScenarioIdx > (int)gScenarios.size() - 1) gActiveScenarioIdx = 0;
 
 				gActiveScenario = gScenarios[gActiveScenarioIdx];
 				ResetScene(*gPhysics);
@@ -1849,7 +1902,7 @@ static void OnKeyUp(const fplKey key, const int x, const int y) {
 			int mode = (int)gSSFRenderMode;
 
 			mode++;
-			if(mode > (int)SSFRenderMode::Disabled) mode = (int)SSFRenderMode::Fluid;
+			if (mode > (int)SSFRenderMode::Disabled) mode = (int)SSFRenderMode::Fluid;
 			gSSFRenderMode = (SSFRenderMode)mode;
 
 			SingleStepPhysX(PhysXInitDT);
@@ -1861,7 +1914,7 @@ static void OnKeyUp(const fplKey key, const int x, const int y) {
 		{
 			gSSFCurrentFluidIndex++;
 
-			if(gSSFCurrentFluidIndex > (int)gActiveScene->getFluidColorCount() - 1) gSSFCurrentFluidIndex = 0;
+			if (gSSFCurrentFluidIndex > (int)gActiveScene->getFluidColorCount() - 1) gSSFCurrentFluidIndex = 0;
 
 			break;
 		}
@@ -1876,9 +1929,9 @@ static void OnKeyUp(const fplKey key, const int x, const int y) {
 		{
 			gSSFDetailFactor += -0.10f;
 
-			if(gSSFDetailFactor < 0.0f) gSSFDetailFactor = 1.0f;
+			if (gSSFDetailFactor < 0.0f) gSSFDetailFactor = 1.0f;
 
-			if(gFluidRenderer)
+			if (gFluidRenderer)
 				gFluidRenderer->SetFBOFactor(gSSFDetailFactor);
 
 			break;
@@ -1886,13 +1939,13 @@ static void OnKeyUp(const fplKey key, const int x, const int y) {
 
 		default:
 			break;
+		}
 	}
-}
 
 void ChangeFluidProperty(float value) {
-	if(!gActiveScenario) return;
+	if (!gActiveScenario) return;
 
-	switch(gFluidCurrentProperty) {
+	switch (gFluidCurrentProperty) {
 		case FluidProperty::Viscosity:
 		{
 			gCurrentProperties.sim.viscosity += value;
@@ -1981,8 +2034,8 @@ void ChangeFluidProperty(float value) {
 			int debugType = (int)gFluidDebugType;
 			debugType += inc;
 
-			if(debugType < 0) debugType = (int)FluidDebugType::Max;
-			if(debugType > (int)FluidDebugType::Max) debugType = (int)FluidDebugType::Final;
+			if (debugType < 0) debugType = (int)FluidDebugType::Max;
+			if (debugType > (int)FluidDebugType::Max) debugType = (int)FluidDebugType::Final;
 
 			gFluidDebugType = (FluidDebugType)debugType;
 		} break;
@@ -2005,7 +2058,7 @@ void KeyDown(const fplKey key, const int x, const int y) {
 	const float accSpeed = 10.0f;
 	const PhysicsForceMode accMode = PhysicsForceMode::Acceleration;
 
-	switch(key) {
+	switch (key) {
 		case fplKey_Right:
 		{
 			gPhysicsParticles->AddForce(glm::vec3(1.0f, 0.0f, 0.0f) * accSpeed, accMode);
@@ -2060,13 +2113,13 @@ void LoadFluidScenarios(const char *appPath) {
 	std::string scenariosPath = COSLowLevel::pathCombine(appPath, "scenarios");
 	std::vector<std::string> scenFiles = COSLowLevel::getFilesInDirectory(scenariosPath.c_str(), "*.xml");
 
-	for(unsigned int i = 0; i < scenFiles.size(); i++) {
+	for (unsigned int i = 0; i < scenFiles.size(); i++) {
 		std::string filePath = COSLowLevel::pathCombine(scenariosPath, scenFiles[i]);
 		Scenario *scenario = Scenario::load(filePath.c_str(), gActiveScene);
 		gScenarios.push_back(scenario);
 	}
 
-	if(gScenarios.size() > 0) {
+	if (gScenarios.size() > 0) {
 		gActiveScenarioIdx = 0;
 		gActiveScenario = gScenarios[gActiveScenarioIdx];
 	} else {
@@ -2082,18 +2135,18 @@ void printOpenGLInfos() {
 	printf("  OpenGL Version: %s\n", glGetString(GL_VERSION));
 
 #if 0
-	if(GLEW_VERSION_2_0)
+	if (GLEW_VERSION_2_0)
 		printf("  GLSL Version: %s\n", glGetString(GL_SHADING_LANGUAGE_VERSION));
 
-	if(glewIsSupported("GL_ARB_framebuffer_object")) {
+	if (glewIsSupported("GL_ARB_framebuffer_object")) {
 		int temp;
 		glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, &temp);
 		printf("  OpenGL FBO Max Color Attachments: %d\n", temp);
 		glGetIntegerv(GL_MAX_RENDERBUFFER_SIZE, &temp);
 		printf("  OpenGL FBO Max Render Buffer Size: %d\n", temp);
-	}
+}
 #endif
-	}
+}
 
 static void InitResources(const char *appPath) {
 	// Create texture manager
@@ -2152,6 +2205,11 @@ static void InitResources(const char *appPath) {
 	gSkyboxShader = new CSkyboxShader();
 	Utils::attachShaderFromFile(gSkyboxShader, GL_VERTEX_SHADER, "shaders\\Skybox.vertex", "    ");
 	Utils::attachShaderFromFile(gSkyboxShader, GL_FRAGMENT_SHADER, "shaders\\Skybox.fragment", "    ");
+
+	// Create font shader
+	gFontShader = new CFontShader();
+	Utils::attachShaderFromFile(gFontShader, GL_VERTEX_SHADER, "shaders\\FontTexture.vertex", "    ");
+	Utils::attachShaderFromFile(gFontShader, GL_FRAGMENT_SHADER, "shaders\\FontTexture.fragment", "    ");
 
 	// Create geometry buffers
 	printf("  Create vertex buffers\n");
@@ -2212,54 +2270,59 @@ static void InitResources(const char *appPath) {
 		gQuadVBO->triangleIndexCount = prim.indexCount;
 		gQuadVBO->lineIndexCount = prim.lineIndexCount;
 	}
+
+	// Font VBO
+	gFontVBO = new DynamicVBO();
+	gFontVBO->ReserveVertices(MaxFontVBOVertexCount, FontVertexStride, GL_DYNAMIC_DRAW);
+	gFontVBO->ReserveIndices(MaxFontVBOIndexCount, GL_DYNAMIC_DRAW);
 }
 
 void ReleaseResources() {
 	printf("  Release vertex buffers\n");
-	CVBO *vbos[] { gQuadVBO, gGridVBO, gCylinderVBO, gSphereVBO, gBoxVBO, gSkyboxVBO };
-	for(size_t i = 0; i < fplArrayCount(vbos); ++i) {
+	CVBO *vbos[] { gFontVBO, gQuadVBO, gGridVBO, gCylinderVBO, gSphereVBO, gBoxVBO, gSkyboxVBO };
+	for (size_t i = 0; i < fplArrayCount(vbos); ++i) {
 		CVBO *vbo = vbos[i];
 		delete vbo;
 	}
 
 	printf("  Release shaders\n");
-	CGLSL *shaders[] { gSkyboxShader, gLightingShader, gLineShader, gColoredShader };
-	for(size_t i = 0; i < fplArrayCount(shaders); ++i) {
+	CGLSL *shaders[] { gFontShader, gSkyboxShader, gLightingShader, gLineShader, gColoredShader };
+	for (size_t i = 0; i < fplArrayCount(shaders); ++i) {
 		CGLSL *shader = shaders[i];
 		delete shader;
 	}
 
 	printf("  Release fluid renderer\n");
-	if(gFluidRenderer)
+	if (gFluidRenderer)
 		delete gFluidRenderer;
-	if(gPointSprites != nullptr)
+	if (gPointSprites != nullptr)
 		delete gPointSprites;
 
 	// Release scene FBO
 	printf("  Release frame buffer objects\n");
-	if(gSceneFBO != nullptr)
+	if (gSceneFBO != nullptr)
 		delete gSceneFBO;
 
 	// Release texture manager
 	printf("  Release textures\n");
-	if(gTexMng != nullptr)
+	if (gTexMng != nullptr)
 		delete gTexMng;
-	if(gFontAtlas32 != nullptr) {
+	if (gFontAtlas32 != nullptr) {
 		delete gFontAtlas32;
 	}
-	if(gFontAtlas16 != nullptr) {
+	if (gFontAtlas16 != nullptr) {
 		delete gFontAtlas16;
 	}
 
 	printf("  Release world\n");
-	if(gActiveScene != nullptr)
+	if (gActiveScene != nullptr)
 		delete gActiveScene;
 }
 
 void OnShutdown() {
 	// Release physx
 	printf("Release Physics\n");
-	if(gPhysics != nullptr) {
+	if (gPhysics != nullptr) {
 		delete gPhysics;
 		gPhysics = nullptr;
 	}
@@ -2269,7 +2332,7 @@ void OnShutdown() {
 
 	// Release scenarios
 	printf("Release Fluid Scenarios\n");
-	for(unsigned int i = 0; i < gScenarios.size(); i++) {
+	for (unsigned int i = 0; i < gScenarios.size(); i++) {
 		Scenario *scenario = gScenarios[i];
 		delete scenario;
 	}
@@ -2277,7 +2340,7 @@ void OnShutdown() {
 
 	// Release renderer
 	printf("Release Renderer\n");
-	if(gRenderer) {
+	if (gRenderer) {
 		delete gRenderer;
 		gRenderer = nullptr;
 	}
@@ -2305,9 +2368,9 @@ int main(int argc, char **argv) {
 	platformSettings.video.graphics.opengl.majorVersion = 2;
 	platformSettings.video.graphics.opengl.minorVersion = 1;
 	fplCopyString(APPTITLE, platformSettings.window.title, fplArrayCount(platformSettings.window.title));
-	if(fplPlatformInit(fplInitFlags_Console | fplInitFlags_Video, &platformSettings)) {
+	if (fplPlatformInit(fplInitFlags_Console | fplInitFlags_Video, &platformSettings)) {
 
-		if(!gladLoadGL()) {
+		if (!gladLoadGL()) {
 			std::cerr << "Failed to initialize OpenGL loader" << std::endl;
 			fplPlatformRelease();
 			return -1;
@@ -2322,7 +2385,7 @@ int main(int argc, char **argv) {
 		int maxColorAttachments = 0;
 		glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, &maxColorAttachments);
 
-		if(!gladHasExtension("GL_ARB_texture_float") ||
+		if (!gladHasExtension("GL_ARB_texture_float") ||
 			!gladHasExtension("GL_ARB_point_sprite") ||
 			!gladHasExtension("GL_ARB_framebuffer_object")) {
 			fplConsoleFormatError("failed\n");
@@ -2369,12 +2432,12 @@ int main(int argc, char **argv) {
 		float frametime = 1.0f / 60.0f;
 		fplWallClock lastTime = fplGetWallClock();
 		fplConsoleFormatOut("Main loop\n\n");
-		while(fplWindowUpdate()) {
-			while(fplPollEvent(&ev)) {
-				switch(ev.type) {
+		while (fplWindowUpdate()) {
+			while (fplPollEvent(&ev)) {
+				switch (ev.type) {
 					case fplEventType_Keyboard:
-						if(ev.keyboard.type == fplKeyboardEventType_Button) {
-							if(ev.keyboard.buttonState == fplButtonState_Release) {
+						if (ev.keyboard.type == fplKeyboardEventType_Button) {
+							if (ev.keyboard.buttonState == fplButtonState_Release) {
 								OnKeyUp(ev.keyboard.mappedKey, 0, 0);
 							} else {
 								KeyDown(ev.keyboard.mappedKey, 0, 0);
@@ -2383,14 +2446,14 @@ int main(int argc, char **argv) {
 						break;
 
 					case fplEventType_Window:
-						if(ev.window.type == fplWindowEventType_Resized) {
+						if (ev.window.type == fplWindowEventType_Resized) {
 						}
 						break;
 
 					case fplEventType_Mouse:
-						if(ev.mouse.type == fplMouseEventType_Move) {
+						if (ev.mouse.type == fplMouseEventType_Move) {
 							OnMouseMove(ev.mouse.mouseButton, ev.mouse.buttonState, ev.mouse.mouseX, ev.mouse.mouseY);
-						} else if(ev.mouse.type == fplMouseEventType_Button) {
+						} else if (ev.mouse.type == fplMouseEventType_Button) {
 							OnMouseButton(ev.mouse.mouseButton, ev.mouse.buttonState, ev.mouse.mouseX, ev.mouse.mouseY);
 						}
 						break;

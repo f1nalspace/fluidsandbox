@@ -1,7 +1,9 @@
 uniform mat4 mvp;
-varying vec3 texCoord;
+varying vec2 texCoord;
+varying vec4 color;
 void main(void)
 {
    gl_Position = mvp * vec4(gl_Vertex.xyz, 1.0);
+   color = gl_Color;
    texCoord = gl_MultiTexCoord0;
 }

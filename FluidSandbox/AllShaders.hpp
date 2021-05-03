@@ -51,6 +51,28 @@ public:
 
 };
 
+class CFontShader: public CGLSL {
+protected:
+
+	void updateUniformLocations() {
+		ulocFontTex = getUniformLocation("fontTex");
+		ulocMVP = getUniformLocation("mvp");
+	}
+
+public:
+	static constexpr char *ShaderName = "FontTexture";
+
+	GLuint ulocFontTex;
+	GLuint ulocMVP;
+
+	CFontShader():
+		CGLSL(),
+		ulocFontTex(0),
+		ulocMVP(0) {
+	}
+
+};
+
 class CLightingShader: public CGLSL {
 protected:
 

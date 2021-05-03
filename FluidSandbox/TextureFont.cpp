@@ -10,7 +10,7 @@
 #include "TextureFont.h"
 
 CTextureFont::CTextureFont(const FontAtlas &atlas):
-	CTexture2D(GL_TEXTURE_2D, GL_ALPHA, GL_ALPHA, GL_UNSIGNED_BYTE, atlas.bitmapWidth, atlas.bitmapHeight),
+	CTexture2D(GL_TEXTURE_2D, GL_RED, GL_RED, GL_UNSIGNED_BYTE, atlas.bitmapWidth, atlas.bitmapHeight),
 	atlas(atlas) {
 }
 

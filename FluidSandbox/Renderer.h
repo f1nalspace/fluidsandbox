@@ -21,6 +21,13 @@
 #include "Texture.h"
 #include "TextureFont.h"
 
+struct FontVertex {
+	glm::vec4 color;
+	glm::vec2 pos;
+	glm::vec2 uv;
+};
+constexpr static uint32_t FontVertexStride = sizeof(FontVertex);
+
 #define GL_CHECKERROR() assert(glGetError() == GL_NO_ERROR)
 
 static const char *glErrorToString(GLuint code) {
@@ -116,9 +123,9 @@ public:
 	void DrawTexturedQuad(const float posX, const float posY, const float scaleW, const float scaleH);
 	void DrawSimpleRect(const float left, const float top, const float right, const float bottom, const glm::vec4 &color);
 	void DrawVBO(CVBO *vbo, const GLenum mode, const GLuint count, const GLsizeiptr offset);
-	glm::vec2 GetStringSize(const CTextureFont *fontTex, const char *text, const size_t textLen, const float charHeight);
-	void DrawString(const int texIndex, CTextureFont *fontTex, const float posX, const float posY, const float charHeight, const char *text, const size_t textLen, const glm::vec4 &color);
-	void DrawString(const int texIndex, CTextureFont *fontTex, const float posX, const float posY, const float charHeight, const char *text, const glm::vec4 &color);
+	glm::vec2 GetStringSize(const FontAtlas *atlas, const char *text, const size_t textLen, const float charHeight, int &glyphCount);
+	void DrawString(const FontAtlas *atlas, const float posX, const float posY, const float charHeight, const char *text, const size_t textLen, const glm::vec4 &color, VBOWritter &writer);
+	void DrawString(const FontAtlas *atlas, const float posX, const float posY, const float charHeight, const char *text, const glm::vec4 &color, VBOWritter &writer);
 
 	void Flip();
 
