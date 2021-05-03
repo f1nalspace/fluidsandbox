@@ -1234,8 +1234,7 @@ void RenderOSD(const int windowWidth, const int windowHeight) {
 
 	// Setup ortho for font rendering
 	glm::mat4 orthoProj = glm::ortho(0.0f, (float)windowWidth, (float)windowHeight, 0.0f);
-	glm::mat4 orthoMVP = glm::mat4(1.0f) * orthoProj;
-	gRenderer->LoadMatrix(orthoMVP);
+	gRenderer->LoadMatrix(orthoProj);
 
 	// Disable depth testing
 	gRenderer->SetDepthTest(false);
