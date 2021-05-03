@@ -778,7 +778,7 @@ void DrawPrimitive(GeometryVBO *vbo, const bool asLines) {
 	// NOTE(final): Expect that a shader is already bound
 
 	// Vertex (vec3, vec3, vec2)
-	vbo->bind();
+	vbo->Bind();
 
 	if(!asLines || vbo->lineIndexCount == 0) {
 		glEnableClientState(GL_VERTEX_ARRAY);
@@ -798,7 +798,7 @@ void DrawPrimitive(GeometryVBO *vbo, const bool asLines) {
 		glDisableClientState(GL_VERTEX_ARRAY);
 	}
 
-	vbo->unbind();
+	vbo->Unbind();
 }
 
 static void DrawGrid(const glm::mat4 &mvp) {
@@ -2158,28 +2158,28 @@ static void InitResources(const char *appPath) {
 	gSkyboxVBO = new GeometryVBO();
 	{
 		Primitives::Primitive skyboxPrim = Primitives::CreateBox(glm::vec3(100.0f), true);
-		gSkyboxVBO->bufferVertices(skyboxPrim.verts[0].data(), skyboxPrim.sizeOfVertices, GL_STATIC_DRAW);
-		gSkyboxVBO->bufferIndices(&skyboxPrim.indices[0], (GLuint)skyboxPrim.indexCount, GL_STATIC_DRAW);
+		gSkyboxVBO->BufferVertices(skyboxPrim.verts[0].data(), skyboxPrim.sizeOfVertices, GL_STATIC_DRAW);
+		gSkyboxVBO->BufferIndices(&skyboxPrim.indices[0], (GLuint)skyboxPrim.indexCount, GL_STATIC_DRAW);
 		gSkyboxVBO->triangleIndexCount = skyboxPrim.indexCount;
 	}
 	gBoxVBO = new GeometryVBO();
 	{
 		Primitives::Primitive prim = Primitives::CreateBox(glm::vec3(1.0f), false);
-		gBoxVBO->bufferVertices(prim.verts[0].data(), prim.sizeOfVertices, GL_STATIC_DRAW);
-		//gBoxVBO->bufferIndices(&geoBoxPrim.indices[0], (GLuint)geoBoxPrim.indexCount, GL_STATIC_DRAW);
-		gBoxVBO->reserveIndices(prim.indexCount + prim.lineIndexCount, GL_STATIC_DRAW);
-		gBoxVBO->subbufferIndices(&prim.indices[0], 0, prim.indexCount);
-		gBoxVBO->subbufferIndices(&prim.lineIndices[0], prim.indexCount, prim.lineIndexCount);
+		gBoxVBO->BufferVertices(prim.verts[0].data(), prim.sizeOfVertices, GL_STATIC_DRAW);
+		//gBoxVBO->BufferIndices(&geoBoxPrim.indices[0], (GLuint)geoBoxPrim.indexCount, GL_STATIC_DRAW);
+		gBoxVBO->ReserveIndices(prim.indexCount + prim.lineIndexCount, GL_STATIC_DRAW);
+		gBoxVBO->SubbufferIndices(&prim.indices[0], 0, prim.indexCount);
+		gBoxVBO->SubbufferIndices(&prim.lineIndices[0], prim.indexCount, prim.lineIndexCount);
 		gBoxVBO->triangleIndexCount = prim.indexCount;
 		gBoxVBO->lineIndexCount = prim.lineIndexCount;
 	}
 	gSphereVBO = new GeometryVBO();
 	{
 		Primitives::Primitive prim = Primitives::CreateSphere(1.0f, 16, 16);
-		gSphereVBO->bufferVertices(prim.verts[0].data(), prim.sizeOfVertices, GL_STATIC_DRAW);
-		gSphereVBO->reserveIndices(prim.indexCount + prim.lineIndexCount, GL_STATIC_DRAW);
-		gSphereVBO->subbufferIndices(&prim.indices[0], 0, prim.indexCount);
-		gSphereVBO->subbufferIndices(&prim.lineIndices[0], prim.indexCount, prim.lineIndexCount);
+		gSphereVBO->BufferVertices(prim.verts[0].data(), prim.sizeOfVertices, GL_STATIC_DRAW);
+		gSphereVBO->ReserveIndices(prim.indexCount + prim.lineIndexCount, GL_STATIC_DRAW);
+		gSphereVBO->SubbufferIndices(&prim.indices[0], 0, prim.indexCount);
+		gSphereVBO->SubbufferIndices(&prim.lineIndices[0], prim.indexCount, prim.lineIndexCount);
 		gSphereVBO->triangleIndexCount = prim.indexCount;
 		gSphereVBO->lineIndexCount = prim.lineIndexCount;
 
@@ -2187,28 +2187,28 @@ static void InitResources(const char *appPath) {
 	gCylinderVBO = new GeometryVBO();
 	{
 		Primitives::Primitive prim = Primitives::CreateCylinder(1.0f, 1.0f, 1.0f, 16, 16);
-		gCylinderVBO->bufferVertices(prim.verts[0].data(), prim.sizeOfVertices, GL_STATIC_DRAW);
-		gCylinderVBO->reserveIndices(prim.indexCount + prim.lineIndexCount, GL_STATIC_DRAW);
-		gCylinderVBO->subbufferIndices(&prim.indices[0], 0, prim.indexCount);
-		gCylinderVBO->subbufferIndices(&prim.lineIndices[0], prim.indexCount, prim.lineIndexCount);
+		gCylinderVBO->BufferVertices(prim.verts[0].data(), prim.sizeOfVertices, GL_STATIC_DRAW);
+		gCylinderVBO->ReserveIndices(prim.indexCount + prim.lineIndexCount, GL_STATIC_DRAW);
+		gCylinderVBO->SubbufferIndices(&prim.indices[0], 0, prim.indexCount);
+		gCylinderVBO->SubbufferIndices(&prim.lineIndices[0], prim.indexCount, prim.lineIndexCount);
 		gCylinderVBO->triangleIndexCount = prim.indexCount;
 		gCylinderVBO->lineIndexCount = prim.lineIndexCount;
 	}
 	gGridVBO = new GeometryVBO();
 	{
 		Primitives::Primitive prim = Primitives::CreateGridXZ(1.0f, 40.0f);
-		gGridVBO->bufferVertices(prim.verts[0].data(), prim.sizeOfVertices, GL_STATIC_DRAW);
-		gGridVBO->reserveIndices(prim.lineIndexCount, GL_STATIC_DRAW);
-		gGridVBO->subbufferIndices(&prim.lineIndices[0], 0, prim.lineIndexCount);
+		gGridVBO->BufferVertices(prim.verts[0].data(), prim.sizeOfVertices, GL_STATIC_DRAW);
+		gGridVBO->ReserveIndices(prim.lineIndexCount, GL_STATIC_DRAW);
+		gGridVBO->SubbufferIndices(&prim.lineIndices[0], 0, prim.lineIndexCount);
 		gGridVBO->lineIndexCount = prim.lineIndexCount;
 	}
 	gQuadVBO = new GeometryVBO();
 	{
 		Primitives::Primitive prim = Primitives::CreateQuatXY(1.0f, 1.0f);
-		gQuadVBO->bufferVertices(prim.verts[0].data(), prim.sizeOfVertices, GL_STATIC_DRAW);
-		gQuadVBO->reserveIndices(prim.indexCount + prim.lineIndexCount, GL_STATIC_DRAW);
-		gQuadVBO->subbufferIndices(&prim.indices[0], 0, prim.indexCount);
-		gQuadVBO->subbufferIndices(&prim.lineIndices[0], prim.indexCount, prim.lineIndexCount);
+		gQuadVBO->BufferVertices(prim.verts[0].data(), prim.sizeOfVertices, GL_STATIC_DRAW);
+		gQuadVBO->ReserveIndices(prim.indexCount + prim.lineIndexCount, GL_STATIC_DRAW);
+		gQuadVBO->SubbufferIndices(&prim.indices[0], 0, prim.indexCount);
+		gQuadVBO->SubbufferIndices(&prim.lineIndices[0], prim.indexCount, prim.lineIndexCount);
 		gQuadVBO->triangleIndexCount = prim.indexCount;
 		gQuadVBO->lineIndexCount = prim.lineIndexCount;
 	}

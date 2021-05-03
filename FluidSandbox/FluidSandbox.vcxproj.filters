@@ -175,6 +175,9 @@
     <ClInclude Include="Renderer2.h">
       <Filter>Rendering</Filter>
     </ClInclude>
+    <ClInclude Include="AllVBOs.hpp">
+      <Filter>World</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="LICENSE.txt" />

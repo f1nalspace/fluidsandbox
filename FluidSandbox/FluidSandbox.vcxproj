@@ -254,6 +254,7 @@ Copy "$(SolutionDir)Libraries\PhysX\pxshared\bin\$(Platform)\*.dll" "$(OutDir)"<
     <ClInclude Include="Actor.hpp" />
     <ClInclude Include="AllActors.hpp" />
     <ClInclude Include="AllFBOs.hpp" />
+    <ClInclude Include="AllVBOs.hpp" />
     <ClInclude Include="Camera.hpp" />
     <ClInclude Include="FBO.h" />
     <ClInclude Include="FluidProperties.h" />
