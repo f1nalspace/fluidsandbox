@@ -302,7 +302,6 @@ constexpr static glm::vec3 DefaultRigidBodyVelocity(0.0f, 0.0f, 0.0f);
 constexpr int MaxFluidParticleCount = 512000;
 
 static CSphericalPointSprites *gPointSprites = nullptr;
-static CPointSpritesShader *gPointSpritesShader = nullptr;
 
 static FluidDebugType gFluidDebugType = FluidDebugType::Final;
 
@@ -378,7 +377,7 @@ static CLightingShader *gLightingShader = nullptr;
 static CSceneFBO *gSceneFBO = nullptr;
 static GeometryVBO *gSkyboxVBO = nullptr;
 static CSkyboxShader *gSkyboxShader = nullptr;
-static CTexture *gSkyboxCubemap = nullptr;
+static CTextureCubemap *gSkyboxCubemap = nullptr;
 
 static GeometryVBO *gGridVBO = nullptr;
 static GeometryVBO *gBoxVBO = nullptr;
@@ -2108,12 +2107,6 @@ static void InitResources(const char *appPath) {
 	gPointSprites = new CSphericalPointSprites();
 	gPointSprites->Allocate(MaxFluidParticleCount);
 
-	// Create spherical point sprites shader
-	printf("  Load spherical point sprites shader\n");
-	gPointSpritesShader = new CPointSpritesShader();
-	Utils::attachShaderFromFile(gPointSpritesShader, GL_VERTEX_SHADER, "shaders\\PointSprites.vertex", "    ");
-	Utils::attachShaderFromFile(gPointSpritesShader, GL_FRAGMENT_SHADER, "shaders\\PointSprites.fragment", "    ");
-
 	// Create scene FBO
 	printf("  Create scene FBO\n");
 	gSceneFBO = new CSceneFBO(128, 128); // Initial FBO size does not matter, because its resized on render anyway
@@ -2124,12 +2117,7 @@ static void InitResources(const char *appPath) {
 	// Create fluid renderer
 	printf("  Create fluid renderer\n");
 	// Initial FBO size does not matter, because its resized on render anyway
-	gFluidRenderer = new CScreenSpaceFluidRendering(128, 128);
-	gFluidRenderer->SetRenderer(gRenderer);
-	gFluidRenderer->SetPointSprites(gPointSprites);
-	gFluidRenderer->SetPointSpritesShader(gPointSpritesShader);
-	gFluidRenderer->SetSceneTexture(gSceneFBO->sceneTexture);
-	gFluidRenderer->SetSkyboxCubemap(gSkyboxCubemap);
+	gFluidRenderer = new CScreenSpaceFluidRendering(128, 128, gRenderer, gSkyboxCubemap, gSceneFBO->sceneTexture, gPointSprites);
 
 	// Create line shader
 	printf("  Create line renderer\n");
@@ -2220,8 +2208,6 @@ void ReleaseResources() {
 		delete gLightingShader;
 	if(gLineShader != nullptr)
 		delete gLineShader;
-	if(gPointSpritesShader != nullptr)
-		delete gPointSpritesShader;
 
 	printf("  Release fluid renderer\n");
 	if(gFluidRenderer)

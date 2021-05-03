@@ -82,15 +82,19 @@ protected:
 		ulocFar = getUniformLocation("far");
 		ulocViewMat = getUniformLocation("viewMat");
 		ulocProjMat = getUniformLocation("projMat");
+		ulocColor = getUniformLocation("color");
 	}
 
 public:
+	static constexpr char *ShaderName = "PointSprites";
+
 	GLuint ulocPointScale;
 	GLuint ulocPointRadius;
 	GLuint ulocNear;
 	GLuint ulocFar;
 	GLuint ulocViewMat;
 	GLuint ulocProjMat;
+	GLuint ulocColor;
 
 	CPointSpritesShader():
 		CGLSL(),
@@ -99,7 +103,30 @@ public:
 		ulocNear(0),
 		ulocFar(0),
 		ulocViewMat(0),
-		ulocProjMat(0) {
+		ulocProjMat(0),
+		ulocColor(0) {
+	}
+
+};
+
+class CPointsShader: public CGLSL {
+protected:
+
+	void updateUniformLocations() {
+		ulocMVP = getUniformLocation("mvp");
+		ulocColor = getUniformLocation("color");
+	}
+
+public:
+	static constexpr char *ShaderName = "Points";
+
+	GLuint ulocMVP;
+	GLuint ulocColor;
+
+	CPointsShader():
+		CGLSL(),
+		ulocMVP(0),
+		ulocColor(0) {
 	}
 
 };

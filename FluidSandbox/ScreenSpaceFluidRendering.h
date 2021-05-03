@@ -18,6 +18,7 @@
 
 #include "GLSL.h"
 #include "Texture.h"
+#include "TextureCubemap.h"
 #include "FBO.h"
 #include "SphericalPointSprites.h"
 #include "Renderer.h"
@@ -27,15 +28,14 @@
 #include "AllShaders.hpp"
 #include "AllFBOs.hpp"
 
-struct FluidColor
-{
+struct FluidColor {
 	glm::vec4 color;
 	glm::vec4 falloff;
 	char name[128];
 	float falloffScale;
 	bool isClear;
 
-	FluidColor(){
+	FluidColor() {
 		this->color = glm::vec4(0.5f, 0.69f, 1.0f, 1.0f);
 		this->falloff = glm::vec4(2.0f, 1.0f, 0.5f, 0.5f);
 		this->isClear = false;
@@ -43,7 +43,7 @@ struct FluidColor
 		this->falloffScale = 0.1f;
 	}
 
-	FluidColor(const glm::vec4& color, const glm::vec4& falloff, const bool &isClear, const char *name){
+	FluidColor(const glm::vec4 &color, const glm::vec4 &falloff, const bool &isClear, const char *name) {
 		this->color = color;
 		this->falloff = falloff;
 		this->isClear = isClear;
@@ -53,7 +53,7 @@ struct FluidColor
 	}
 };
 
-enum class SSFRenderMode : int {
+enum class SSFRenderMode: int {
 	Fluid = 0,
 	PointSprites,
 	Points,
@@ -61,7 +61,7 @@ enum class SSFRenderMode : int {
 	Count
 };
 
-enum class FluidDebugType : int {
+enum class FluidDebugType: int {
 	Final = 0,
 	Depth = 1,
 	Normal = 2,
@@ -79,8 +79,7 @@ enum class FluidDebugType : int {
 	Max = Absorbtion
 };
 
-struct SSFDrawingOptions
-{
+struct SSFDrawingOptions {
 	glm::vec3 clearColor;
 	FluidColor fluidColor;
 	float blurScale;
@@ -89,8 +88,7 @@ struct SSFDrawingOptions
 	SSFRenderMode renderMode;
 	bool blurEnabled;
 
-	SSFDrawingOptions()
-	{
+	SSFDrawingOptions() {
 		textureState = 0;
 		renderMode = SSFRenderMode::Fluid;
 		fluidColor = {};
@@ -106,16 +104,16 @@ struct SSFDrawingOptions
 constexpr float MAX_DEPTH = 0.9999f;
 constexpr float MIN_DEPTH = -9999.0f;
 
-class CScreenSpaceFluidRendering
-{
+class CScreenSpaceFluidRendering {
 private:
 	CRenderer *renderer;
 	CSphericalPointSprites *pointSprites;
-	CPointSpritesShader *pointSpritesShader;
 
 	CSSFRFullFBO *fullFrameBuffer;
 	CSSFRDepthFBO *depthFrameBuffer;
 
+	CPointSpritesShader *pointSpritesShader;
+	CPointsShader *pointsShader;
 	CDepthShader *depthShader;
 	CThicknessShader *thicknessShader;
 	CDepthBlurShader *depthBlurShader;
@@ -123,8 +121,8 @@ private:
 	CWaterShader *colorWaterShader;
 	CWaterShader *debugWaterShader;
 
-	CTexture *sceneTexture;
-	CTexture *skyboxCubemap;
+	CTexture2D *sceneTexture;
+	CTextureCubemap *skyboxCubemap;
 
 	float curFBOFactor;
 	float newFBOFactor;
@@ -137,23 +135,19 @@ private:
 	void DepthPass(const uint32_t numPointSprites, const glm::mat4 &proj, const glm::mat4 &view, const float zfar, const float znear, const int wH, const float particleRadius);
 	void ThicknessPass(const uint32_t numPointSprites, const glm::mat4 &proj, const glm::mat4 &view, const float zfar, const float znear, const int wH, const float particleRadius);
 	void RenderSSF(const CCamera &cam, const uint32_t numPointSprites, const SSFDrawingOptions &dstate, const int wW, const int wH, const float particleRadius);
-	void RenderPointSprites(const uint32_t numPointSprites, const glm::mat4 &proj, const glm::mat4 &view, const float zfar, const float znear, CPointSpritesShader* shader, const int wH, const float particleRadius);
+	void RenderPoints(const uint32_t numPointSprites, const glm::mat4 &mvp, const glm::vec4 &color);
+	void RenderPointSprites(const uint32_t numPointSprites, const glm::mat4 &proj, const glm::mat4 &view, const float zfar, const float znear, const int wH, const float particleRadius, const glm::vec4 &color);
 	void RenderFullscreenQuad();
-	void BlurDepthPass(const glm::mat4 &mvp, CTexture2D* depthTexture, const float dirX, const float dirY);
-	void WaterPass(const CCamera &cam, const glm::mat4 &mvp, CTexture2D* depthTexture, CTexture2D* thicknessTexture, const FluidColor &color, const FluidDebugType showType);
+	void BlurDepthPass(const glm::mat4 &mvp, CTexture2D *depthTexture, const float dirX, const float dirY);
+	void WaterPass(const CCamera &cam, const glm::mat4 &mvp, CTexture2D *depthTexture, CTexture2D *thicknessTexture, const FluidColor &color, const FluidDebugType showType);
 	int CalcFBOSize(int size, float factor) { return (int)(size * factor); }
 public:
-	CScreenSpaceFluidRendering(const int width, const int height);
+	CScreenSpaceFluidRendering(const int width, const int height, CRenderer *renderer, CTextureCubemap *skyboxCubemap, CTexture2D *sceneTexture, CSphericalPointSprites *pointSprites);
 	~CScreenSpaceFluidRendering(void);
 	void Render(const CCamera &cam, const uint32_t numPointSprites, const SSFDrawingOptions &dstate, const int wW, const int wH, const float particleRadius);
-	void SetRenderer(CRenderer* value) { renderer = value; }
-	void SetPointSprites(CSphericalPointSprites* value) { pointSprites = value; }
-	void SetPointSpritesShader(CPointSpritesShader* value) { pointSpritesShader = value; }
-	void SetSceneTexture(CTexture* texture) { sceneTexture = texture; }
-	void SetSkyboxCubemap(CTexture* cubemap) { skyboxCubemap = cubemap; }
 	void SetFBOFactor(float factor) {
-		if (factor > 1.0f) factor = 1.0f;
-		if (factor < 0.0f) factor = 0.0f;
+		if(factor > 1.0f) factor = 1.0f;
+		if(factor < 0.0f) factor = 0.0f;
 		newFBOFactor = factor;
 	}
 };
