@@ -312,10 +312,10 @@ namespace Primitives {
 				if(i == 0) {
 					result.AddLineIndices(k1, k1 + 1);
 				}
-	}
-}
+			}
+		}
 
-		// remember where the base indices start
+				// remember where the base indices start
 		GLuint baseIndex = (GLuint)result.indices.size();
 
 		// put indices for base
@@ -341,7 +341,7 @@ namespace Primitives {
 		return(result);
 	}
 
-	Primitive CreateGrid2D(const float cellSize, const float totalSize) {
+	Primitive CreateGridXZ(const float cellSize, const float totalSize) {
 		Primitive result = Primitive();
 
 		int numCells = (int)(totalSize / cellSize) + 1;
@@ -362,6 +362,30 @@ namespace Primitives {
 			result.AddVertex(glm::vec3(maxXZ, 0, xz), glm::vec3(0), glm::vec2(0, 0));
 			result.AddLineIndices(index + 0, index + 1);
 		}
+
+		result.ValidateAndUpdateCounts();
+
+		return(result);
+	}
+
+	Primitive CreateQuatXY(const float width, const float height) {
+		Primitive result = Primitive();
+
+		float halfW = width * 0.5f;
+		float halfH = height * 0.5f;
+
+		result.AddVertex(glm::vec3(-halfW, -halfH, 0.0f), glm::vec3(0, 0, 0), glm::vec2(0.0f, 1.0f));
+		result.AddVertex(glm::vec3(-halfW, halfH, 0.0f), glm::vec3(0, 0, 0), glm::vec2(0.0f, 0.0f));
+		result.AddVertex(glm::vec3(halfW, halfH, 0.0f), glm::vec3(0, 0, 0), glm::vec2(1.0f, 0.0f));
+		result.AddVertex(glm::vec3(halfW, -halfH, 0.0f), glm::vec3(0, 0, 0), glm::vec2(0.0f, 1.0f));
+
+		result.AddLineIndices(0, 1);
+		result.AddLineIndices(1, 2);
+		result.AddLineIndices(2, 3);
+		result.AddLineIndices(3, 0);
+		result.AddIndices(0, 1, 2);
+		result.AddIndices(2, 3, 0);
+
 
 		result.ValidateAndUpdateCounts();
 

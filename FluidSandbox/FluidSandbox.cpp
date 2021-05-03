@@ -284,7 +284,7 @@ static bool gDrawWireframe = false;
 static bool gDrawBoundBox = false;
 static bool gHideStaticRigidBodies = false;
 static bool gHideDynamicRigidBodies = false;
-static bool gShowOSD = false;
+static bool gShowOSD = true;
 
 // Drawing statistics
 static size_t gTotalActors = 0;
@@ -371,6 +371,7 @@ static CCamera gCamera;
 static Frustum gFrustum;
 
 // Non fluid rendering
+static CColoredShader *gColoredShader = nullptr;
 static CLineShader *gLineShader = nullptr;
 static CLightingShader *gLightingShader = nullptr;
 
@@ -379,6 +380,7 @@ static GeometryVBO *gSkyboxVBO = nullptr;
 static CSkyboxShader *gSkyboxShader = nullptr;
 static CTextureCubemap *gSkyboxCubemap = nullptr;
 
+static GeometryVBO *gQuadVBO = nullptr;
 static GeometryVBO *gGridVBO = nullptr;
 static GeometryVBO *gBoxVBO = nullptr;
 static GeometryVBO *gSphereVBO = nullptr;
@@ -1233,7 +1235,6 @@ void RenderOSD(const int windowWidth, const int windowHeight) {
 
 	// Setup ortho for font rendering
 	glm::mat4 orthoProj = glm::ortho(0.0f, (float)windowWidth, (float)windowHeight, 0.0f);
-	gRenderer->LoadMatrix(orthoProj);
 
 	// Disable depth testing
 	gRenderer->SetDepthTest(false);
@@ -1243,7 +1244,16 @@ void RenderOSD(const int windowWidth, const int windowHeight) {
 
 	if(gShowOSD) {
 		// Draw background
-		gRenderer->DrawSimpleRect(0.0f, 0.0f, (float)windowWidth * 0.25f, (float)windowHeight, glm::vec4(0.1f, 0.1f, 0.1f, 0.2f));
+		glm::vec4 backColor = glm::vec4(0.1f, 0.1f, 0.1f, 0.3f);
+		glm::vec3 backScale = glm::vec3((float)windowWidth * 0.25f, (float)windowHeight, 1.0f);
+		glm::vec3 backTranslation = glm::vec3(backScale.x * 0.5f, backScale.y * 0.5f, 0.0f);
+		glm::mat4 backView = glm::translate(glm::mat4(1.0f), backTranslation) * glm::scale(glm::mat4(1.0f), backScale);
+		glm::mat4 backMVP = orthoProj * backView;
+		gColoredShader->enable();
+		gColoredShader->uniform4f(gColoredShader->ulocColor, &backColor[0]);
+		gColoredShader->uniformMatrix4(gColoredShader->ulocMVP, &backMVP[0][0]);
+		DrawPrimitive(gQuadVBO, false);
+		gColoredShader->disable();
 	}
 
 	// Font height is proportional to window height
@@ -1253,6 +1263,9 @@ void RenderOSD(const int windowWidth, const int windowHeight) {
 	OSDRenderPosition osdPos = OSDRenderPosition(fontHeight, fontHeight * 0.9f);
 	osdPos.x = 20;
 	osdPos.y = 20;
+
+	// TODO(final): Remove this!
+	gRenderer->LoadMatrix(orthoProj);
 
 	// Render text
 	sprintf_s(buffer, "FPS: %3.2f", gFps);
@@ -2080,7 +2093,7 @@ void printOpenGLInfos() {
 		printf("  OpenGL FBO Max Render Buffer Size: %d\n", temp);
 	}
 #endif
-}
+	}
 
 static void InitResources(const char *appPath) {
 	// Create texture manager
@@ -2119,20 +2132,29 @@ static void InitResources(const char *appPath) {
 	// Initial FBO size does not matter, because its resized on render anyway
 	gFluidRenderer = new CScreenSpaceFluidRendering(128, 128, gRenderer, gSkyboxCubemap, gSceneFBO->sceneTexture, gPointSprites);
 
+	// Create colored shader
+	printf("  Create shaders renderer\n");
+	gColoredShader = new CColoredShader();
+	Utils::attachShaderFromFile(gColoredShader, GL_VERTEX_SHADER, "shaders\\Colored.vertex", "    ");
+	Utils::attachShaderFromFile(gColoredShader, GL_FRAGMENT_SHADER, "shaders\\Colored.fragment", "    ");
+
 	// Create line shader
-	printf("  Create line renderer\n");
 	gLineShader = new CLineShader();
 	Utils::attachShaderFromFile(gLineShader, GL_VERTEX_SHADER, "shaders\\Line.vertex", "    ");
 	Utils::attachShaderFromFile(gLineShader, GL_FRAGMENT_SHADER, "shaders\\Line.fragment", "    ");
 
 	// Create lightning shader
-	printf("  Create lighting renderer\n");
 	gLightingShader = new CLightingShader();
 	Utils::attachShaderFromFile(gLightingShader, GL_VERTEX_SHADER, "shaders\\Lighting.vertex", "    ");
 	Utils::attachShaderFromFile(gLightingShader, GL_FRAGMENT_SHADER, "shaders\\Lighting.fragment", "    ");
 
-	// Create skybox vbo and shader
-	printf("  Create skybox\n");
+	// Create skybox shader
+	gSkyboxShader = new CSkyboxShader();
+	Utils::attachShaderFromFile(gSkyboxShader, GL_VERTEX_SHADER, "shaders\\Skybox.vertex", "    ");
+	Utils::attachShaderFromFile(gSkyboxShader, GL_FRAGMENT_SHADER, "shaders\\Skybox.fragment", "    ");
+
+	// Create geometry buffers
+	printf("  Create vertex buffers\n");
 	gSkyboxVBO = new GeometryVBO();
 	{
 		Primitives::Primitive skyboxPrim = Primitives::CreateBox(glm::vec3(100.0f), true);
@@ -2140,12 +2162,6 @@ static void InitResources(const char *appPath) {
 		gSkyboxVBO->bufferIndices(&skyboxPrim.indices[0], (GLuint)skyboxPrim.indexCount, GL_STATIC_DRAW);
 		gSkyboxVBO->triangleIndexCount = skyboxPrim.indexCount;
 	}
-	gSkyboxShader = new CSkyboxShader();
-	Utils::attachShaderFromFile(gSkyboxShader, GL_VERTEX_SHADER, "shaders\\Skybox.vertex", "    ");
-	Utils::attachShaderFromFile(gSkyboxShader, GL_FRAGMENT_SHADER, "shaders\\Skybox.fragment", "    ");
-
-	// Create geometry buffers
-	printf("  Create geometry buffers\n");
 	gBoxVBO = new GeometryVBO();
 	{
 		Primitives::Primitive prim = Primitives::CreateBox(glm::vec3(1.0f), false);
@@ -2180,34 +2196,38 @@ static void InitResources(const char *appPath) {
 	}
 	gGridVBO = new GeometryVBO();
 	{
-		Primitives::Primitive prim = Primitives::CreateGrid2D(1.0f, 40.0f);
+		Primitives::Primitive prim = Primitives::CreateGridXZ(1.0f, 40.0f);
 		gGridVBO->bufferVertices(prim.verts[0].data(), prim.sizeOfVertices, GL_STATIC_DRAW);
 		gGridVBO->reserveIndices(prim.lineIndexCount, GL_STATIC_DRAW);
 		gGridVBO->subbufferIndices(&prim.lineIndices[0], 0, prim.lineIndexCount);
 		gGridVBO->lineIndexCount = prim.lineIndexCount;
 	}
+	gQuadVBO = new GeometryVBO();
+	{
+		Primitives::Primitive prim = Primitives::CreateQuatXY(1.0f, 1.0f);
+		gQuadVBO->bufferVertices(prim.verts[0].data(), prim.sizeOfVertices, GL_STATIC_DRAW);
+		gQuadVBO->reserveIndices(prim.indexCount + prim.lineIndexCount, GL_STATIC_DRAW);
+		gQuadVBO->subbufferIndices(&prim.indices[0], 0, prim.indexCount);
+		gQuadVBO->subbufferIndices(&prim.lineIndices[0], prim.indexCount, prim.lineIndexCount);
+		gQuadVBO->triangleIndexCount = prim.indexCount;
+		gQuadVBO->lineIndexCount = prim.lineIndexCount;
+	}
 }
 
 void ReleaseResources() {
-	printf("  Release geometry buffers\n");
-	if(gGridVBO != nullptr)
-		delete gGridVBO;
-	if(gCylinderVBO != nullptr)
-		delete gCylinderVBO;
-	if(gSphereVBO != nullptr)
-		delete gSphereVBO;
-	if(gBoxVBO != nullptr)
-		delete gBoxVBO;
-	if(gSkyboxVBO != nullptr)
-		delete gSkyboxVBO;
+	printf("  Release vertex buffers\n");
+	CVBO *vbos[] { gQuadVBO, gGridVBO, gCylinderVBO, gSphereVBO, gBoxVBO, gSkyboxVBO };
+	for(size_t i = 0; i < fplArrayCount(vbos); ++i) {
+		CVBO *vbo = vbos[i];
+		delete vbo;
+	}
 
 	printf("  Release shaders\n");
-	if(gSkyboxShader != nullptr)
-		delete gSkyboxShader;
-	if(gLightingShader != nullptr)
-		delete gLightingShader;
-	if(gLineShader != nullptr)
-		delete gLineShader;
+	CGLSL *shaders[] { gSkyboxShader, gLightingShader, gLineShader, gColoredShader };
+	for(size_t i = 0; i < fplArrayCount(shaders); ++i) {
+		CGLSL *shader = shaders[i];
+		delete shader;
+	}
 
 	printf("  Release fluid renderer\n");
 	if(gFluidRenderer)
