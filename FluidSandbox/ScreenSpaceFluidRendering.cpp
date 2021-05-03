@@ -111,7 +111,7 @@ CScreenSpaceFluidRendering::~CScreenSpaceFluidRendering(void)
 	renderer = nullptr;
 }
 
-void CScreenSpaceFluidRendering::DepthPass(const unsigned int numPointSprites, const glm::mat4 &proj, const glm::mat4 &view, const float zfar, const float znear, const int wH, const float particleRadius)
+void CScreenSpaceFluidRendering::DepthPass(const uint32_t numPointSprites, const glm::mat4 &proj, const glm::mat4 &view, const float zfar, const float znear, const int wH, const float particleRadius)
 {
 	depthShader->enable();
 	depthShader->uniform1f(depthShader->ulocPointScale, CSphericalPointSprites::GetPointScale(wH, 50.0f));
@@ -124,7 +124,7 @@ void CScreenSpaceFluidRendering::DepthPass(const unsigned int numPointSprites, c
 	depthShader->disable();
 }
 
-void CScreenSpaceFluidRendering::ThicknessPass(const unsigned int numPointSprites, const glm::mat4 &proj, const glm::mat4 &view, const float zfar, const float znear, const int wH, const float particleRadius)
+void CScreenSpaceFluidRendering::ThicknessPass(const uint32_t numPointSprites, const glm::mat4 &proj, const glm::mat4 &view, const float zfar, const float znear, const int wH, const float particleRadius)
 {
 	renderer->ClearColor(0,0,0,0);
 	renderer->Clear(ClearFlags::Color);
@@ -149,7 +149,7 @@ void CScreenSpaceFluidRendering::ThicknessPass(const unsigned int numPointSprite
 	renderer->SetBlending(false);
 }
 
-void CScreenSpaceFluidRendering::RenderPointSprites(const unsigned int numPointSprites, const glm::mat4 &proj, const glm::mat4 &view, const float zfar, const float znear, CPointSpritesShader* shader, const int wH, const float particleRadius)
+void CScreenSpaceFluidRendering::RenderPointSprites(const uint32_t numPointSprites, const glm::mat4 &proj, const glm::mat4 &view, const float zfar, const float znear, CPointSpritesShader* shader, const int wH, const float particleRadius)
 {
 	if (shader != nullptr){
 		shader->enable();
@@ -199,7 +199,7 @@ void CScreenSpaceFluidRendering::BlurDepthPass(const glm::mat4 &mvp, CTexture2D*
 	renderer->SetDepthMask(true);
 }
 
-void CScreenSpaceFluidRendering::WaterPass(const glm::mat4 &mvp, CCamera &cam, CTexture2D* depthTexture, CTexture2D* thicknessTexture, const FluidColor &color, const FluidDebugType showType)
+void CScreenSpaceFluidRendering::WaterPass(const CCamera &cam, const glm::mat4 &mvp, CTexture2D* depthTexture, CTexture2D* thicknessTexture, const FluidColor &color, const FluidDebugType showType)
 {
 	// Bind 3 textures (Depth, Thickness, Scene)
 	renderer->SetBlending(true);
@@ -242,7 +242,7 @@ void CScreenSpaceFluidRendering::WaterPass(const glm::mat4 &mvp, CCamera &cam, C
 	renderer->SetBlending(false);
 }
 
-void CScreenSpaceFluidRendering::RenderSSF(CCamera &cam, const unsigned int numPointSprites, const SSFDrawingOptions &dstate, const int wW, const int wH, const float particleRadius)
+void CScreenSpaceFluidRendering::RenderSSF(const CCamera &cam, const uint32_t numPointSprites, const SSFDrawingOptions &dstate, const int wW, const int wH, const float particleRadius)
 {
 	assert(fullFrameBuffer);
 	assert(depthFrameBuffer);
@@ -342,10 +342,10 @@ void CScreenSpaceFluidRendering::RenderSSF(CCamera &cam, const unsigned int numP
 	renderer->SetScissor(0,0,curWindowWidth,curWindowHeight);
 
 	// Pass 5: Water rendering
-	WaterPass(orthoMVP, cam, depthSmoothBTexture, thicknessTexture, dstate.fluidColor, dstate.debugType);
+	WaterPass(cam, orthoMVP, depthSmoothBTexture, thicknessTexture, dstate.fluidColor, dstate.debugType);
 }
 
-void CScreenSpaceFluidRendering::Render(CCamera &cam, const unsigned int numPointSprites, const SSFDrawingOptions &dstate, const int wW, const int wH, const float particleRadius)
+void CScreenSpaceFluidRendering::Render(const CCamera &cam, const uint32_t numPointSprites, const SSFDrawingOptions &dstate, const int wW, const int wH, const float particleRadius)
 {
 	assert(pointSpritesShader);
 	assert(pointSprites);
