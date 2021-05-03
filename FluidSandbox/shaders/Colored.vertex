@@ -1,0 +1,5 @@
+uniform mat4 mvp;
+void main()
+{
+	gl_Position = mvp * vec4(gl_Vertex.xyz, 1.0);
+}

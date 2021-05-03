@@ -11,6 +11,26 @@
 
 #include "GLSL.h"
 
+class CColoredShader: public CGLSL {
+protected:
+
+	void updateUniformLocations() {
+		ulocColor = getUniformLocation("color");
+		ulocMVP = getUniformLocation("mvp");
+	}
+
+public:
+	GLuint ulocColor;
+	GLuint ulocMVP;
+
+	CColoredShader():
+		CGLSL(),
+		ulocColor(0),
+		ulocMVP(0) {
+	}
+
+};
+
 class CLineShader: public CGLSL {
 protected:
 
