@@ -382,6 +382,7 @@ static GeometryVBO *gSkyboxVBO = nullptr;
 static CSkyboxShader *gSkyboxShader = nullptr;
 static CTextureCubemap *gSkyboxCubemap = nullptr;
 
+static GeometryVBO *gFullscreenQuadVBO = nullptr;
 static GeometryVBO *gQuadVBO = nullptr;
 static GeometryVBO *gGridVBO = nullptr;
 static GeometryVBO *gBoxVBO = nullptr;
@@ -804,39 +805,12 @@ void DrawFontsVBO(const glm::mat4 &mvp, DynamicVBO *vbo, const uint32_t triangle
 	assert(err == GL_NO_ERROR);
 }
 
-void DrawPrimitive(GeometryVBO *vbo, const bool asLines) {
-	// NOTE(final): Expect that a shader is already bound
-
-	// Vertex (vec3, vec3, vec2)
-	vbo->Bind();
-
-	if (!asLines || vbo->lineIndexCount == 0) {
-		glEnableClientState(GL_VERTEX_ARRAY);
-		glEnableClientState(GL_NORMAL_ARRAY);
-		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-		glVertexPointer(3, GL_FLOAT, sizeof(Primitives::Vertex), (void *)(offsetof(Primitives::Vertex, pos)));
-		glNormalPointer(GL_FLOAT, sizeof(Primitives::Vertex), (void *)(offsetof(Primitives::Vertex, normal)));
-		glTexCoordPointer(2, GL_FLOAT, sizeof(Primitives::Vertex), (void *)(offsetof(Primitives::Vertex, texcoord)));
-		gRenderer->DrawVBO(vbo, GL_TRIANGLES, vbo->triangleIndexCount, 0);
-		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-		glDisableClientState(GL_NORMAL_ARRAY);
-		glDisableClientState(GL_VERTEX_ARRAY);
-	} else {
-		glEnableClientState(GL_VERTEX_ARRAY);
-		glVertexPointer(3, GL_FLOAT, sizeof(Primitives::Vertex), (void *)(offsetof(Primitives::Vertex, pos)));
-		gRenderer->DrawVBO(vbo, GL_LINES, vbo->lineIndexCount, sizeof(GLuint) * vbo->triangleIndexCount);
-		glDisableClientState(GL_VERTEX_ARRAY);
-	}
-
-	vbo->Unbind();
-}
-
 static void DrawGrid(const glm::mat4 &mvp) {
 	glm::vec4 color = glm::vec4(0.25f, 0.25f, 0.25f, 1.0f);
 	gLineShader->enable();
 	gLineShader->uniform4f(gLineShader->ulocColor, &color[0]);
 	gLineShader->uniformMatrix4(gLineShader->ulocMVP, &mvp[0][0]);
-	DrawPrimitive(gGridVBO, true);
+	gRenderer->DrawPrimitive(gGridVBO, true);
 	gLineShader->disable();
 }
 
@@ -873,7 +847,7 @@ void DrawBoxShape(const glm::mat4 &cameraMVP, const PhysicsTransform &bodyTransf
 	gLightingShader->enable();
 	gLightingShader->uniform4f(gLightingShader->ulocColor, &color[0]);
 	gLightingShader->uniformMatrix4(gLightingShader->ulocMVP, &mvp[0][0]);
-	DrawPrimitive(gBoxVBO, false);
+	gRenderer->DrawPrimitive(gBoxVBO, false);
 	gLightingShader->disable();
 }
 
@@ -886,7 +860,7 @@ void DrawSphereShape(const glm::mat4 &cameraMVP, const PhysicsTransform &bodyTra
 	gLightingShader->enable();
 	gLightingShader->uniform4f(gLightingShader->ulocColor, &color[0]);
 	gLightingShader->uniformMatrix4(gLightingShader->ulocMVP, &mvp[0][0]);
-	DrawPrimitive(gSphereVBO, false);
+	gRenderer->DrawPrimitive(gSphereVBO, false);
 	gLightingShader->disable();
 }
 
@@ -905,17 +879,17 @@ void DrawCapsuleShape(const glm::mat4 &cameraMVP, const PhysicsTransform &bodyTr
 	glm::mat4 translation0 = glm::translate(rotationMVP, glm::vec3(0.0f, 0.0f, 0.0f));
 	glm::mat4 scaled0 = glm::scale(translation0, glm::vec3(radius, radius, 2.0f * halfHeight));
 	gLightingShader->uniformMatrix4(gLightingShader->ulocMVP, &scaled0[0][0]);
-	DrawPrimitive(gCylinderVBO, false);
+	gRenderer->DrawPrimitive(gCylinderVBO, false);
 
 	glm::mat4 translation1 = glm::translate(rotationMVP, glm::vec3(0.0f, 0.0f, -halfHeight));
 	glm::mat4 scaled1 = glm::scale(translation1, glm::vec3(radius));
 	gLightingShader->uniformMatrix4(gLightingShader->ulocMVP, &scaled1[0][0]);
-	DrawPrimitive(gSphereVBO, false);
+	gRenderer->DrawPrimitive(gSphereVBO, false);
 
 	glm::mat4 translation2 = glm::translate(rotationMVP, glm::vec3(0.0f, 0.0f, halfHeight));
 	glm::mat4 scaled2 = glm::scale(translation2, glm::vec3(radius));
 	gLightingShader->uniformMatrix4(gLightingShader->ulocMVP, &scaled2[0][0]);
-	DrawPrimitive(gSphereVBO, false);
+	gRenderer->DrawPrimitive(gSphereVBO, false);
 
 	gLightingShader->disable();
 }
@@ -948,7 +922,7 @@ void DrawBounds(const glm::mat4 &cameraMVP, const PhysicsBoundingBox &bounds) {
 	gLineShader->enable();
 	gLineShader->uniform4f(gLineShader->ulocColor, &color[0]);
 	gLineShader->uniformMatrix4(gLineShader->ulocMVP, &mvp[0][0]);
-	DrawPrimitive(gBoxVBO, true);
+	gRenderer->DrawPrimitive(gBoxVBO, true);
 	gLineShader->disable();
 }
 
@@ -1288,7 +1262,7 @@ void RenderOSD(const int windowWidth, const int windowHeight) {
 		gColoredShader->enable();
 		gColoredShader->uniform4f(gColoredShader->ulocColor, &backColor[0]);
 		gColoredShader->uniformMatrix4(gColoredShader->ulocMVP, &backMVP[0][0]);
-		DrawPrimitive(gQuadVBO, false);
+		gRenderer->DrawPrimitive(gQuadVBO, false);
 		gColoredShader->disable();
 	}
 
@@ -1440,7 +1414,7 @@ void RenderSkybox(const glm::mat4 &mvp) {
 	gSkyboxShader->enable();
 	gSkyboxShader->uniformMatrix4(gSkyboxShader->ulocMVP, &mvp[0][0]);
 	gSkyboxShader->uniform1i(gSkyboxShader->ulocCubemap, 0);
-	DrawPrimitive(gSkyboxVBO, false);
+	gRenderer->DrawPrimitive(gSkyboxVBO, false);
 	gSkyboxShader->disable();
 
 	gRenderer->DisableTexture(0, gSkyboxCubemap);
@@ -2168,22 +2142,12 @@ static void InitResources(const char *appPath) {
 	gCurrentProperties.render = gActiveScene->render;
 	gSSFCurrentFluidIndex = gActiveScene->fluidColorDefaultIndex;
 
-	// Create spherical point sprites
-	printf("  Allocate spherical point sprites\n");
-	gPointSprites = new CSphericalPointSprites();
-	gPointSprites->Allocate(MaxFluidParticleCount);
-
 	// Create scene FBO
 	printf("  Create scene FBO\n");
 	gSceneFBO = new CSceneFBO(128, 128); // Initial FBO size does not matter, because its resized on render anyway
 	gSceneFBO->depthTexture = gSceneFBO->addRenderTarget(GL_DEPTH_COMPONENT32, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, GL_DEPTH_ATTACHMENT, GL_NEAREST);
 	gSceneFBO->sceneTexture = gSceneFBO->addTextureTarget(GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, GL_COLOR_ATTACHMENT0, GL_LINEAR);
 	gSceneFBO->update();
-
-	// Create fluid renderer
-	printf("  Create fluid renderer\n");
-	// Initial FBO size does not matter, because its resized on render anyway
-	gFluidRenderer = new CScreenSpaceFluidRendering(128, 128, gRenderer, gSkyboxCubemap, gSceneFBO->sceneTexture, gPointSprites);
 
 	// Create colored shader
 	printf("  Create shaders renderer\n");
@@ -2270,16 +2234,42 @@ static void InitResources(const char *appPath) {
 		gQuadVBO->triangleIndexCount = prim.indexCount;
 		gQuadVBO->lineIndexCount = prim.lineIndexCount;
 	}
+	gFullscreenQuadVBO = new GeometryVBO();
+	{
+		Primitives::Primitive prim = Primitives::CreateQuatXY(2.0f, 2.0f);
+		gFullscreenQuadVBO->BufferVertices(prim.verts[0].data(), prim.sizeOfVertices, GL_STATIC_DRAW);
+		gFullscreenQuadVBO->ReserveIndices(prim.indexCount + prim.lineIndexCount, GL_STATIC_DRAW);
+		gFullscreenQuadVBO->SubbufferIndices(&prim.indices[0], 0, prim.indexCount);
+		gFullscreenQuadVBO->SubbufferIndices(&prim.lineIndices[0], prim.indexCount, prim.lineIndexCount);
+		gFullscreenQuadVBO->triangleIndexCount = prim.indexCount;
+		gFullscreenQuadVBO->lineIndexCount = prim.lineIndexCount;
+	}
 
 	// Font VBO
 	gFontVBO = new DynamicVBO();
 	gFontVBO->ReserveVertices(MaxFontVBOVertexCount, FontVertexStride, GL_DYNAMIC_DRAW);
 	gFontVBO->ReserveIndices(MaxFontVBOIndexCount, GL_DYNAMIC_DRAW);
+
+	// Create spherical point sprites
+	printf("  Allocate spherical point sprites\n");
+	gPointSprites = new CSphericalPointSprites();
+	gPointSprites->Allocate(MaxFluidParticleCount);
+
+	// Create fluid renderer
+	printf("  Create fluid renderer\n");
+	// Initial FBO size does not matter, because its resized on render anyway
+	gFluidRenderer = new CScreenSpaceFluidRendering(128, 128, gRenderer, gSkyboxCubemap, gSceneFBO->sceneTexture, gPointSprites, gFullscreenQuadVBO);
 }
 
 void ReleaseResources() {
+	printf("  Release fluid renderer\n");
+	if(gFluidRenderer)
+		delete gFluidRenderer;
+	if(gPointSprites != nullptr)
+		delete gPointSprites;
+
 	printf("  Release vertex buffers\n");
-	CVBO *vbos[] { gFontVBO, gQuadVBO, gGridVBO, gCylinderVBO, gSphereVBO, gBoxVBO, gSkyboxVBO };
+	CVBO *vbos[] { gFullscreenQuadVBO, gFontVBO, gQuadVBO, gGridVBO, gCylinderVBO, gSphereVBO, gBoxVBO, gSkyboxVBO };
 	for (size_t i = 0; i < fplArrayCount(vbos); ++i) {
 		CVBO *vbo = vbos[i];
 		delete vbo;
@@ -2291,12 +2281,6 @@ void ReleaseResources() {
 		CGLSL *shader = shaders[i];
 		delete shader;
 	}
-
-	printf("  Release fluid renderer\n");
-	if (gFluidRenderer)
-		delete gFluidRenderer;
-	if (gPointSprites != nullptr)
-		delete gPointSprites;
 
 	// Release scene FBO
 	printf("  Release frame buffer objects\n");

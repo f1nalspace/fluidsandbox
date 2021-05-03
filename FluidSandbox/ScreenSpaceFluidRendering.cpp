@@ -9,9 +9,10 @@
 
 #include "ScreenSpaceFluidRendering.h"
 
-CScreenSpaceFluidRendering::CScreenSpaceFluidRendering(const int width, const int height, CRenderer *renderer, CTextureCubemap *skyboxCubemap, CTexture2D *sceneTexture, CSphericalPointSprites *pointSprites):
+CScreenSpaceFluidRendering::CScreenSpaceFluidRendering(const int width, const int height, CRenderer *renderer, CTextureCubemap *skyboxCubemap, CTexture2D *sceneTexture, CSphericalPointSprites *pointSprites, GeometryVBO *fullscreenQuad):
 	renderer(renderer),
 	pointSprites(pointSprites),
+	fullscreenQuad(fullscreenQuad),
 	fullFrameBuffer(nullptr),
 	depthFrameBuffer(nullptr),
 	pointSpritesShader(nullptr),
@@ -184,7 +185,7 @@ void CScreenSpaceFluidRendering::RenderPointSprites(const uint32_t numPointSprit
 }
 
 void CScreenSpaceFluidRendering::RenderFullscreenQuad() {
-	renderer->DrawTexturedQuad(0.0f, 0.0f, 1.0f, 1.0f);
+	renderer->DrawPrimitive(fullscreenQuad, false);
 }
 
 void CScreenSpaceFluidRendering::BlurDepthPass(const glm::mat4 &mvp, CTexture2D *depthTexture, const float dirX, const float dirY) {
@@ -291,8 +292,7 @@ void CScreenSpaceFluidRendering::RenderSSF(const CCamera &cam, const uint32_t nu
 	glm::mat4 mproj = cam.projection;
 
 	// Calculate ortho matrix
-	glm::mat4 orthoProj = glm::ortho(0.0f, 1.0f, 1.0f, 0.0f);
-	glm::mat4 orthoMVP = glm::mat4(1.0f) * orthoProj;
+	glm::mat4 orthoMVP = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f); // Unit-Cube OpenGL
 
 	// Get depth range
 	float nf[2];
@@ -303,9 +303,6 @@ void CScreenSpaceFluidRendering::RenderSSF(const CCamera &cam, const uint32_t nu
 	// Set view and scissor
 	renderer->SetViewport(0, 0, curFBOWidth, curFBOHeight);
 	renderer->SetScissor(0, 0, curFBOWidth, curFBOHeight);
-
-	// From here, everything is white
-	renderer->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 
 	// Pass 1: Render point sprites to depth and color
 	depthFrameBuffer->enable();

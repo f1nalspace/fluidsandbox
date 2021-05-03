@@ -24,6 +24,7 @@
 #include "Renderer.h"
 #include "Camera.hpp"
 #include "Utils.h"
+#include "GeometryVBO.h"
 
 #include "AllShaders.hpp"
 #include "AllFBOs.hpp"
@@ -108,6 +109,7 @@ class CScreenSpaceFluidRendering {
 private:
 	CRenderer *renderer;
 	CSphericalPointSprites *pointSprites;
+	GeometryVBO *fullscreenQuad;
 
 	CSSFRFullFBO *fullFrameBuffer;
 	CSSFRDepthFBO *depthFrameBuffer;
@@ -142,7 +144,7 @@ private:
 	void WaterPass(const CCamera &cam, const glm::mat4 &mvp, CTexture2D *depthTexture, CTexture2D *thicknessTexture, const FluidColor &color, const FluidDebugType showType);
 	int CalcFBOSize(int size, float factor) { return (int)(size * factor); }
 public:
-	CScreenSpaceFluidRendering(const int width, const int height, CRenderer *renderer, CTextureCubemap *skyboxCubemap, CTexture2D *sceneTexture, CSphericalPointSprites *pointSprites);
+	CScreenSpaceFluidRendering(const int width, const int height, CRenderer *renderer, CTextureCubemap *skyboxCubemap, CTexture2D *sceneTexture, CSphericalPointSprites *pointSprites, GeometryVBO *fullscreenQuad);
 	~CScreenSpaceFluidRendering(void);
 	void Render(const CCamera &cam, const uint32_t numPointSprites, const SSFDrawingOptions &dstate, const int wW, const int wH, const float particleRadius);
 	void SetFBOFactor(float factor) {

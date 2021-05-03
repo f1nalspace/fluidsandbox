@@ -373,18 +373,18 @@ namespace Primitives {
 
 		float halfW = width * 0.5f;
 		float halfH = height * 0.5f;
+		result.AddVertex(glm::vec3( halfW,  halfH, 0.0f), glm::vec3(0, 0, 0), glm::vec2(1.0f, 1.0f));
+		result.AddVertex(glm::vec3(-halfW,  halfH, 0.0f), glm::vec3(0, 0, 0), glm::vec2(0.0f, 1.0f));
+		result.AddVertex(glm::vec3(-halfW, -halfH, 0.0f), glm::vec3(0, 0, 0), glm::vec2(0.0f, 0.0f));
+		result.AddVertex(glm::vec3( halfW, -halfH, 0.0f), glm::vec3(0, 0, 0), glm::vec2(1.0f, 0.0f));
 
-		result.AddVertex(glm::vec3(-halfW, -halfH, 0.0f), glm::vec3(0, 0, 0), glm::vec2(0.0f, 1.0f));
-		result.AddVertex(glm::vec3(-halfW, halfH, 0.0f), glm::vec3(0, 0, 0), glm::vec2(0.0f, 0.0f));
-		result.AddVertex(glm::vec3(halfW, halfH, 0.0f), glm::vec3(0, 0, 0), glm::vec2(1.0f, 0.0f));
-		result.AddVertex(glm::vec3(halfW, -halfH, 0.0f), glm::vec3(0, 0, 0), glm::vec2(0.0f, 1.0f));
+		result.AddIndices(0, 1, 2);
+		result.AddIndices(2, 3, 0);
 
 		result.AddLineIndices(0, 1);
 		result.AddLineIndices(1, 2);
 		result.AddLineIndices(2, 3);
 		result.AddLineIndices(3, 0);
-		result.AddIndices(0, 1, 2);
-		result.AddIndices(2, 3, 0);
 
 
 		result.ValidateAndUpdateCounts();

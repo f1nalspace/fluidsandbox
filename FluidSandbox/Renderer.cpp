@@ -14,6 +14,8 @@
 
 #include <final_platform_layer.h>
 
+#include "Primitives.h"
+
 constexpr int SpacesForTabstop = 2;
 
 CRenderer::CRenderer(void) {
@@ -78,23 +80,6 @@ void CRenderer::SetScissor(const int left, const int top, const int width, const
 	glScissor(left, top, width, height);
 }
 
-void CRenderer::LoadMatrix(const glm::mat4 &m) {
-	glMatrixMode(GL_MODELVIEW);
-	glLoadMatrixf(&m[0][0]);
-}
-
-void CRenderer::SetColor(const float r, const float g, const float b, const float a) {
-	glColor4f(r, g, b, a);
-}
-
-void CRenderer::SetColor(const float *color) {
-	glColor4fv(color);
-}
-
-void CRenderer::SetColor(const glm::vec4 &color) {
-	glColor4fv(&color[0]);
-}
-
 void CRenderer::SetDepthTest(const bool enabled) {
 	assert(depthTestEnabled != enabled);
 	depthTestEnabled = enabled;
@@ -147,24 +132,31 @@ void CRenderer::SetWireframe(const bool enabled) {
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
-void CRenderer::DrawTexturedQuad(const float posX, const float posY, const float scaleW, const float scaleH) {
-	glBegin(GL_QUADS);
-	glTexCoord2f(0.0f, 1.0f); glVertex2f(posX + 0.0f, posY + 0.0f);
-	glTexCoord2f(0.0f, 0.0f); glVertex2f(posX + 0.0f, posY + 1.0f * scaleW);
-	glTexCoord2f(1.0f, 0.0f); glVertex2f(posX + 1.0f * scaleW, posY + 1.0f * scaleW);
-	glTexCoord2f(1.0f, 1.0f); glVertex2f(posX + 1.0f * scaleW, posY + 0.0f);
-	glEnd();
-}
+void CRenderer::DrawPrimitive(GeometryVBO *vbo, const bool asLines) {
+	// NOTE(final): Expect that a shader is already bound
 
-void CRenderer::DrawSimpleRect(const float left, const float top, const float right, const float bottom, const glm::vec4 &color) {
-	SetColor(color);
-	glBegin(GL_QUADS);
-	glVertex2f(left, top);
-	glVertex2f(left, bottom);
-	glVertex2f(right, bottom);
-	glVertex2f(right, top);
-	glEnd();
-	SetColor(1, 1, 1, 1);
+	// Vertex (vec3, vec3, vec2)
+	vbo->Bind();
+
+	if(!asLines || vbo->lineIndexCount == 0) {
+		glEnableClientState(GL_VERTEX_ARRAY);
+		glEnableClientState(GL_NORMAL_ARRAY);
+		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+		glVertexPointer(3, GL_FLOAT, sizeof(Primitives::Vertex), (void *)(offsetof(Primitives::Vertex, pos)));
+		glNormalPointer(GL_FLOAT, sizeof(Primitives::Vertex), (void *)(offsetof(Primitives::Vertex, normal)));
+		glTexCoordPointer(2, GL_FLOAT, sizeof(Primitives::Vertex), (void *)(offsetof(Primitives::Vertex, texcoord)));
+		DrawVBO(vbo, GL_TRIANGLES, vbo->triangleIndexCount, 0);
+		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+		glDisableClientState(GL_NORMAL_ARRAY);
+		glDisableClientState(GL_VERTEX_ARRAY);
+	} else {
+		glEnableClientState(GL_VERTEX_ARRAY);
+		glVertexPointer(3, GL_FLOAT, sizeof(Primitives::Vertex), (void *)(offsetof(Primitives::Vertex, pos)));
+		DrawVBO(vbo, GL_LINES, vbo->lineIndexCount, sizeof(GLuint) * vbo->triangleIndexCount);
+		glDisableClientState(GL_VERTEX_ARRAY);
+	}
+
+	vbo->Unbind();
 }
 
 void CRenderer::DrawVBO(CVBO *vbo, const GLenum mode, const GLuint count, const GLsizeiptr offset) {
