@@ -259,6 +259,7 @@ Copy "$(SolutionDir)Libraries\PhysX\pxshared\bin\$(Platform)\*.dll" "$(OutDir)"<
     <ClInclude Include="FBO.h" />
     <ClInclude Include="FluidProperties.h" />
     <ClInclude Include="GeometryVBO.h" />
+    <ClInclude Include="IndexBuffer.hpp" />
     <ClInclude Include="Renderer2.h" />
     <ClInclude Include="Scenario.h" />
     <ClInclude Include="FontAtlas.h" />
@@ -282,6 +283,7 @@ Copy "$(SolutionDir)Libraries\PhysX\pxshared\bin\$(Platform)\*.dll" "$(OutDir)"<
     <ClInclude Include="ValueTypes.h" />
     <ClInclude Include="VariableManager.h" />
     <ClInclude Include="VBO.h" />
+    <ClInclude Include="VertexBuffer.hpp" />
     <ClInclude Include="XMLUtils.h" />
   </ItemGroup>
   <ItemGroup>

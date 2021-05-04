@@ -178,6 +178,12 @@
     <ClInclude Include="AllVBOs.hpp">
       <Filter>World</Filter>
     </ClInclude>
+    <ClInclude Include="VertexBuffer.hpp">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="IndexBuffer.hpp">
+      <Filter>Rendering</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="LICENSE.txt" />
