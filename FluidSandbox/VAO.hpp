@@ -18,7 +18,7 @@ public:
 		indexBuffer.Bind();
 
 		size_t stride = vertexBuffer.stride;
-		for (size_t i = 0; i < vertexBuffer.elements.size(); ++i) {
+		for(size_t i = 0; i < vertexBuffer.elements.size(); ++i) {
 			const VertexBufferElement &element = vertexBuffer.elements[i];
 			GLuint locationOrIndex = element.location;
 			GLint components = element.components;
@@ -34,7 +34,14 @@ public:
 	}
 
 	~VAO() {
-		if (vaoId > 0)
-			glDeleteVertexArrays(1, &vaoId);
+		glDeleteVertexArrays(1, &vaoId);
+	}
+
+	void Bind() {
+		glBindVertexArray(vaoId);
+	}
+
+	void Unbind() {
+		glBindVertexArray(0);
 	}
 };
