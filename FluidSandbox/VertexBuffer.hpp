@@ -19,9 +19,6 @@ enum class VertexBufferDataType: int32_t {
 	V2i,
 	V3f,
 	V4f,
-	Mat2f,
-	Mat3f,
-	Mat4f,
 	Count
 };
 
@@ -133,13 +130,13 @@ struct VertexBufferElement {
 
 	VertexBufferElement(const VertexBufferLayoutElement &other, const size_t offset):
 		VertexBufferElement(
-			other.name, 
-			other.location, 
-			other.size, 
-			offset, 
-			OpenGLVertexBufferDataTypes[(int)other.dataType], 
-			OpenGLVertexBufferComponentCount[(int)other.dataType], 
-			other.isNormalized) {
+		other.name,
+		other.location,
+		other.size,
+		offset,
+		OpenGLVertexBufferDataTypes[(int)other.dataType],
+		OpenGLVertexBufferComponentCount[(int)other.dataType],
+		other.isNormalized) {
 	}
 };
 
@@ -162,7 +159,7 @@ public:
 
 		stride = 0;
 		size_t offset = 0;
-		for (size_t i = 0; i < layout.elements.size(); ++i) {
+		for(size_t i = 0; i < layout.elements.size(); ++i) {
 			const VertexBufferLayoutElement &layoutElement = layout.elements[i];
 			VertexBufferElement dstElement = VertexBufferElement(layoutElement, offset);
 			stride += dstElement.size;
@@ -173,8 +170,8 @@ public:
 		glGenBuffers(1, &vboId);
 
 		totalSize = stride * vertexCount;
-		if (vertexCount > 0) {
-			if (data != nullptr) {
+		if(vertexCount > 0) {
+			if(data != nullptr) {
 				Fill(vertexCount, data);
 			} else {
 				Allocate(vertexCount);
