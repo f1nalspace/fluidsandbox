@@ -184,6 +184,9 @@
     <ClInclude Include="IndexBuffer.hpp">
       <Filter>Rendering</Filter>
     </ClInclude>
+    <ClInclude Include="VAO.hpp">
+      <Filter>Rendering</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="LICENSE.txt" />

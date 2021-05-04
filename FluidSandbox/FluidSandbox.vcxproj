@@ -281,6 +281,7 @@ Copy "$(SolutionDir)Libraries\PhysX\pxshared\bin\$(Platform)\*.dll" "$(OutDir)"<
     <ClInclude Include="TextureManager.h" />
     <ClInclude Include="Utils.h" />
     <ClInclude Include="ValueTypes.h" />
+    <ClInclude Include="VAO.hpp" />
     <ClInclude Include="VariableManager.h" />
     <ClInclude Include="VBO.h" />
     <ClInclude Include="VertexBuffer.hpp" />
