@@ -73,13 +73,12 @@ static constexpr GLenum OpenGLVertexBufferComponentCount[(int)VertexBufferDataTy
 	4, // V4f
 };
 
-// Maps to GLSL -> layout(location = 0) out vec3 fragColor;
 struct VertexBufferLayoutElement {
-	const std::string name;              // Mapping name -> Not variable name!
-	const size_t location;               // Location index
-	const size_t size;                   // Size in bytes
-	const VertexBufferDataType dataType; // The data type
-	const int32_t isNormalized;          // Need the values to be normalized
+	const std::string name;
+	const size_t location;
+	const size_t size;
+	const VertexBufferDataType dataType;
+	const int32_t isNormalized;
 
 	VertexBufferLayoutElement(const std::string &name, const VertexBufferDataType dataType, const size_t location, const int32_t isNormalized):
 		name(name),
