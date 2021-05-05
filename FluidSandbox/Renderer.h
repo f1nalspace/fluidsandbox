@@ -13,7 +13,7 @@
 
 #include <cstdint>
 
-#include <glad/glad.h>
+#include <final_dynamic_opengl.h>
 
 #include <glm/glm.hpp>
 

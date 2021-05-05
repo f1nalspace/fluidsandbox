@@ -9,7 +9,7 @@
 
 #pragma once
 
-#include <glad/glad.h>
+#include <final_dynamic_opengl.h>
 
 class CGLSL
 {

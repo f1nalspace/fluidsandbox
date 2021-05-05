@@ -12,7 +12,7 @@
 #include "VertexBuffer.hpp"
 #include "IndexBuffer.hpp"
 
-#include <glad/glad.h>
+#include <final_dynamic_opengl.h>
 
 class VAO {
 private:

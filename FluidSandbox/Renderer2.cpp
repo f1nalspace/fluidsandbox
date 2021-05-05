@@ -5,7 +5,7 @@
 #include <stdexcept>
 #include <assert.h>
 
-#include <glad/glad.h>
+#include <final_dynamic_opengl.h>
 
 #include <final_platform_layer.h>
 

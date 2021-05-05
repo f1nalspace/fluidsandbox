@@ -13,7 +13,7 @@
 #include <malloc.h>
 #include <cstdint>
 
-#include <glad/glad.h>
+#include <final_dynamic_opengl.h>
 
 #include "Texture2D.h"
 

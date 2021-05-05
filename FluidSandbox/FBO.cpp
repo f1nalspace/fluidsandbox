@@ -9,9 +9,6 @@
 
 #include "FBO.h"
 
-#define GL_EXT_framebuffer_object 1
-#include <glad/glad.h>
-
 #include <iostream>
 
 CFBO::CFBO(const int width, const int height):

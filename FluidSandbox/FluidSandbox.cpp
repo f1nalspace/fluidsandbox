@@ -27,7 +27,7 @@ Dependencies:
 	- STB freetype (included)
 	- Final Platform Layer (included)
 	- Final XML (included)
-	- Glad (included)
+	- Final Dynamic OpenGL (included)
 	- glm (included)
 ======================================================================================================================
 How to compile:
@@ -93,8 +93,6 @@ Todo:
 
 	- Tech:
 
-		- Replace Glad with final_dynamic_opengl.h (Glad is weird and have too many warnings)
-
 		- Use ImGUI for OSD, so we don't have to use keyboard to modify the scene
 
 		- Migrate to OpenGL 4.x
@@ -158,6 +156,7 @@ License:
 
 #include <iostream>
 #include <vector>
+#include <unordered_set>
 #include <time.h>
 #include <malloc.h>
 #include <string.h>
@@ -167,7 +166,7 @@ License:
 #include <typeinfo>
 
 // OpenGL
-#include <glad/glad.h>
+#include <final_dynamic_opengl.h>
 
 // Vector math
 #include <glm/glm.hpp>
@@ -1913,8 +1912,8 @@ static void OnKeyUp(const fplKey key, const int x, const int y) {
 
 		default:
 			break;
-		}
 	}
+}
 
 void ChangeFluidProperty(float value) {
 	if (!gActiveScenario) return;
@@ -2103,25 +2102,6 @@ void LoadFluidScenarios(const char *appPath) {
 	}
 }
 
-void printOpenGLInfos() {
-	printf("  OpenGL Renderer: %s\n", glGetString(GL_RENDERER));
-	printf("  OpenGL Vendor: %s\n", glGetString(GL_VENDOR));
-	printf("  OpenGL Version: %s\n", glGetString(GL_VERSION));
-
-#if 0
-	if (GLEW_VERSION_2_0)
-		printf("  GLSL Version: %s\n", glGetString(GL_SHADING_LANGUAGE_VERSION));
-
-	if (glewIsSupported("GL_ARB_framebuffer_object")) {
-		int temp;
-		glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, &temp);
-		printf("  OpenGL FBO Max Color Attachments: %d\n", temp);
-		glGetIntegerv(GL_MAX_RENDERBUFFER_SIZE, &temp);
-		printf("  OpenGL FBO Max Render Buffer Size: %d\n", temp);
-}
-#endif
-}
-
 static void InitResources(const char *appPath) {
 	// Create texture manager
 	printf("  Create texture manager\n");
@@ -2263,9 +2243,9 @@ static void InitResources(const char *appPath) {
 
 void ReleaseResources() {
 	printf("  Release fluid renderer\n");
-	if(gFluidRenderer)
+	if (gFluidRenderer)
 		delete gFluidRenderer;
-	if(gPointSprites != nullptr)
+	if (gPointSprites != nullptr)
 		delete gPointSprites;
 
 	printf("  Release vertex buffers\n");
@@ -2330,6 +2310,83 @@ void OnShutdown() {
 	}
 }
 
+struct OpenGLVersion {
+	int major;
+	int minor;
+	int fix;
+};
+
+static int32_t fplStringToS32AdvancedLen(const char *str, const size_t maxLen, size_t *len) {
+	//FPL__CheckArgumentNull(str, 0);
+	//FPL__CheckArgumentNull(len, 0);
+	//FPL__CheckArgumentZero(maxLen, 0);
+	*len = 0;
+	const char *p = str;
+	bool isNegative = false;
+	if (*p == '-') {
+		if (maxLen == 1) {
+			return 0;
+		}
+		isNegative = true;
+		++p;
+	}
+	uint32_t value = 0;
+	while (*p && ((size_t)(p - str) < maxLen)) {
+		char c = *p;
+		if (c < '0' || c > '9') {
+			break;
+		}
+		int v = (int)(*p - '0');
+		value *= 10;
+		value += (uint32_t)v;
+		++p;
+	}
+	*len = (size_t)(p - str);
+	int32_t result = isNegative ? -(int32_t)value : (int32_t)value;
+	return(result);
+}
+
+static int32_t fplStringToS32Advanced(const char *str, size_t *len) {
+	size_t maxLen = fplGetStringLength(str);
+	int32_t result = fplStringToS32AdvancedLen(str, maxLen, len);
+	return(result);
+}
+
+OpenGLVersion ParseOpenGLVersion(const char *str) {
+	OpenGLVersion result = {};
+
+	const char *p = str;
+	size_t majorLen = 0;
+	int32_t major = fplStringToS32Advanced(p, &majorLen);
+	if (majorLen > 0) {
+		result.major = major;
+		p += majorLen;
+	}
+
+	// Skip any dots
+	if (*p == '.')
+		++p;
+
+	size_t minorLen = 0;
+	int32_t minor = fplStringToS32Advanced(p, &minorLen);
+	if (minorLen > 0) {
+		result.minor = minor;
+		p += minorLen;
+	}
+
+	// Skip any dots
+	if (*p == '.')
+		++p;
+
+	size_t fixLen = 0;
+	int32_t fix = fplStringToS32Advanced(p, &fixLen);
+	if (fixLen > 0) {
+		result.fix = fix;
+	}
+
+	return(result);
+}
+
 int main(int argc, char **argv) {
 	fplConsoleFormatOut("%s v%s\n", APPLICATION_NAME, APPLICATION_VERSION);
 	fplConsoleFormatOut("%s\n", APPLICATION_COPYRIGHT);
@@ -2354,40 +2411,73 @@ int main(int argc, char **argv) {
 	fplCopyString(APPTITLE, platformSettings.window.title, fplArrayCount(platformSettings.window.title));
 	if (fplPlatformInit(fplInitFlags_Console | fplInitFlags_Video, &platformSettings)) {
 
-		if (!gladLoadGL()) {
+		// Stored extensions
+		std::unordered_set<std::string> extensions;
+
+		if (!fglLoadOpenGL(true)) {
 			std::cerr << "Failed to initialize OpenGL loader" << std::endl;
 			fplPlatformRelease();
 			return -1;
 		}
 
-		// Print OpenGL stuff
-		printOpenGLInfos();
-
-		// Required extensions check
-		fplConsoleFormatOut("  Checking opengl requirements...");
-
 		int maxColorAttachments = 0;
 		glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, &maxColorAttachments);
 
-		if (!gladHasExtension("GL_ARB_texture_float") ||
-			!gladHasExtension("GL_ARB_point_sprite") ||
-			!gladHasExtension("GL_ARB_framebuffer_object")) {
-			fplConsoleFormatError("failed\n");
-			std::cerr << std::endl << "Your graphics adapter is not supported, press any key to exit!" << std::endl;
-			std::cerr << "Required opengl version:" << std::endl;
-			std::cerr << "  OpenGL version 2.0 or higher" << std::endl;
-			std::cerr << "Required opengl extensions:" << std::endl;
-			std::cerr << "  GL_ARB_texture_float" << std::endl;
-			std::cerr << "  GL_ARB_point_sprite" << std::endl;
-			std::cerr << "  GL_ARB_framebuffer_object" << std::endl;
-			std::cerr << "Required constants:" << std::endl;
-			std::cerr << "  GL_MAX_COLOR_ATTACHMENTS >= 4" << std::endl;
+		// Store extensions
+		const char *extensionsString = (const char *)glGetString(GL_EXTENSIONS);
+		if (extensionsString != nullptr) {
+			const char *p = extensionsString;
+			const char *first = p;
+			while (*p) {
+				if (*p == ' ' && first != nullptr) {
+					size_t len = p - first;
+					std::string ext = std::string(first, len);
+					extensions.emplace(ext);
+					first = nullptr;
+				} else {
+					if (first == nullptr) {
+						first = p;
+					}
+				}
+				++p;
+			}
+		}
+
+		const char *openglVersionString = (const char *)glGetString(GL_VERSION);
+		OpenGLVersion openglVersion = ParseOpenGLVersion(openglVersionString);
+
+		bool hasARBTextureFloat = extensions.count("GL_ARB_texture_float");
+		bool hasARBFrameBufferObject = extensions.count("GL_ARB_framebuffer_object");
+		bool hasARBPointSprites = extensions.count("GL_ARB_point_sprite");
+		bool hasGLVersion = (openglVersion.major > 2) || (openglVersion.major == 2 && openglVersion.minor >= 1);
+
+		fplConsoleFormatOut("OpenGL Informations...\n");
+		printf("  OpenGL Renderer: %s\n", glGetString(GL_RENDERER));
+		printf("  OpenGL Vendor: %s\n", glGetString(GL_VENDOR));
+		printf("  OpenGL Version: %s\n", glGetString(GL_VERSION));
+
+		// Required extensions check
+		fplConsoleFormatOut("Checking opengl requirements...\n");
+		fplConsoleFormatOut("  OpenGL >= 2.1: %s (%d.%d.%d)\n", (hasGLVersion ? "yes" : "no"), openglVersion.major, openglVersion.minor, openglVersion.fix);
+		fplConsoleFormatOut("  GL_ARB_texture_float supported: %s\n", (hasARBTextureFloat ? "yes" : "no"));
+		fplConsoleFormatOut("  GL_ARB_framebuffer_object supported: %s\n", (hasARBFrameBufferObject ? "yes" : "no"));
+		fplConsoleFormatOut("  GL_ARB_point_sprite supported: %s\n", (hasARBPointSprites ? "yes" : "no"));
+		fplConsoleFormatOut("  GL_MAX_COLOR_ATTACHMENTS >= 4: %s (%d)\n", (hasARBPointSprites ? "yes" : "no"), maxColorAttachments);
+
+		if (!hasARBTextureFloat ||
+			!hasARBFrameBufferObject ||
+			!hasARBPointSprites ||
+			maxColorAttachments < 4) {
+			fplConsoleFormatError("Your graphics adapter and/or driver is not sufficient to run this application!");
+			fplConsoleFormatError("Press any key to exit the application.");
 			fplConsoleWaitForCharInput();
-			gladUnload();
+			fglUnloadOpenGL();
 			fplPlatformRelease();
 			return(1);
-		} else {
-			fplConsoleFormatOut("ok\n");
+		}
+
+		if (!hasGLVersion) {
+			fplConsoleFormatError("Warning: OpenGL version '%s' may not be unsupported!\n", openglVersionString);
 		}
 
 		fplConsoleFormatOut("Initialize Renderer\n");
@@ -2463,7 +2553,7 @@ int main(int argc, char **argv) {
 
 		OnShutdown();
 
-		gladUnload();
+		fglUnloadOpenGL();
 		fplPlatformRelease();
 
 		return(0);

@@ -13,8 +13,7 @@
 #include <initializer_list>
 #include <cassert>
 
-#include <glad/glad.h>
-#include <glm/glm.hpp>
+#include <final_dynamic_opengl.h>
 
 enum class IndexDataType: int32_t {
 	None = 0,

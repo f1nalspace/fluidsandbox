@@ -13,7 +13,7 @@
 #include <math.h>
 #include <stdio.h>
 
-#include <glad/glad.h>
+#include <final_dynamic_opengl.h>
 
 class CSphericalPointSprites
 {

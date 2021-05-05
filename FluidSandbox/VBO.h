@@ -9,8 +9,9 @@
 
 #pragma once
 
-#include <glad/glad.h>
 #include <glm/glm.hpp>
+
+#include <final_dynamic_opengl.h>
 
 struct VBOWritter {
 	GLfloat *verts;
