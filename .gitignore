@@ -6,7 +6,7 @@
 # My ignores
 Build/
 Immediates/
-Libraries/PhysX/
+#Libraries/PhysX/
 
 # User-specific files
 *.rsuser
