@@ -11,7 +11,7 @@
 
 #include <assert.h>
 
-#include <glad/glad.h>
+#include <final_dynamic_opengl.h>
 
 class CTexture
 {

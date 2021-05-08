@@ -1,3 +1,4 @@
+uniform vec4 color;
 const vec3 lightDir = vec3(0.577, 0.577, 0.577);
 void main(void) {
 	vec3 N;
@@ -6,6 +7,5 @@ void main(void) {
 	if (mag > 1.0) discard;
 	N.z = sqrt(1.0-mag);
 	float diffuse = max(0.0, dot(lightDir, N));
-	gl_FragColor = gl_Color * diffuse;
+	gl_FragColor = color * diffuse;
 }
-

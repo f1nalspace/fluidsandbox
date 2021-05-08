@@ -89,7 +89,7 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>$(SolutionDir)Libraries\PhysX\physx\include\;$(SolutionDir)Libraries\PhysX\pxshared\include\;$(SolutionDir)Libraries\glm\include\;$(SolutionDir)Libraries\stb\include\;$(SolutionDir)Libraries\final\include\;$(SolutionDir)Libraries\glad\include\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Libraries\PhysX\physx\include\;$(SolutionDir)Libraries\PhysX\pxshared\include\;$(SolutionDir)Libraries\glm\include\;$(SolutionDir)Libraries\stb\include\;$(SolutionDir)Libraries\final\include\</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -123,7 +123,7 @@ Copy "$(SolutionDir)Libraries\PhysX\pxshared\bin\$(Platform)\*.dll" "$(OutDir)"<
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>$(SolutionDir)Libraries\PhysX\physx\include\;$(SolutionDir)Libraries\PhysX\pxshared\include\;$(SolutionDir)Libraries\glm\include\;$(SolutionDir)Libraries\stb\include\;$(SolutionDir)Libraries\final\include\;$(SolutionDir)Libraries\glad\include\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Libraries\PhysX\physx\include\;$(SolutionDir)Libraries\PhysX\pxshared\include\;$(SolutionDir)Libraries\glm\include\;$(SolutionDir)Libraries\stb\include\;$(SolutionDir)Libraries\final\include\</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -158,7 +158,7 @@ Copy "$(SolutionDir)Libraries\PhysX\pxshared\bin\$(Platform)\*.dll" "$(OutDir)"<
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>$(SolutionDir)Libraries\PhysX\physx\include\;$(SolutionDir)Libraries\PhysX\pxshared\include\;$(SolutionDir)Libraries\glm\include\;$(SolutionDir)Libraries\stb\include\;$(SolutionDir)Libraries\final\include\;$(SolutionDir)Libraries\glad\include\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Libraries\PhysX\physx\include\;$(SolutionDir)Libraries\PhysX\pxshared\include\;$(SolutionDir)Libraries\glm\include\;$(SolutionDir)Libraries\stb\include\;$(SolutionDir)Libraries\final\include\</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -195,7 +195,7 @@ Copy "$(SolutionDir)Libraries\PhysX\pxshared\bin\$(Platform)\*.dll" "$(OutDir)"<
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>$(SolutionDir)Libraries\PhysX\physx\include\;$(SolutionDir)Libraries\PhysX\pxshared\include\;$(SolutionDir)Libraries\glm\include\;$(SolutionDir)Libraries\stb\include\;$(SolutionDir)Libraries\final\include\;$(SolutionDir)Libraries\glad\include\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Libraries\PhysX\physx\include\;$(SolutionDir)Libraries\PhysX\pxshared\include\;$(SolutionDir)Libraries\glm\include\;$(SolutionDir)Libraries\stb\include\;$(SolutionDir)Libraries\final\include\</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -222,10 +222,11 @@ Copy "$(SolutionDir)Libraries\PhysX\pxshared\bin\$(Platform)\*.dll" "$(OutDir)"<
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\Libraries\glad\src\glad.c" />
     <ClCompile Include="FBO.cpp" />
+    <ClCompile Include="final_dynamic_opengl.cpp" />
     <ClCompile Include="final_platform_layer.cpp" />
     <ClCompile Include="final_xml.cpp" />
+    <ClCompile Include="Renderer2.cpp" />
     <ClCompile Include="Scenario.cpp" />
     <ClCompile Include="FontAtlas.cpp" />
     <ClCompile Include="Frustum.cpp" />
@@ -253,10 +254,13 @@ Copy "$(SolutionDir)Libraries\PhysX\pxshared\bin\$(Platform)\*.dll" "$(OutDir)"<
     <ClInclude Include="Actor.hpp" />
     <ClInclude Include="AllActors.hpp" />
     <ClInclude Include="AllFBOs.hpp" />
+    <ClInclude Include="AllVBOs.hpp" />
     <ClInclude Include="Camera.hpp" />
     <ClInclude Include="FBO.h" />
     <ClInclude Include="FluidProperties.h" />
     <ClInclude Include="GeometryVBO.h" />
+    <ClInclude Include="IndexBuffer.hpp" />
+    <ClInclude Include="Renderer2.h" />
     <ClInclude Include="Scenario.h" />
     <ClInclude Include="FontAtlas.h" />
     <ClInclude Include="Fonts.h" />
@@ -277,8 +281,10 @@ Copy "$(SolutionDir)Libraries\PhysX\pxshared\bin\$(Platform)\*.dll" "$(OutDir)"<
     <ClInclude Include="TextureManager.h" />
     <ClInclude Include="Utils.h" />
     <ClInclude Include="ValueTypes.h" />
+    <ClInclude Include="VAO.hpp" />
     <ClInclude Include="VariableManager.h" />
     <ClInclude Include="VBO.h" />
+    <ClInclude Include="VertexBuffer.hpp" />
     <ClInclude Include="XMLUtils.h" />
   </ItemGroup>
   <ItemGroup>

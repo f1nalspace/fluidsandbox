@@ -11,6 +11,26 @@
 
 #include "GLSL.h"
 
+class CColoredShader: public CGLSL {
+protected:
+
+	void updateUniformLocations() {
+		ulocColor = getUniformLocation("color");
+		ulocMVP = getUniformLocation("mvp");
+	}
+
+public:
+	GLuint ulocColor;
+	GLuint ulocMVP;
+
+	CColoredShader():
+		CGLSL(),
+		ulocColor(0),
+		ulocMVP(0) {
+	}
+
+};
+
 class CLineShader: public CGLSL {
 protected:
 
@@ -26,6 +46,28 @@ public:
 	CLineShader():
 		CGLSL(),
 		ulocColor(0),
+		ulocMVP(0) {
+	}
+
+};
+
+class CFontShader: public CGLSL {
+protected:
+
+	void updateUniformLocations() {
+		ulocFontTex = getUniformLocation("fontTex");
+		ulocMVP = getUniformLocation("mvp");
+	}
+
+public:
+	static constexpr char *ShaderName = "FontTexture";
+
+	GLuint ulocFontTex;
+	GLuint ulocMVP;
+
+	CFontShader():
+		CGLSL(),
+		ulocFontTex(0),
 		ulocMVP(0) {
 	}
 
@@ -82,15 +124,19 @@ protected:
 		ulocFar = getUniformLocation("far");
 		ulocViewMat = getUniformLocation("viewMat");
 		ulocProjMat = getUniformLocation("projMat");
+		ulocColor = getUniformLocation("color");
 	}
 
 public:
+	static constexpr char *ShaderName = "PointSprites";
+
 	GLuint ulocPointScale;
 	GLuint ulocPointRadius;
 	GLuint ulocNear;
 	GLuint ulocFar;
 	GLuint ulocViewMat;
 	GLuint ulocProjMat;
+	GLuint ulocColor;
 
 	CPointSpritesShader():
 		CGLSL(),
@@ -99,7 +145,30 @@ public:
 		ulocNear(0),
 		ulocFar(0),
 		ulocViewMat(0),
-		ulocProjMat(0) {
+		ulocProjMat(0),
+		ulocColor(0) {
+	}
+
+};
+
+class CPointsShader: public CGLSL {
+protected:
+
+	void updateUniformLocations() {
+		ulocMVP = getUniformLocation("mvp");
+		ulocColor = getUniformLocation("color");
+	}
+
+public:
+	static constexpr char *ShaderName = "Points";
+
+	GLuint ulocMVP;
+	GLuint ulocColor;
+
+	CPointsShader():
+		CGLSL(),
+		ulocMVP(0),
+		ulocColor(0) {
 	}
 
 };

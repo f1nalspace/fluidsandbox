@@ -92,5 +92,6 @@ namespace Primitives {
 	Primitive CreateBox(const glm::vec3 &extends, const bool invert);
 	Primitive CreateSphere(const float radius, const int sectorCount, const int stackCount);
 	Primitive CreateCylinder(const float baseRadius, const float topRadius, const float height, const GLuint sectorCount, const GLuint stackCount);
-	Primitive CreateGrid2D(const float cellSize, const float totalSize);
+	Primitive CreateGridXZ(const float cellSize, const float totalSize);
+	Primitive CreateQuatXY(const float width, const float height);
 };

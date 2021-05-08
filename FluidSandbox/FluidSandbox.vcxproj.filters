@@ -7,9 +7,6 @@
     <ClCompile Include="final_xml.cpp">
       <Filter>Dependencies</Filter>
     </ClCompile>
-    <ClCompile Include="..\Libraries\glad\src\glad.c">
-      <Filter>Dependencies</Filter>
-    </ClCompile>
     <ClCompile Include="FluidSandbox.cpp" />
     <ClCompile Include="Scenario.cpp">
       <Filter>World</Filter>
@@ -76,6 +73,12 @@
     </ClCompile>
     <ClCompile Include="FBO.cpp">
       <Filter>Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer2.cpp">
+      <Filter>Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="final_dynamic_opengl.cpp">
+      <Filter>Dependencies</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -168,6 +171,21 @@
     </ClInclude>
     <ClInclude Include="Fonts.h">
       <Filter>Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer2.h">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="AllVBOs.hpp">
+      <Filter>World</Filter>
+    </ClInclude>
+    <ClInclude Include="VertexBuffer.hpp">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="IndexBuffer.hpp">
+      <Filter>Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="VAO.hpp">
+      <Filter>Rendering</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

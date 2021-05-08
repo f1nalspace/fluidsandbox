@@ -9,8 +9,9 @@
 
 #pragma once
 
-#include <glad/glad.h>
 #include <cstdint>
+
+#include <final_dynamic_opengl.h>
 
 #include "Texture.h"
 
