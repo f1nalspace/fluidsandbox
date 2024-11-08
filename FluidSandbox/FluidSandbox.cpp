@@ -1747,6 +1747,7 @@ static void AddDynamicActor(PhysicsEngine &physics, PhysicsParticleSystem &parti
 static void ToggleFluidGPUAcceleration() {
 	bool enabled = gPhysics->IsGPUAcceleration();
 	gPhysics->SetGPUAcceleration(!enabled);
+	gPhysicsUseGPUAcceleration = gPhysics->IsGPUAcceleration();
 }
 
 static void SetFluidExternalAcceleration(const glm::vec3 &acc) {
