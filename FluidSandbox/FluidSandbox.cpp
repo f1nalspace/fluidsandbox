@@ -19,75 +19,76 @@
 ======================================================================================================================
 Dependencies:
 	- Windows 7 or higher
-	- Visual Studio 2019
+	- Visual Studio 2019 or higher
 
 	- PhysX SDK 3.4.2 (Multithreaded DLL, x64/win32, Headers are included)
 
+	- Final Platform Layer (included)
+	- Final Dynamic OpenGL (included)
+	- Final XML (included)
 	- STB image (included)
 	- STB freetype (included)
-	- Final Platform Layer (included)
-	- Final XML (included)
-	- Final Dynamic OpenGL (included)
-	- glm (included)
+	- OpenGL Mathematics (included)
 ======================================================================================================================
 How to compile:
-	PhysX SDK:
-		- Compile the PhysX SDK as Multithreaded DLLs for x64 and x64 platform with the configurations Debug/Release
-			NOTE: Do not compile with static CRT library, change to (Multithreaded DLL and Multithreaded Debug DLL).
 
-		- Copy all 10 resulting PhysX DLL files into the folders for each platform:
-			- /Libraries/PhysX/physx/bin/win32/
-				- nvToolsExt32_1.dll
-				- PhysX3_x86.dll
-				- PhysX3Common_x86.dll
-				- PhysX3CommonDEBUG_x86.dll
-				- PhysX3Cooking_x86.dll
-				- PhysX3CookingDEBUG_x86.dll
-				- PhysX3DEBUG_x86.dll
-				- PhysX3Gpu_x86.dll
-				- PhysX3GpuDEBUG_x86.dll
-				- PhysXDevice.dll
+	- Compile the PhysX SDK as Multithreaded DLLs for x64 and x64 platform with the configurations Debug/Release
+		NOTE: Do not compile with static CRT library, change to (Multithreaded DLL and Multithreaded Debug DLL).
 
-			- /Libraries/PhysX/physx/bin/x64/
-				- nvToolsExt32_1.dll
-				- PhysX3_x64.dll
-				- PhysX3Common_x64.dll
-				- PhysX3CommonDEBUG_x64.dll
-				- PhysX3Cooking_x64.dll
-				- PhysX3CookingDEBUG_x64.dll
-				- PhysX3DEBUG_x64.dll
-				- PhysX3Gpu_x64.dll
-				- PhysX3GpuDEBUG_x64.dll
-				- PhysXDevice.dll
+	- Copy all 10 resulting PhysX DLL files into the folders for each platform:
+		- /Libraries/PhysX/physx/bin/win32/
+			- nvToolsExt32_1.dll
+			- PhysX3_x86.dll
+			- PhysX3Common_x86.dll
+			- PhysX3CommonDEBUG_x86.dll
+			- PhysX3Cooking_x86.dll
+			- PhysX3CookingDEBUG_x86.dll
+			- PhysX3DEBUG_x86.dll
+			- PhysX3Gpu_x86.dll
+			- PhysX3GpuDEBUG_x86.dll
+			- PhysXDevice.dll
 
-		- Copy all 8 resulting PhysX LIB files into the folders respectively:
-			- /Libraries/PhysX/physx/lib/win32/
-				- PhysX3_x86.lib
-				- PhysX3Common_x86.lib
-				- PhysX3CommonDEBUG_x86.lib
-				- PhysX3Cooking_x86.lib
-				- PhysX3CookingDEBUG_x86.lib
-				- PhysX3DEBUG_x86.lib
-				- PhysX3Extensions.lib
-				- PhysX3ExtensionsDEBUG.lib
+		- /Libraries/PhysX/physx/bin/x64/
+			- nvToolsExt32_1.dll
+			- PhysX3_x64.dll
+			- PhysX3Common_x64.dll
+			- PhysX3CommonDEBUG_x64.dll
+			- PhysX3Cooking_x64.dll
+			- PhysX3CookingDEBUG_x64.dll
+			- PhysX3DEBUG_x64.dll
+			- PhysX3Gpu_x64.dll
+			- PhysX3GpuDEBUG_x64.dll
+			- PhysXDevice.dll
 
-			- /Libraries/PhysX/physx/lib/x64/
-				- PhysX3_x64.lib
-				- PhysX3Common_x64.lib
-				- PhysX3CommonDEBUG_x64.lib
-				- PhysX3Cooking_x64.lib
-				- PhysX3CookingDEBUG_x64.lib
-				- PhysX3DEBUG_x64.lib
-				- PhysX3Extensions.lib
-				- PhysX3ExtensionsDEBUG.lib
+	- Copy all 8 resulting PhysX LIB files into the folders respectively:
+		- /Libraries/PhysX/physx/lib/win32/
+			- PhysX3_x86.lib
+			- PhysX3Common_x86.lib
+			- PhysX3CommonDEBUG_x86.lib
+			- PhysX3Cooking_x86.lib
+			- PhysX3CookingDEBUG_x86.lib
+			- PhysX3DEBUG_x86.lib
+			- PhysX3Extensions.lib
+			- PhysX3ExtensionsDEBUG.lib
 
-		- Copy the include files for PhysX SDK in the folder:
-			- /Libraries/PhysX/pxshared/include/ (~160 files)
-			- /Libraries/PhysX/physx/include/ (~60 files)
+		- /Libraries/PhysX/physx/lib/x64/
+			- PhysX3_x64.lib
+			- PhysX3Common_x64.lib
+			- PhysX3CommonDEBUG_x64.lib
+			- PhysX3Cooking_x64.lib
+			- PhysX3CookingDEBUG_x64.lib
+			- PhysX3DEBUG_x64.lib
+			- PhysX3Extensions.lib
+			- PhysX3ExtensionsDEBUG.lib
+
+	- Copy the include files for PhysX SDK in the folder:
+		- /Libraries/PhysX/pxshared/include/ (~160 files)
+		- /Libraries/PhysX/physx/include/ (~60 files)
 
 	- All other libraries are already included
 
 	- Build and run the FluidSandbox Solution
+
 ======================================================================================================================
 Todo:
 
@@ -129,13 +130,14 @@ Background:
 	Back then I really liked the demo and wanted to create my own scenes for it.
 	Unfortunately, the demo was not suitable for that, so I simply created my own application -> Fluid Sandbox.
 	But at that time, I had bare minimum knowledge about math and no experience using any kind of physics engines.
-	So it took me ~3 months to learn how everything works and implement it using the PhysX SDK.
+	So it took me ~3 months to learn how everything how it works and implement it using the PhysX SDK.
 
-	Why 3 months? Fluids are very hard to configure, especially to find parameters which works and does not explode.
+	Why 3 months? Fluids is very hard to configure, especially to find parameters which works and does not explode.
 	Rest offset, contact offset, distance offset, max motion distance, viscosity, stiffness and many more have to be properly set and affect each other.
-	Also the screen space fluid rendering was not easy too and it took me a while to get it working.
+	Also the screen space fluid rendering was not easy too.
 
 	After 10 years i revisited it, upgraded it to latest PhysX SDK, cleaned up the source and put in on Github.
+
 ======================================================================================================================
 License:
 
@@ -143,27 +145,34 @@ License:
 	You can find a a copy of the license file in the source directory (LICENSE.txt)
 	If a copy of the MPL was not distributed with this file, You can obtain one at https://www.mozilla.org/MPL/2.0/.
 
-	Copyright (C) Torsten Spaete 2011-2021. All rights reserved.
+	Copyright (C) Torsten Spaete 2011-2024 All rights reserved.
+
 ======================================================================================================================
 */
 
 // Enable this to activate support for PhysX Visual Debugger
 //#define PVD_ENABLED
 
+// Include the entry point
 #define FPL_ENTRYPOINT
+
+// We dont need any audio support
 #define FPL_NO_AUDIO
 #include <final_platform_layer.h>
+
+// C/C++ libraries
+#include <time.h>
+#include <malloc.h>
+#include <string.h>
 
 #include <iostream>
 #include <vector>
 #include <unordered_set>
-#include <time.h>
-#include <malloc.h>
-#include <string.h>
 #include <cstdint>
+#include <typeinfo>
+
 #define _USE_MATH_DEFINES
 #include <math.h>
-#include <typeinfo>
 
 // OpenGL
 #include <final_dynamic_opengl.h>
@@ -191,7 +200,7 @@ License:
 #include "GeometryVBO.h"
 #include "PhysicsEngine.h"
 
-// Font
+// Assets
 #include "TextureFont.h"
 #include "Fonts.h"
 
