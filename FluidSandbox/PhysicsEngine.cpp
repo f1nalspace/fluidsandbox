@@ -561,7 +561,8 @@ public:
 		if(cudaContextManager != nullptr) {
 			gpuDispatcher = cudaContextManager->getGpuDispatcher();
 			if(gpuDispatcher != nullptr) {
-				printf("  GPU acceleration supported\n");
+				const char *deviceName = cudaContextManager->getDeviceName();
+				printf("  GPU acceleration supported, using device: %s\n", deviceName);
 				useGPUAcceleration = true;
 				sceneDesc.gpuDispatcher = gpuDispatcher;
 			}
