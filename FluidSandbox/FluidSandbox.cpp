@@ -14,12 +14,12 @@
 
 	This is the main source file.
 
-	Copyright (C) Torsten Spaete 2011-2021. All rights reserved.
+	Copyright (C) Torsten Spaete 2011-2026. All rights reserved.
 	MPL v.2 licensed. See LICENSE.txt for more details.
 ======================================================================================================================
 Dependencies:
 	- Windows 7 or higher
-	- Visual Studio 2019 or higher
+	- Visual Studio 2022 or higher
 
 	- PhysX SDK 3.4.2 (Multithreaded DLL, x64/win32, Headers are included)
 
@@ -145,7 +145,7 @@ License:
 	You can find a a copy of the license file in the source directory (LICENSE.txt)
 	If a copy of the MPL was not distributed with this file, You can obtain one at https://www.mozilla.org/MPL/2.0/.
 
-	Copyright (C) Torsten Spaete 2011-2024 All rights reserved.
+	Copyright (C) Torsten Spaete 2011-2026 All rights reserved.
 
 ======================================================================================================================
 */
@@ -213,9 +213,9 @@ License:
 
 // Application
 #define APPLICATION_NAME "Fluid Sandbox"
-#define APPLICATION_VERSION "1.9.0"
+#define APPLICATION_VERSION "1.9.1"
 #define APPLICATION_AUTHOR "Torsten Spaete"
-#define APPLICATION_COPYRIGHT "(C) 2015-2021 Torsten Spaete - All rights reserved"
+#define APPLICATION_COPYRIGHT "(C) 2015-2026 Torsten Spaete - All rights reserved"
 
 #define CONCAT_TWO(A, B) A ## B
 #define CONCAT_FIVE(A, B, C, D, E) CONCAT_TWO(A, B) CONCAT_TWO(C, D) E

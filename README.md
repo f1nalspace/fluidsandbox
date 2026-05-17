@@ -16,14 +16,14 @@ A real time application for playing around with 3D fluids and rigid bodies.
 - Uses Final Platform Layer ([libfpl.org](https://www.libfpl.org)) for creating a window and an opengl rendering context
 
 ## Copyright / License
-Copyright (C) Torsten Spaete 2011-2024. All rights reserved.
+Copyright (C) Torsten Spaete 2011-2026. All rights reserved.
 
 MPL v.2 licensed. See LICENSE.txt for more details.
 
 ## Dependencies
 - Windows 7 or higher (With a few changes it may compile and run on other platforms too)
 
-- Visual Studio 2019 or higher
+- Visual Studio 2022 or higher
 
 - PhysX SDK 3.4.2 (Multithreaded DLL, x64/win32, Headers are included)
 
