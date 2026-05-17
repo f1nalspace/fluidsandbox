@@ -299,9 +299,9 @@ static bool gShowOSD = true;
 static size_t gTotalActors = 0;
 static size_t gDrawedActors = 0;
 static uint32_t gActiveParticleCount = 0;
-static float gFps = 0;
+static double gFps = 0;
 static int gTotalFrames = 0;
-static float gAppStartTime = 0.0f;
+static fplTimestamp gAppStartTime = fplZeroInit;
 
 // For simulation
 constexpr float DefaultRigidBodyDensity = 0.05f;
@@ -408,7 +408,7 @@ constexpr static uint32_t MaxFontVBOIndexCount = MaxFontVBOQuadCount * 6;
 static DynamicVBO *gFontVBO = nullptr;
 
 // Timing
-static float gTotalTimeElapsed = 0;
+static fplSeconds gTotalTimeElapsed = 0;
 static float gPhysicsAccumulator = 0;
 static bool gPaused = false;
 
@@ -826,7 +826,7 @@ static void DrawGrid(const glm::mat4 &mvp) {
 void UpdatePhysX(const float frametime) {
 	// Update water external direction if required
 	if (gFluidLatestExternalAccelerationTime > -1) {
-		uint64_t current = fplGetTimeInMillisecondsLP();
+		fplMilliseconds current = fplMillisecondsQuery();
 		if ((int64_t)current > gFluidLatestExternalAccelerationTime) {
 			gPhysicsParticles->SetExternalAcceleration(glm::vec3(0.0f, 0.0f, 0.0f));
 			gFluidLatestExternalAccelerationTime = -1;
@@ -1569,13 +1569,13 @@ static void OnRender2(FluidSandbox &app, const int windowWidth, const int window
 }
 
 void OnRender(const int windowWidth, const int windowHeight, const float frametime) {
-	float realFrametimeStart = (float)fplGetTimeInMillisecondsHP();
+	fplTimestamp realFrametimeStart = fplTimestampQuery();
 
 	// TODO(final): Revisit any time / delta computation, because its not correct
 	gTotalFrames++;
-	if ((realFrametimeStart - gAppStartTime) > 1000.0f) {
-		float elapsedTime = float(realFrametimeStart - gAppStartTime);
-		gFps = (((float)gTotalFrames * 1000.0f) / elapsedTime);
+	fplSeconds elapsed = fplTimestampElapsed(gAppStartTime, realFrametimeStart);
+	if (elapsed > 1.0) {
+		gFps = (double)gTotalFrames / elapsed;
 		gAppStartTime = realFrametimeStart;
 		gTotalFrames = 0;
 	}
@@ -1641,8 +1641,9 @@ void OnRender(const int windowWidth, const int windowHeight, const float frameti
 	// Draw frame
 	gRenderer->Flip();
 
-	float curTime = (float)fplGetTimeInMillisecondsHP();
-	gTotalTimeElapsed += (curTime - realFrametimeStart);
+	fplTimestamp curTime = fplTimestampQuery();
+	elapsed = fplTimestampElapsed(realFrametimeStart, curTime);
+	gTotalTimeElapsed += elapsed;
 }
 
 enum class MouseAction: int {
@@ -1760,7 +1761,7 @@ static void ToggleFluidGPUAcceleration() {
 }
 
 static void SetFluidExternalAcceleration(const glm::vec3 &acc) {
-	gFluidLatestExternalAccelerationTime = fplGetTimeInMillisecondsLP() + 3000; // 3 Seconds
+	gFluidLatestExternalAccelerationTime = fplMillisecondsQuery() + 3000; // 3 Seconds
 	gPhysicsParticles->SetExternalAcceleration(acc);
 }
 
@@ -2415,7 +2416,7 @@ int main(int argc, char **argv) {
 	platformSettings.window.windowSize.height = DefaultWindowHeight;
 	platformSettings.window.isFullscreen = false;
 	platformSettings.video.isVSync = true;
-	platformSettings.video.graphics.opengl.compabilityFlags = fplOpenGLCompabilityFlags_Legacy;
+	platformSettings.video.graphics.opengl.compatibilityFlags = fplOpenGLCompatibilityFlags_Legacy;
 	platformSettings.video.graphics.opengl.majorVersion = 2;
 	platformSettings.video.graphics.opengl.minorVersion = 1;
 	fplCopyString(APPTITLE, platformSettings.window.title, fplArrayCount(platformSettings.window.title));
@@ -2514,7 +2515,7 @@ int main(int argc, char **argv) {
 		fplEvent ev;
 
 		float frametime = 1.0f / 60.0f;
-		fplWallClock lastTime = fplGetWallClock();
+		fplTimestamp lastTime = fplTimestampQuery();
 		fplConsoleFormatOut("Main loop\n\n");
 		while (fplWindowUpdate()) {
 			while (fplPollEvent(&ev)) {
@@ -2554,8 +2555,8 @@ int main(int argc, char **argv) {
 			OnRender2(app, winSize.width, winSize.height, frametime);
 #endif
 
-			fplWallClock endTime = fplGetWallClock();
-			double wallDelta = fplGetWallDelta(lastTime, endTime);
+			fplTimestamp endTime = fplTimestampQuery();
+			fplSeconds wallDelta = fplTimestampElapsed(lastTime, endTime);
 			lastTime = endTime;
 		}
 

@@ -40,10 +40,10 @@ namespace COSLowLevel {
 
 	uint8_t *COSLowLevel::getBinaryFileContent(const std::string &filePath) {
 		fplFileHandle file;
-		if(fplOpenBinaryFile(filePath.c_str(), &file)) {
-			size_t len = fplGetFileSizeFromHandle(&file);
+		if(fplFileOpenBinary(filePath.c_str(), &file)) {
+			size_t len = fplFileGetSizeFromHandle(&file);
 			uint8_t *result = new uint8_t[len];
-			fplReadFileBlock(&file, len, &result[0], len);
+			fplFileReadBlock(&file, len, &result[0], len);
 			return(result);
 		} else {
 			return(nullptr);
@@ -58,17 +58,17 @@ namespace COSLowLevel {
 	std::vector<std::string> COSLowLevel::getFilesInDirectory(const std::string &folderPath, const std::string &filter) {
 		std::vector<std::string> result;
 		fplFileEntry entry;
-		for(bool isValid = fplListDirBegin(folderPath.c_str(), filter.c_str(), &entry); isValid; isValid = fplListDirNext(&entry)) {
+		for(bool isValid = fplDirectoryListBegin(folderPath.c_str(), filter.c_str(), &entry); isValid; isValid = fplDirectoryListNext(&entry)) {
 			if(entry.type == fplFileEntryType_File) {
 				result.push_back(std::string(entry.name));
 			}
 		}
-		fplListDirEnd(&entry);
+		fplDirectoryListEnd(&entry);
 		return(result);
 	}
 
 	double COSLowLevel::getTimeMilliSeconds() {
-		double result = fplGetTimeInMillisecondsHP();
+		double result = (double)fplMillisecondsQuery() / 1000.0;
 		return(result);
 	}
 

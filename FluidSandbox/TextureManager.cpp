@@ -49,7 +49,7 @@ private:
 				if(data != nullptr)
 					delete[] data;
 				if(file.isValid)
-					fplCloseFile(&file);
+					fplFileClose(&file);
 			}
 		}
 	};
@@ -170,21 +170,21 @@ public:
 		// NOTE(final): Context should be released automatically when functions goes out-of-scope, regardless if failed or not
 		LoadContext ctx = LoadContext();
 		std::cout << "Load image file '" << filename << "'" << std::endl;
-		if(!fplOpenBinaryFile(filename, &ctx.file)) {
+		if(!fplFileOpenBinary(filename, &ctx.file)) {
 			std::cerr << "Failed to load the image file '" << filename << "'!" << std::endl;
 			ctx.Release();
 			return(false);
 		}
-		ctx.dataSize = fplGetFileSizeFromHandle(&ctx.file);
+		ctx.dataSize = fplFileGetSizeFromHandle(&ctx.file);
 		ctx.data = new uint8_t[ctx.dataSize];
-		size_t read = fplReadFileBlock(&ctx.file, ctx.dataSize, ctx.data, ctx.dataSize);
+		size_t read = fplFileReadBlock(&ctx.file, ctx.dataSize, ctx.data, ctx.dataSize);
 		if(read != ctx.dataSize) {
 			std::cerr << "Failed to load image file '" << filename << "'! Only " << read << " was read from " << ctx.dataSize << " bytes." << std::endl;
 			ctx.Release();
 			return(false);
 		}
 		std::cout << "Successfully loaded image file '" << filename << "'" << std::endl;
-		fplCloseFile(&ctx.file); // File is not needed anymore
+		fplFileClose(&ctx.file); // File is not needed anymore
 
 		std::cout << "  Decode image file '" << filename << "' with size of " << ctx.dataSize << std::endl;
 		int width = 0, height = 0, components = 0;
