@@ -1,17 +1,9 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
-    <ProjectConfiguration Include="Debug|Win32">
-      <Configuration>Debug</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
     <ProjectConfiguration Include="Debug|x64">
       <Configuration>Debug</Configuration>
       <Platform>x64</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="Release|Win32">
-      <Configuration>Release</Configuration>
-      <Platform>Win32</Platform>
     </ProjectConfiguration>
     <ProjectConfiguration Include="Release|x64">
       <Configuration>Release</Configuration>
@@ -32,18 +24,7 @@
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <PlatformToolset>v145</PlatformToolset>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
-    <CharacterSet>Unicode</CharacterSet>
-    <WholeProgramOptimization>true</WholeProgramOptimization>
-    <PlatformToolset>v145</PlatformToolset>
-  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
-    <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v145</PlatformToolset>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <CharacterSet>Unicode</CharacterSet>
     <PlatformToolset>v145</PlatformToolset>
@@ -54,30 +35,18 @@
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
     <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)Build\FluidSandbox-$(Configuration)-$(Platform)\</OutDir>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)Build\FluidSandbox-$(Configuration)-$(Platform)\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)Immediates\FluidSandbox-$(Configuration)-$(Platform)\</IntDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)Immediates\FluidSandbox-$(Configuration)-$(Platform)\</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</LinkIncremental>
-    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</LinkIncremental>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)Build\FluidSandbox-$(Configuration)-$(Platform)\</OutDir>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)Build\FluidSandbox-$(Configuration)-$(Platform)\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)Immediates\FluidSandbox-$(Configuration)-$(Platform)\</IntDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)Immediates\FluidSandbox-$(Configuration)-$(Platform)\</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkIncremental>
-    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</LinkIncremental>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -96,7 +65,7 @@
       <SubSystem>Console</SubSystem>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <IgnoreSpecificDefaultLibraries>mcvcrtd.lib;libcmt.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
-      <AdditionalLibraryDirectories>$(SolutionDir)Libraries\PhysX\physx\lib\$(Platform)\;$(SolutionDir)Libraries\PhysX\pxshared\lib\$(Platform)\</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)Libraries\PhysX\physx\lib\windows-x64-debug\;$(SolutionDir)Libraries\PhysX\pxshared\lib\windows-x64-debug\</AdditionalLibraryDirectories>
       <AdditionalDependencies>PhysX3DEBUG_x64.lib;PhysX3CommonDEBUG_x64.lib;PhysX3ExtensionsDEBUG.lib;PxFoundationDEBUG_x64.lib;PxTaskDEBUG_x64.lib;PxPvdSDKDEBUG_x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
@@ -109,42 +78,9 @@ Copy "$(ProjectDir)shaders\*.fragment" "$(OutDir)shaders"
 Copy "$(ProjectDir)scenarios\*.xml" "$(OutDir)scenarios"
 Copy "$(ProjectDir)scene.xml" "$(OutDir)"
 Copy "$(ProjectDir)textures\*.*" "$(OutDir)textures"
-Copy "$(SolutionDir)Libraries\PhysX\physx\bin\$(Platform)\*.dll" "$(OutDir)"
-Copy "$(SolutionDir)Libraries\PhysX\pxshared\bin\$(Platform)\*.dll" "$(OutDir)"</Command>
-    </PostBuildEvent>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <ClCompile>
-      <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_SCL_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
-      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <PrecompiledHeader>
-      </PrecompiledHeader>
-      <WarningLevel>Level3</WarningLevel>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>$(SolutionDir)Libraries\PhysX\physx\include\;$(SolutionDir)Libraries\PhysX\pxshared\include\;$(SolutionDir)Libraries\glm\include\;$(SolutionDir)Libraries\stb\include\;$(SolutionDir)Libraries\final\include\</AdditionalIncludeDirectories>
-    </ClCompile>
-    <Link>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-      <SubSystem>Console</SubSystem>
-      <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
-      <IgnoreSpecificDefaultLibraries>mcvcrtd.lib;libcmt.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
-      <AdditionalLibraryDirectories>$(SolutionDir)Libraries\PhysX\physx\lib\$(Platform)\;$(SolutionDir)Libraries\PhysX\pxshared\lib\$(Platform)\</AdditionalLibraryDirectories>
-      <AdditionalDependencies>opengl32.lib;PhysX3DEBUG_x86.lib;PhysX3CommonDEBUG_x86.lib;PhysX3ExtensionsDEBUG.lib;PxFoundationDEBUG_x86.lib;PxTaskDEBUG_x86.lib;PxPvdSDKDEBUG_x86.lib;%(AdditionalDependencies)</AdditionalDependencies>
-    </Link>
-    <PostBuildEvent>
-      <Command>REM Copy shader files
-Mkdir "$(OutDir)shaders"
-Mkdir "$(OutDir)scenarios"
-Mkdir "$(OutDir)textures"
-Copy "$(ProjectDir)shaders\*.vertex" "$(OutDir)shaders"
-Copy "$(ProjectDir)shaders\*.fragment" "$(OutDir)shaders"
-Copy "$(ProjectDir)scenarios\*.xml" "$(OutDir)scenarios"
-Copy "$(ProjectDir)scene.xml" "$(OutDir)"
-Copy "$(ProjectDir)textures\*.*" "$(OutDir)textures"
-Copy "$(SolutionDir)Libraries\PhysX\physx\bin\$(Platform)\*.dll" "$(OutDir)"
-Copy "$(SolutionDir)Libraries\PhysX\pxshared\bin\$(Platform)\*.dll" "$(OutDir)"</Command>
+Copy "$(SolutionDir)Libraries\PhysX\physx\bin\windows-x64-debug\*.dll" "$(OutDir)"
+Copy "$(SolutionDir)Libraries\PhysX\physx\bin\windows-x64-shared\*.dll" "$(OutDir)"
+Copy "$(SolutionDir)Libraries\PhysX\pxshared\bin\windows-x64-debug\*.dll" "$(OutDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -167,7 +103,7 @@ Copy "$(SolutionDir)Libraries\PhysX\pxshared\bin\$(Platform)\*.dll" "$(OutDir)"<
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <IgnoreSpecificDefaultLibraries>mcvcrtd.lib;libcmt.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
-      <AdditionalLibraryDirectories>$(SolutionDir)Libraries\PhysX\physx\lib\$(Platform)\;$(SolutionDir)Libraries\PhysX\pxshared\lib\$(Platform)\</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)Libraries\PhysX\physx\lib\windows-x64-release\;$(SolutionDir)Libraries\PhysX\pxshared\lib\windows-x64-release\</AdditionalLibraryDirectories>
       <AdditionalDependencies>PhysX3_x64.lib;PhysX3Common_x64.lib;PhysX3Extensions.lib;PxFoundation_x64.lib;PxTask_x64.lib;PxPvdSDK_x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
@@ -180,45 +116,9 @@ Copy "$(ProjectDir)shaders\*.fragment" "$(OutDir)shaders"
 Copy "$(ProjectDir)scenarios\*.xml" "$(OutDir)scenarios"
 Copy "$(ProjectDir)scene.xml" "$(OutDir)"
 Copy "$(ProjectDir)textures\*.*" "$(OutDir)textures"
-Copy "$(SolutionDir)Libraries\PhysX\physx\bin\$(Platform)\*.dll" "$(OutDir)"
-Copy "$(SolutionDir)Libraries\PhysX\pxshared\bin\$(Platform)\*.dll" "$(OutDir)"</Command>
-    </PostBuildEvent>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <ClCompile>
-      <Optimization>MaxSpeed</Optimization>
-      <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <FunctionLevelLinking>true</FunctionLevelLinking>
-      <PrecompiledHeader>
-      </PrecompiledHeader>
-      <WarningLevel>Level3</WarningLevel>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>$(SolutionDir)Libraries\PhysX\physx\include\;$(SolutionDir)Libraries\PhysX\pxshared\include\;$(SolutionDir)Libraries\glm\include\;$(SolutionDir)Libraries\stb\include\;$(SolutionDir)Libraries\final\include\</AdditionalIncludeDirectories>
-    </ClCompile>
-    <Link>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-      <SubSystem>Console</SubSystem>
-      <OptimizeReferences>true</OptimizeReferences>
-      <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
-      <IgnoreSpecificDefaultLibraries>mcvcrtd.lib;libcmt.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
-      <AdditionalLibraryDirectories>$(SolutionDir)Libraries\PhysX\physx\lib\$(Platform)\;$(SolutionDir)Libraries\PhysX\pxshared\lib\$(Platform)\</AdditionalLibraryDirectories>
-      <AdditionalDependencies>PhysX3_x86.lib;PhysX3Common_x86.lib;PhysX3Extensions.lib;PxFoundation_x86.lib;PxTask_x86.lib;PxPvdSDK_x86.lib;%(AdditionalDependencies)</AdditionalDependencies>
-    </Link>
-    <PostBuildEvent>
-      <Command>REM Copy shader files
-Mkdir "$(OutDir)shaders"
-Mkdir "$(OutDir)scenarios"
-Mkdir "$(OutDir)textures"
-Copy "$(ProjectDir)shaders\*.vertex" "$(OutDir)shaders"
-Copy "$(ProjectDir)shaders\*.fragment" "$(OutDir)shaders"
-Copy "$(ProjectDir)scenarios\*.xml" "$(OutDir)scenarios"
-Copy "$(ProjectDir)scene.xml" "$(OutDir)"
-Copy "$(ProjectDir)textures\*.*" "$(OutDir)textures"
-Copy "$(SolutionDir)Libraries\PhysX\physx\bin\$(Platform)\*.dll" "$(OutDir)"
-Copy "$(SolutionDir)Libraries\PhysX\pxshared\bin\$(Platform)\*.dll" "$(OutDir)"</Command>
+Copy "$(SolutionDir)Libraries\PhysX\physx\bin\windows-x64-release\*.dll" "$(OutDir)"
+Copy "$(SolutionDir)Libraries\PhysX\physx\bin\windows-x64-shared\*.dll" "$(OutDir)"
+Copy "$(SolutionDir)Libraries\PhysX\pxshared\bin\windows-x64-release\*.dll" "$(OutDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -289,8 +189,6 @@ Copy "$(SolutionDir)Libraries\PhysX\pxshared\bin\$(Platform)\*.dll" "$(OutDir)"<
   </ItemGroup>
   <ItemGroup>
     <Text Include="LICENSE.txt">
-      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</DeploymentContent>
-      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</DeploymentContent>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
     </Text>

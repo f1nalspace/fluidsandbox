@@ -25,7 +25,7 @@ MPL v.2 licensed. See LICENSE.txt for more details.
 
 - Visual Studio 2022 or higher
 
-- PhysX SDK 3.4.2 (Multithreaded DLL, x64/win32, Headers are included)
+- PhysX SDK 3.4.2 (Multithreaded DLL, x64, Headers are included)
 
 - Final Platform Layer (included)
 - Final Dynamic OpenGL (included)
@@ -36,54 +36,58 @@ MPL v.2 licensed. See LICENSE.txt for more details.
 
 ## How to compile:
 
-- Compile the PhysX SDK as Multithreaded DLLs for x86 and x64 platform with the configurations Debug/Release
+Only the 64-bit (x64) platform is supported. 32-bit (x86/Win32) builds have been removed.
+
+- Compile the PhysX SDK as Multithreaded DLLs for the x64 platform with the configurations Debug/Release
 NOTE: Do not compile with static CRT library, change to (Multithreaded DLL and Multithreaded Debug DLL).
 
-- Copy all 10 resulting PhysX DLL files into the folders for each platform:
-	- /Libraries/PhysX/physx/bin/win32/
-		- nvToolsExt32_1.dll
-		- PhysX3_x86.dll
-		- PhysX3Common_x86.dll
-		- PhysX3CommonDEBUG_x86.dll
-		- PhysX3Cooking_x86.dll
-		- PhysX3CookingDEBUG_x86.dll
-		- PhysX3DEBUG_x86.dll
-		- PhysX3Gpu_x86.dll
-		- PhysX3GpuDEBUG_x86.dll
-		- PhysXDevice.dll
-
-	/Libraries/PhysX/physx/bin/x64/
-		- nvToolsExt32_1.dll
-		- PhysX3_x64.dll
-		- PhysX3Common_x64.dll
+- Copy the resulting PhysX DLL files into the per-configuration folders:
+	- /Libraries/PhysX/physx/bin/windows-x64-debug/
 		- PhysX3CommonDEBUG_x64.dll
-		- PhysX3Cooking_x64.dll
 		- PhysX3CookingDEBUG_x64.dll
 		- PhysX3DEBUG_x64.dll
-		- PhysX3Gpu_x64.dll
 		- PhysX3GpuDEBUG_x64.dll
-		- PhysXDevice.dll
 
-- Copy all 8 resulting PhysX LIB files into the folders respectively:
-	- /Libraries/PhysX/physx/lib/win32/
-		- PhysX3_x86.lib
-		- PhysX3Common_x86.lib
-		- PhysX3CommonDEBUG_x86.lib
-		- PhysX3Cooking_x86.lib
-		- PhysX3CookingDEBUG_x86.lib
-		- PhysX3DEBUG_x86.lib
-		- PhysX3Extensions.lib
-		- PhysX3ExtensionsDEBUG.lib
+	- /Libraries/PhysX/physx/bin/windows-x64-release/
+		- PhysX3Common_x64.dll
+		- PhysX3Cooking_x64.dll
+		- PhysX3Gpu_x64.dll
+		- PhysX3_x64.dll
 
-	- /Libraries/PhysX/physx/lib/x64/
-		- PhysX3_x64.lib
-		- PhysX3Common_x64.lib
+	- /Libraries/PhysX/physx/bin/windows-x64-shared/ (configuration-neutral, used by both)
+		- nvToolsExt64_1.dll
+		- PhysXDevice64.dll
+
+	- /Libraries/PhysX/pxshared/bin/windows-x64-debug/
+		- PxFoundationDEBUG_x64.dll
+		- PxPvdSDKDEBUG_x64.dll
+
+	- /Libraries/PhysX/pxshared/bin/windows-x64-release/
+		- PxFoundation_x64.dll
+		- PxPvdSDK_x64.dll
+
+- Copy the resulting PhysX LIB files into the per-configuration folders:
+	- /Libraries/PhysX/physx/lib/windows-x64-debug/
 		- PhysX3CommonDEBUG_x64.lib
-		- PhysX3Cooking_x64.lib
 		- PhysX3CookingDEBUG_x64.lib
 		- PhysX3DEBUG_x64.lib
-		- PhysX3Extensions.lib
 		- PhysX3ExtensionsDEBUG.lib
+
+	- /Libraries/PhysX/physx/lib/windows-x64-release/
+		- PhysX3Common_x64.lib
+		- PhysX3Cooking_x64.lib
+		- PhysX3Extensions.lib
+		- PhysX3_x64.lib
+
+	- /Libraries/PhysX/pxshared/lib/windows-x64-debug/
+		- PxFoundationDEBUG_x64.lib
+		- PxPvdSDKDEBUG_x64.lib
+		- PxTaskDEBUG_x64.lib
+
+	- /Libraries/PhysX/pxshared/lib/windows-x64-release/
+		- PxFoundation_x64.lib
+		- PxPvdSDK_x64.lib
+		- PxTask_x64.lib
 
 - Copy the include files for PhysX SDK in the folder:
 	- /Libraries/PhysX/pxshared/include/ (~160 files)
