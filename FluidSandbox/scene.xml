@@ -18,17 +18,20 @@
     <ParticleDistanceFactor>2.0</ParticleDistanceFactor>
     <!-- Particle radius (Default: 0.05) -->
     <ParticleRadius>0.05</ParticleRadius>
-    <!-- Max distance the particles will move (Default: 0.3) -->
-		<MaxMotionDistance>0.3</MaxMotionDistance>
-		<!-- Rest offset(Default: 0.12) -->
-		<RestOffset>0.12</RestOffset>
-		<!-- Contact offset (Default: 0.24) -->
-		<ContactOffset>0.24</ContactOffset>
+    <!-- Max distance a particle may move per step. Must stay below the grid
+         cell size (~0.25 here) so a particle can never skip a grid cell. (Default: 0.1) -->
+		<MaxMotionDistance>0.1</MaxMotionDistance>
+		<!-- Particle-vs-rigidbody rest distance. Must stay <= restParticleDistance
+		     (= ParticleRadius * ParticleDistanceFactor = 0.1) to avoid over-compression
+		     against walls and the resulting corner explosions. (Default: 0.05) -->
+		<RestOffset>0.05</RestOffset>
+		<!-- Contact offset, must be slightly larger than RestOffset (Default: 0.075) -->
+		<ContactOffset>0.075</ContactOffset>
     <!-- Viscosity (Default: 40, Range 5 - 300) -->
 		<Viscosity>40.0</Viscosity>
     <!-- Stiffness/Gas-Constant (Default: 50, Range 1 - 200) -->
 		<Stiffness>50.0</Stiffness>
-    <!-- Restitution (Default: 0.25, Range 0.0 - 1.0) -->
+    <!-- Restitution (Default: 0.1, Range 0.0 - 1.0). 0 = no bounce, most water-like -->
 		<Restitution>0.0</Restitution>
     <!-- Damping (Default: 0.001, Range 0.0 - 1.0) -->
 		<Damping>0.001</Damping>
@@ -36,8 +39,9 @@
 		<DynamicFriction>0.001</DynamicFriction>
     <!-- Static friction (Default: 0.0, Range 0.0 - 1.0) -->
     <StaticFriction>0</StaticFriction>
-    <!-- Particle mass (Default: 0.0001, Range 0.0 - 1.0) -->
-		<ParticleMass>0.0001</ParticleMass>
+    <!-- Particle mass (Default: 0.005, Range 0.0 - 1.0). Too low amplifies every
+         pressure error into an explosive acceleration (acceleration = force / mass). -->
+		<ParticleMass>0.005</ParticleMass>
     <!-- Particle render factor (Default: 1.5, Range: 0.0 - 10.0) -->
 		<ParticleRenderFactor>1.5</ParticleRenderFactor>
     <!-- Minimum density for smallest particle (Default: 0.01, Range: 0.0 - 1.0) -->
