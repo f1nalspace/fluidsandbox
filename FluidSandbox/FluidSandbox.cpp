@@ -2121,7 +2121,7 @@ static void InitResources(const char *appPath) {
 	printf("  Create texture manager\n");
 	gTexMng = new CTextureManager();
 
-	gSkyboxCubemap = gTexMng->addCubemap("skybox", "textures\\skybox_texture.jpg");
+	gSkyboxCubemap = gTexMng->addCubemap("skybox", "textures/skybox_texture.jpg");
 
 	gFontAtlas16 = FontAtlas::LoadFromMemory(sulphurPointRegularData, 0, 16.0f, 32, 255);
 	gFontAtlas32 = FontAtlas::LoadFromMemory(sulphurPointRegularData, 0, 32.0f, 32, 255);
@@ -2146,28 +2146,28 @@ static void InitResources(const char *appPath) {
 	// Create colored shader
 	printf("  Create shaders renderer\n");
 	gColoredShader = new CColoredShader();
-	Utils::attachShaderFromFile(gColoredShader, GL_VERTEX_SHADER, "shaders\\Colored.vertex", "    ");
-	Utils::attachShaderFromFile(gColoredShader, GL_FRAGMENT_SHADER, "shaders\\Colored.fragment", "    ");
+	Utils::attachShaderFromFile(gColoredShader, GL_VERTEX_SHADER, "shaders/Colored.vertex", "    ");
+	Utils::attachShaderFromFile(gColoredShader, GL_FRAGMENT_SHADER, "shaders/Colored.fragment", "    ");
 
 	// Create line shader
 	gLineShader = new CLineShader();
-	Utils::attachShaderFromFile(gLineShader, GL_VERTEX_SHADER, "shaders\\Line.vertex", "    ");
-	Utils::attachShaderFromFile(gLineShader, GL_FRAGMENT_SHADER, "shaders\\Line.fragment", "    ");
+	Utils::attachShaderFromFile(gLineShader, GL_VERTEX_SHADER, "shaders/Line.vertex", "    ");
+	Utils::attachShaderFromFile(gLineShader, GL_FRAGMENT_SHADER, "shaders/Line.fragment", "    ");
 
 	// Create lightning shader
 	gLightingShader = new CLightingShader();
-	Utils::attachShaderFromFile(gLightingShader, GL_VERTEX_SHADER, "shaders\\Lighting.vertex", "    ");
-	Utils::attachShaderFromFile(gLightingShader, GL_FRAGMENT_SHADER, "shaders\\Lighting.fragment", "    ");
+	Utils::attachShaderFromFile(gLightingShader, GL_VERTEX_SHADER, "shaders/Lighting.vertex", "    ");
+	Utils::attachShaderFromFile(gLightingShader, GL_FRAGMENT_SHADER, "shaders/Lighting.fragment", "    ");
 
 	// Create skybox shader
 	gSkyboxShader = new CSkyboxShader();
-	Utils::attachShaderFromFile(gSkyboxShader, GL_VERTEX_SHADER, "shaders\\Skybox.vertex", "    ");
-	Utils::attachShaderFromFile(gSkyboxShader, GL_FRAGMENT_SHADER, "shaders\\Skybox.fragment", "    ");
+	Utils::attachShaderFromFile(gSkyboxShader, GL_VERTEX_SHADER, "shaders/Skybox.vertex", "    ");
+	Utils::attachShaderFromFile(gSkyboxShader, GL_FRAGMENT_SHADER, "shaders/Skybox.fragment", "    ");
 
 	// Create font shader
 	gFontShader = new CFontShader();
-	Utils::attachShaderFromFile(gFontShader, GL_VERTEX_SHADER, "shaders\\FontTexture.vertex", "    ");
-	Utils::attachShaderFromFile(gFontShader, GL_FRAGMENT_SHADER, "shaders\\FontTexture.fragment", "    ");
+	Utils::attachShaderFromFile(gFontShader, GL_VERTEX_SHADER, "shaders/FontTexture.vertex", "    ");
+	Utils::attachShaderFromFile(gFontShader, GL_FRAGMENT_SHADER, "shaders/FontTexture.fragment", "    ");
 
 	// Create geometry buffers
 	printf("  Create vertex buffers\n");

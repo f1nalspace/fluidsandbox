@@ -50,49 +50,49 @@ CScreenSpaceFluidRendering::CScreenSpaceFluidRendering(const int width, const in
 
 		// Create shaders
 		{
-			std::string pointSpritesShaderPath = std::string("shaders\\" + std::string(CPointSpritesShader::ShaderName));
+			std::string pointSpritesShaderPath = std::string("shaders/" + std::string(CPointSpritesShader::ShaderName));
 			pointSpritesShader = new CPointSpritesShader();
 			Utils::attachShaderFromFile(pointSpritesShader, GL_VERTEX_SHADER, (pointSpritesShaderPath + ".vertex").c_str(), "    ");
 			Utils::attachShaderFromFile(pointSpritesShader, GL_FRAGMENT_SHADER, (pointSpritesShaderPath + ".fragment").c_str(), "    ");
 		}
 		{
-			std::string pointsShaderPath = std::string("shaders\\" + std::string(CPointsShader::ShaderName));
+			std::string pointsShaderPath = std::string("shaders/" + std::string(CPointsShader::ShaderName));
 			pointsShader = new CPointsShader();
 			Utils::attachShaderFromFile(pointsShader, GL_VERTEX_SHADER, (pointsShaderPath + ".vertex").c_str(), "    ");
 			Utils::attachShaderFromFile(pointsShader, GL_FRAGMENT_SHADER, (pointsShaderPath + ".fragment").c_str(), "    ");
 		}
 		{
-			std::string depthShaderPath = std::string("shaders\\" + std::string(CDepthShader::ShaderName));
+			std::string depthShaderPath = std::string("shaders/" + std::string(CDepthShader::ShaderName));
 			depthShader = new CDepthShader();
 			Utils::attachShaderFromFile(depthShader, GL_VERTEX_SHADER, (depthShaderPath + ".vertex").c_str(), "    ");
 			Utils::attachShaderFromFile(depthShader, GL_FRAGMENT_SHADER, (depthShaderPath + ".fragment").c_str(), "    ");
 		}
 		{
-			std::string thicknessShaderPath = std::string("shaders\\" + std::string(CThicknessShader::ShaderName));
+			std::string thicknessShaderPath = std::string("shaders/" + std::string(CThicknessShader::ShaderName));
 			thicknessShader = new CThicknessShader();
 			Utils::attachShaderFromFile(thicknessShader, GL_VERTEX_SHADER, (thicknessShaderPath + ".vertex").c_str(), "    ");
 			Utils::attachShaderFromFile(thicknessShader, GL_FRAGMENT_SHADER, (thicknessShaderPath + ".fragment").c_str(), "    ");
 		}
 		{
-			std::string depthBlurShaderPath = std::string("shaders\\" + std::string(CDepthBlurShader::ShaderName));
+			std::string depthBlurShaderPath = std::string("shaders/" + std::string(CDepthBlurShader::ShaderName));
 			depthBlurShader = new CDepthBlurShader();
 			Utils::attachShaderFromFile(depthBlurShader, GL_VERTEX_SHADER, (depthBlurShaderPath + ".vertex").c_str(), "    ");
 			Utils::attachShaderFromFile(depthBlurShader, GL_FRAGMENT_SHADER, (depthBlurShaderPath + ".fragment").c_str(), "    ");
 		}
 		{
-			std::string clearWaterShaderPath = std::string("shaders\\" + std::string(CWaterShader::ClearName));
+			std::string clearWaterShaderPath = std::string("shaders/" + std::string(CWaterShader::ClearName));
 			clearWaterShader = new CWaterShader();
 			Utils::attachShaderFromFile(clearWaterShader, GL_VERTEX_SHADER, (clearWaterShaderPath + ".vertex").c_str(), "    ");
 			Utils::attachShaderFromFile(clearWaterShader, GL_FRAGMENT_SHADER, (clearWaterShaderPath + ".fragment").c_str(), "    ");
 		}
 		{
-			std::string colorWaterShaderPath = std::string("shaders\\" + std::string(CWaterShader::ColorName));
+			std::string colorWaterShaderPath = std::string("shaders/" + std::string(CWaterShader::ColorName));
 			colorWaterShader = new CWaterShader();
 			Utils::attachShaderFromFile(colorWaterShader, GL_VERTEX_SHADER, (colorWaterShaderPath + ".vertex").c_str(), "    ");
 			Utils::attachShaderFromFile(colorWaterShader, GL_FRAGMENT_SHADER, (colorWaterShaderPath + ".fragment").c_str(), "    ");
 		}
 		{
-			std::string debugWaterShaderPath = std::string("shaders\\" + std::string(CWaterShader::DebugName));
+			std::string debugWaterShaderPath = std::string("shaders/" + std::string(CWaterShader::DebugName));
 			debugWaterShader = new CWaterShader();
 			Utils::attachShaderFromFile(debugWaterShader, GL_VERTEX_SHADER, (debugWaterShaderPath + ".vertex").c_str(), "    ");
 			Utils::attachShaderFromFile(debugWaterShader, GL_FRAGMENT_SHADER, (debugWaterShaderPath + ".fragment").c_str(), "    ");
