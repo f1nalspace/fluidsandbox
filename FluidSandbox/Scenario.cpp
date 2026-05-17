@@ -13,6 +13,7 @@
 
 #include <glm/glm.hpp>
 
+#include <final_platform_layer.h>
 #include <final_xml.h>
 
 #include "OSLowLevel.h"
@@ -85,7 +86,7 @@ Scenario *Scenario::load(const char *filePath, CScene *scene) {
 		// Name
 		const fxmlTag *nameNode = fxmlFindTagByName(rootNode, "Name");
 		if(nameNode) {
-			strcpy_s(newScenario->displayName, sizeof(newScenario->displayName), nameNode->value);
+			fplCopyString(nameNode->value, newScenario->displayName, sizeof(newScenario->displayName));
 		}
 
 		// Gravity
@@ -160,11 +161,11 @@ Scenario *Scenario::load(const char *filePath, CScene *scene) {
 				bool particleDrain = xmlUtils.getAttributeBool(actorNode, "particleDrain", false);
 
 				Actor *newBody = nullptr;
-				if(strcmp(primitive.c_str(), "cube") == 0) {
+				if(fplIsStringEqual(primitive.c_str(), "cube")) {
 					newBody = new CubeActor(atype, extents);
-				} else if(strcmp(primitive.c_str(), "sphere") == 0) {
+				} else if(fplIsStringEqual(primitive.c_str(), "sphere")) {
 					newBody = new SphereActor(atype, radius);
-				} else if(strcmp(primitive.c_str(), "capsule") == 0) {
+				} else if(fplIsStringEqual(primitive.c_str(), "capsule")) {
 					newBody = new CapsuleActor(atype, radius, halfHeight);
 				} else {
 					std::cerr << "    Actor primitive type '" << primitive << "' is not valid!" << std::endl;

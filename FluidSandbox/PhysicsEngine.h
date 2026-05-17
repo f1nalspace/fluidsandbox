@@ -12,6 +12,8 @@
 #include <vector>
 #include <cstdint>
 
+#include <final_platform_layer.h>
+
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 
@@ -182,7 +184,7 @@ protected:
 		density(1.0f),
 		shapeCount(0),
 		motionKind(motionKind) {
-		memset(shapes, 0, sizeof(shapes));
+		fplMemoryClear(shapes, sizeof(shapes));
 	}
 public:
 	virtual ~PhysicsRigidBody() {}

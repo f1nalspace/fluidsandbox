@@ -13,6 +13,8 @@
 
 #include <math.h>
 
+#include <final_platform_layer.h>
+
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -49,7 +51,7 @@ struct FluidColor {
 		this->falloff = falloff;
 		this->isClear = isClear;
 		this->name[0] = 0;
-		strcpy_s(this->name, sizeof(this->name), name);
+		fplCopyString(name, this->name, sizeof(this->name));
 		this->falloffScale = isClear ? 0.0f : 0.1f;
 	}
 };

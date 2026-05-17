@@ -604,12 +604,9 @@ std::string VariableManager::Resolve(const std::string &source) const {
 
 VariableValue::VariableValue(const ValueType type):
 	type(type),
-	vec4Value(Vec4Value()),
-	vec3Value(Vec3Value()),
-	stringValue(StringValue()),
-	floatValue(FloatValue()),
-	s32Value(S32Value()),
-	boolValue(BoolValue()) {
+	// Only one union member may be initialized; StringValue is the largest, so
+	// value-initializing it zeroes the entire union storage.
+	stringValue(StringValue()) {
 }
 
 VariableValue::VariableValue(): VariableValue(ValueType::None) {}
@@ -630,12 +627,9 @@ VariableValue::~VariableValue() {
 
 VariableValue::VariableValue(const VariableValue &other):
 	type(other.type),
-	vec4Value(other.vec4Value),
-	vec3Value(other.vec3Value),
-	stringValue(other.stringValue),
-	floatValue(other.floatValue),
-	s32Value(other.s32Value),
-	boolValue(other.boolValue) {
+	// Copying the largest union member duplicates the whole storage regardless
+	// of which member is currently active.
+	stringValue(other.stringValue) {
 }
 
 VariableValue VariableValue::fromS32(const int32_t value) {

@@ -18,13 +18,13 @@
 
 namespace COSLowLevel {
 
-	uint32_t COSLowLevel::getNumCPUCores() {
+	uint32_t getNumCPUCores() {
 		uint32_t result = (uint32_t)fplCPUGetCoreCount();
 		return result;
 	}
 
 
-	std::string COSLowLevel::getTextFileContent(const std::string &filePath) {
+	std::string getTextFileContent(const std::string &filePath) {
 		std::string result = "";
 		std::ifstream myfile(filePath);
 		if(myfile && myfile.is_open()) {
@@ -38,7 +38,7 @@ namespace COSLowLevel {
 		return result;
 	}
 
-	uint8_t *COSLowLevel::getBinaryFileContent(const std::string &filePath) {
+	uint8_t *getBinaryFileContent(const std::string &filePath) {
 		fplFileHandle file;
 		if(fplFileOpenBinary(filePath.c_str(), &file)) {
 			size_t len = fplFileGetSizeFromHandle(&file);
@@ -50,12 +50,12 @@ namespace COSLowLevel {
 		}
 	}
 
-	bool COSLowLevel::fileExists(const char *filePath) {
+	bool fileExists(const char *filePath) {
 		bool result = fplFileExists(filePath);
 		return(result);
 	}
 
-	std::vector<std::string> COSLowLevel::getFilesInDirectory(const std::string &folderPath, const std::string &filter) {
+	std::vector<std::string> getFilesInDirectory(const std::string &folderPath, const std::string &filter) {
 		std::vector<std::string> result;
 		fplFileEntry entry;
 		for(bool isValid = fplDirectoryListBegin(folderPath.c_str(), filter.c_str(), &entry); isValid; isValid = fplDirectoryListNext(&entry)) {
@@ -67,12 +67,12 @@ namespace COSLowLevel {
 		return(result);
 	}
 
-	double COSLowLevel::getTimeMilliSeconds() {
+	double getTimeMilliSeconds() {
 		double result = (double)fplMillisecondsQuery() / 1000.0;
 		return(result);
 	}
 
-	std::string COSLowLevel::getAppPath(const int argc, char **argv) {
+	std::string getAppPath(const int argc, char **argv) {
 		size_t pathLen = fplGetExecutableFilePath(nullptr, 0) + 1;
 		std::string fullPath;
 		fullPath.reserve(pathLen);
@@ -84,7 +84,7 @@ namespace COSLowLevel {
 		return(result);
 	}
 
-	std::string COSLowLevel::pathCombine(const std::string &p1, const std::string &p2) {
+	std::string pathCombine(const std::string &p1, const std::string &p2) {
 		size_t len = fplPathCombine(nullptr, 0, 2, p1.c_str(), p2.c_str()) + 1;
 		std::string result;
 		result.reserve(len);

@@ -179,8 +179,8 @@ License:
 
 // Vector math
 #include <glm/glm.hpp>
-#include <glm/gtc\matrix_transform.hpp>
-#include <glm/gtc\quaternion.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/quaternion.hpp>
 
 // Classes
 #include "Frustum.h"
@@ -217,7 +217,10 @@ License:
 #define APPLICATION_AUTHOR "Torsten Spaete"
 #define APPLICATION_COPYRIGHT "(C) 2015-2026 Torsten Spaete - All rights reserved"
 
-#define CONCAT_TWO(A, B) A ## B
+// Concatenation here only joins string literals - adjacent literals merge by
+// the C++ standard, so no '##' token paste is needed (and '##' on string
+// literals is rejected by GCC/Clang).
+#define CONCAT_TWO(A, B) A B
 #define CONCAT_FIVE(A, B, C, D, E) CONCAT_TWO(A, B) CONCAT_TWO(C, D) E
 
 #if defined(__x86_64__) || defined(_M_X64) || defined(__amd64__)
@@ -1285,19 +1288,19 @@ void RenderOSD(const int windowWidth, const int windowHeight) {
 	osdPos.y = 20;
 
 	// Render text
-	sprintf_s(buffer, "FPS: %3.2f", gFps);
+	fplStringFormat(buffer, sizeof(buffer), "FPS: %3.2f", gFps);
 	RenderOSDLine(osdPos, buffer);
-	sprintf_s(buffer, "Show osd: %s (T)", gShowOSD ? "yes" : "no");
+	fplStringFormat(buffer, sizeof(buffer), "Show osd: %s (T)", gShowOSD ? "yes" : "no");
 	RenderOSDLine(osdPos, buffer);
 
 	if (gShowOSD) {
-		sprintf_s(buffer, "Drawed actors: %zu of %zu", gDrawedActors, gTotalActors);
+		fplStringFormat(buffer, sizeof(buffer), "Drawed actors: %zu of %zu", gDrawedActors, gTotalActors);
 		RenderOSDLine(osdPos, buffer);
-		sprintf_s(buffer, "Total fluid particles: %lu", gActiveParticleCount);
+		fplStringFormat(buffer, sizeof(buffer), "Total fluid particles: %lu", gActiveParticleCount);
 		RenderOSDLine(osdPos, buffer);
-		sprintf_s(buffer, "Draw error: %s", drawingError.c_str());
+		fplStringFormat(buffer, sizeof(buffer), "Draw error: %s", drawingError.c_str());
 		RenderOSDLine(osdPos, buffer);
-		sprintf_s(buffer, "Simulation state (O): %s", gPaused ? "paused" : "running");
+		fplStringFormat(buffer, sizeof(buffer), "Simulation state (O): %s", gPaused ? "paused" : "running");
 		RenderOSDLine(osdPos, buffer);
 
 		// Empty line
@@ -1305,83 +1308,83 @@ void RenderOSD(const int windowWidth, const int windowHeight) {
 
 		const FluidColor &activeFluidColor = gActiveScene->getFluidColor(gSSFCurrentFluidIndex);
 
-		sprintf_s(buffer, "Controls:");
+		fplStringFormat(buffer, sizeof(buffer), "Controls:");
 		RenderOSDLine(osdPos, buffer);
-		sprintf_s(buffer, "Geometry type (1-7): %s", GetActorCreationKindName(gCurrentActorCreationKind));
+		fplStringFormat(buffer, sizeof(buffer), "Geometry type (1-7): %s", GetActorCreationKindName(gCurrentActorCreationKind));
 		RenderOSDLine(osdPos, buffer);
-		sprintf_s(buffer, "Draw Wireframe (W): %s", gDrawWireframe ? "enabled" : "disabled");
+		fplStringFormat(buffer, sizeof(buffer), "Draw Wireframe (W): %s", gDrawWireframe ? "enabled" : "disabled");
 		RenderOSDLine(osdPos, buffer);
-		sprintf_s(buffer, "Draw Boundbox (B): %s", gDrawBoundBox ? "enabled" : "disabled");
+		fplStringFormat(buffer, sizeof(buffer), "Draw Boundbox (B): %s", gDrawBoundBox ? "enabled" : "disabled");
 		RenderOSDLine(osdPos, buffer);
 #if 0
-		sprintf_s(buffer, "Draw Rigidbodies (D): %s", GetDrawRigidbodyStr(gHideRigidBodies));
+		fplStringFormat(buffer, sizeof(buffer), "Draw Rigidbodies (D): %s", GetDrawRigidbodyStr(gHideRigidBodies));
 		RenderOSDLine(osdPos, buffer);
 #endif
-		sprintf_s(buffer, "Fluid Rendering Mode (S): %s", GetFluidRenderMode(gSSFRenderMode));
+		fplStringFormat(buffer, sizeof(buffer), "Fluid Rendering Mode (S): %s", GetFluidRenderMode(gSSFRenderMode));
 		RenderOSDLine(osdPos, buffer);
-		sprintf_s(buffer, "Fluid color (C): %d / %zu - %s", gSSFCurrentFluidIndex + 1, gActiveScene->getFluidColorCount(), activeFluidColor.name);
+		fplStringFormat(buffer, sizeof(buffer), "Fluid color (C): %d / %zu - %s", gSSFCurrentFluidIndex + 1, gActiveScene->getFluidColorCount(), activeFluidColor.name);
 		RenderOSDLine(osdPos, buffer);
-		sprintf_s(buffer, "Fluid detail level (P): %3.2f %s", gSSFDetailFactor * 100.0f, "%");
+		fplStringFormat(buffer, sizeof(buffer), "Fluid detail level (P): %3.2f %s", gSSFDetailFactor * 100.0f, "%");
 		RenderOSDLine(osdPos, buffer);
-		sprintf_s(buffer, "Fluid blur depth active: (M): %s", gSSFBlurActive ? "yes" : "no");
+		fplStringFormat(buffer, sizeof(buffer), "Fluid blur depth active: (M): %s", gSSFBlurActive ? "yes" : "no");
 		RenderOSDLine(osdPos, buffer);
-		sprintf_s(buffer, "Fluid current property (V): %s", GetFluidProperty(gFluidCurrentProperty));
+		fplStringFormat(buffer, sizeof(buffer), "Fluid current property (V): %s", GetFluidProperty(gFluidCurrentProperty));
 		RenderOSDLine(osdPos, buffer);
-		sprintf_s(buffer, "    Fluid viscosity: %f", gCurrentProperties.sim.viscosity);
+		fplStringFormat(buffer, sizeof(buffer), "    Fluid viscosity: %f", gCurrentProperties.sim.viscosity);
 		RenderOSDLine(osdPos, buffer);
-		sprintf_s(buffer, "    Fluid stiffness: %f", gCurrentProperties.sim.stiffness);
+		fplStringFormat(buffer, sizeof(buffer), "    Fluid stiffness: %f", gCurrentProperties.sim.stiffness);
 		RenderOSDLine(osdPos, buffer);
-		sprintf_s(buffer, "    Fluid rest offset: %f", gCurrentProperties.sim.restOffset);
+		fplStringFormat(buffer, sizeof(buffer), "    Fluid rest offset: %f", gCurrentProperties.sim.restOffset);
 		RenderOSDLine(osdPos, buffer);
-		sprintf_s(buffer, "    Fluid contact offset: %f", gCurrentProperties.sim.contactOffset);
+		fplStringFormat(buffer, sizeof(buffer), "    Fluid contact offset: %f", gCurrentProperties.sim.contactOffset);
 		RenderOSDLine(osdPos, buffer);
-		sprintf_s(buffer, "    Fluid restitution: %f", gCurrentProperties.sim.restitution);
+		fplStringFormat(buffer, sizeof(buffer), "    Fluid restitution: %f", gCurrentProperties.sim.restitution);
 		RenderOSDLine(osdPos, buffer);
-		sprintf_s(buffer, "    Fluid damping: %f", gCurrentProperties.sim.damping);
+		fplStringFormat(buffer, sizeof(buffer), "    Fluid damping: %f", gCurrentProperties.sim.damping);
 		RenderOSDLine(osdPos, buffer);
-		sprintf_s(buffer, "    Fluid dynamic friction: %f", gCurrentProperties.sim.dynamicFriction);
+		fplStringFormat(buffer, sizeof(buffer), "    Fluid dynamic friction: %f", gCurrentProperties.sim.dynamicFriction);
 		RenderOSDLine(osdPos, buffer);
-		sprintf_s(buffer, "    Fluid static friction: %f", gCurrentProperties.sim.staticFriction);
+		fplStringFormat(buffer, sizeof(buffer), "    Fluid static friction: %f", gCurrentProperties.sim.staticFriction);
 		RenderOSDLine(osdPos, buffer);
-		sprintf_s(buffer, "    Fluid particle mass: %f", gCurrentProperties.sim.particleMass);
+		fplStringFormat(buffer, sizeof(buffer), "    Fluid particle mass: %f", gCurrentProperties.sim.particleMass);
 		RenderOSDLine(osdPos, buffer);
-		sprintf_s(buffer, "    Fluid max motion distance: %f", gCurrentProperties.sim.maxMotionDistance);
+		fplStringFormat(buffer, sizeof(buffer), "    Fluid max motion distance: %f", gCurrentProperties.sim.maxMotionDistance);
 		RenderOSDLine(osdPos, buffer);
-		sprintf_s(buffer, "    Fluid blur depth scale: %f", gSSFBlurDepthScale);
+		fplStringFormat(buffer, sizeof(buffer), "    Fluid blur depth scale: %f", gSSFBlurDepthScale);
 		RenderOSDLine(osdPos, buffer);
-		sprintf_s(buffer, "    Fluid particle render factor: %f", gCurrentProperties.render.particleRenderFactor);
+		fplStringFormat(buffer, sizeof(buffer), "    Fluid particle render factor: %f", gCurrentProperties.render.particleRenderFactor);
 		RenderOSDLine(osdPos, buffer);
-		sprintf_s(buffer, "    Fluid debug type: %d / %d (%s)", (int)gFluidDebugType, FluidDebugType::Max, GetFluidDebugType(gFluidDebugType));
+		fplStringFormat(buffer, sizeof(buffer), "    Fluid debug type: %d / %d (%s)", (int)gFluidDebugType, FluidDebugType::Max, GetFluidDebugType(gFluidDebugType));
 		RenderOSDLine(osdPos, buffer);
-		sprintf_s(buffer, "    Fluid color falloff scale: %f", activeFluidColor.falloffScale);
+		fplStringFormat(buffer, sizeof(buffer), "    Fluid color falloff scale: %f", activeFluidColor.falloffScale);
 		RenderOSDLine(osdPos, buffer);
-		sprintf_s(buffer, "    Fluid color falloff alpha: %f", activeFluidColor.falloff.w);
+		fplStringFormat(buffer, sizeof(buffer), "    Fluid color falloff alpha: %f", activeFluidColor.falloff.w);
 		RenderOSDLine(osdPos, buffer);
-		sprintf_s(buffer, "Fluid scenario (L): %d / %zu - %s", gActiveScenarioIdx + 1, gScenarios.size(), gActiveScenario ? gActiveScenario->displayName : "No scenario loaded!");
+		fplStringFormat(buffer, sizeof(buffer), "Fluid scenario (L): %d / %zu - %s", gActiveScenarioIdx + 1, gScenarios.size(), gActiveScenario ? gActiveScenario->displayName : "No scenario loaded!");
 		RenderOSDLine(osdPos, buffer);
-		sprintf_s(buffer, "New actor (Space)");
+		fplStringFormat(buffer, sizeof(buffer), "New actor (Space)");
 		RenderOSDLine(osdPos, buffer);
-		sprintf_s(buffer, "Reset current scene (R)");
+		fplStringFormat(buffer, sizeof(buffer), "Reset current scene (R)");
 		RenderOSDLine(osdPos, buffer);
-		sprintf_s(buffer, "Fluid add acceleration (Arrow Keys)");
+		fplStringFormat(buffer, sizeof(buffer), "Fluid add acceleration (Arrow Keys)");
 		RenderOSDLine(osdPos, buffer);
-		sprintf_s(buffer, "Fluid using GPU acceleration (H): %s", gPhysicsUseGPUAcceleration ? "yes" : "no");
+		fplStringFormat(buffer, sizeof(buffer), "Fluid using GPU acceleration (H): %s", gPhysicsUseGPUAcceleration ? "yes" : "no");
 		RenderOSDLine(osdPos, buffer);
-		sprintf_s(buffer, "Fluid emitter active (K): %s", !gStoppedEmitter ? "yes" : "no");
+		fplStringFormat(buffer, sizeof(buffer), "Fluid emitter active (K): %s", !gStoppedEmitter ? "yes" : "no");
 		RenderOSDLine(osdPos, buffer);
-		sprintf_s(buffer, "Add fluid after scene change (N): %s", !gWaterAddBySceneChange ? "yes" : "no");
+		fplStringFormat(buffer, sizeof(buffer), "Add fluid after scene change (N): %s", !gWaterAddBySceneChange ? "yes" : "no");
 		RenderOSDLine(osdPos, buffer);
 
 		// Empty line
 		osdPos.newLine();
 
-		sprintf_s(buffer, "Fluid particle radius: %f", gCurrentProperties.sim.particleRadius);
+		fplStringFormat(buffer, sizeof(buffer), "Fluid particle radius: %f", gCurrentProperties.sim.particleRadius);
 		RenderOSDLine(osdPos, buffer);
-		sprintf_s(buffer, "Fluid rest particle distance: %f", gCurrentProperties.sim.restParticleDistance);
+		fplStringFormat(buffer, sizeof(buffer), "Fluid rest particle distance: %f", gCurrentProperties.sim.restParticleDistance);
 		RenderOSDLine(osdPos, buffer);
-		sprintf_s(buffer, "Fluid cell size: %f", gCurrentProperties.sim.cellSize);
+		fplStringFormat(buffer, sizeof(buffer), "Fluid cell size: %f", gCurrentProperties.sim.cellSize);
 		RenderOSDLine(osdPos, buffer);
-		sprintf_s(buffer, "Fluid min density: %f", gActiveScenario ? gActiveScenario->render.minDensity : gActiveScene->render.minDensity);
+		fplStringFormat(buffer, sizeof(buffer), "Fluid min density: %f", gActiveScenario ? gActiveScenario->render.minDensity : gActiveScene->render.minDensity);
 		RenderOSDLine(osdPos, buffer);
 	}
 

@@ -363,7 +363,7 @@ public:
 	std::vector<NativeParticleSystem *> particleSystems;
 	std::vector<NativeRigidBody *> rigidbodies;
 
-	NativePhysicsEngine::NativePhysicsEngine(const PhysicsEngineConfiguration &config):
+	NativePhysicsEngine(const PhysicsEngineConfiguration &config):
 		PhysicsEngine(config),
 		foundation(nullptr),
 		physics(nullptr),
@@ -378,7 +378,7 @@ public:
 		Initialize(config);
 	}
 
-	NativePhysicsEngine::~NativePhysicsEngine() {
+	~NativePhysicsEngine() {
 		Shutdown();
 	}
 

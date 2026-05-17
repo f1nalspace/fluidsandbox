@@ -3,6 +3,7 @@
 #include <map>
 #include <queue>
 #include <stdexcept>
+#include <algorithm>
 #include <assert.h>
 
 #include <final_dynamic_opengl.h>
@@ -355,7 +356,7 @@ namespace fsr {
 			CommandHeader header = {};
 			header.type = type;
 			header.size = commandSize;
-			std::memcpy(target + 0, &header, sizeof(CommandHeader));
+			fplMemoryCopy(&header, sizeof(CommandHeader), target + 0);
 			offset += requiredSize;
 			used += requiredSize;
 			CommandHeader *result = reinterpret_cast<CommandHeader *>(target);
@@ -364,7 +365,7 @@ namespace fsr {
 
 		void PushData(CommandHeader *header, const size_t offset, const size_t commandSize, const uint8_t *commandData) {
 			uint8_t *target = (uint8_t *)header + sizeof(CommandHeader) + offset;
-			std::memcpy(target, commandData, commandSize);
+			fplMemoryCopy(commandData, commandSize, target);
 		}
 
 		void Push(const CommandType type, const size_t commandSize, const uint8_t *commandData) {

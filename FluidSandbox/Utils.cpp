@@ -11,6 +11,8 @@
 
 #include <sstream>
 
+#include <final_platform_layer.h>
+
 namespace Utils {
 	const char *getShaderTypeToString(const GLuint what) {
 		switch(what) {
@@ -41,13 +43,21 @@ namespace Utils {
 		}
 	}
 
+	// Returns true when the given character occurs anywhere in str.
+	static bool containsChar(const char *str, const char c) {
+		for(const char *p = str; *p != 0; ++p) {
+			if(*p == c) return(true);
+		}
+		return(false);
+	}
+
 	std::vector<std::string> split(const std::string &source, const char *delimiter) {
 		std::vector<std::string> result;
 		const char *s = source.c_str();
 		const char *e = s;
 		while(*e != 0) {
 			e = s;
-			while(*e != 0 && strchr(delimiter, *e) == 0) ++e;
+			while(*e != 0 && !containsChar(delimiter, *e)) ++e;
 			if(e - s > 0) {
 				size_t len = e - s;
 				result.push_back(std::string(s, len));
@@ -200,22 +210,22 @@ namespace Utils {
 	}
 
 	FluidType toFluidType(const char *str) {
-		if(strcmp(str, "sphere") == 0)
+		if(fplIsStringEqual(str, "sphere"))
 			return FluidType::Sphere;
-		else if(strcmp(str, "blob") == 0 || strcmp(str, "box") == 0 || strcmp(str, "cube") == 0)
+		else if(fplIsStringEqual(str, "blob") || fplIsStringEqual(str, "box") || fplIsStringEqual(str, "cube"))
 			return FluidType::Box;
-		else if(strcmp(str, "wall") == 0 || strcmp(str, "plane") == 0)
+		else if(fplIsStringEqual(str, "wall") || fplIsStringEqual(str, "plane"))
 			return FluidType::Plane;
-		else if(strcmp(str, "drop"))
+		else if(!fplIsStringEqual(str, "drop"))
 			return FluidType::Drop;
 		else
 			return FluidType::Box;
 	}
 
 	ActorMovementType toActorMovementType(const char *str) {
-		if(strcmp(str, "static") == 0)
+		if(fplIsStringEqual(str, "static"))
 			return ActorMovementType::Static;
-		else if(strcmp(str, "dynamic") == 0)
+		else if(fplIsStringEqual(str, "dynamic"))
 			return ActorMovementType::Dynamic;
 		else
 			return ActorMovementType::Static;

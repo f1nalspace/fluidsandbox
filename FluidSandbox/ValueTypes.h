@@ -3,6 +3,8 @@
 #include <cstdint>
 #include <string>
 
+#include <final_platform_layer.h>
+
 #include <glm/glm.hpp>
 
 enum class ValueType: int {
@@ -41,7 +43,7 @@ struct StringValue {
 
 	static StringValue fromString(const std::string &source) {
 		StringValue result = {};
-		strcpy_s(result.value, sizeof(result.value), source.c_str());
+		fplCopyString(source.c_str(), result.value, sizeof(result.value));
 		return(result);
 	}
 };

@@ -285,7 +285,7 @@ void CRenderer::DrawString(const FontAtlas *atlas, const float posX, const float
 }
 
 void CRenderer::DrawString(const FontAtlas *atlas, const float posX, const float posY, const float charHeight, const char *text, const glm::vec4 &color, VBOWritter &writer) {
-	size_t textLen = strlen(text);
+	size_t textLen = fplGetStringLength(text);
 	DrawString(atlas, posX, posY, charHeight, text, textLen, color, writer);
 }
 
