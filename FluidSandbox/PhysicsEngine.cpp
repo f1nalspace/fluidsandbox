@@ -350,9 +350,11 @@ public:
 	physx::PxPhysics *physics;
 	physx::PxMaterial *defaultMaterial;
 	physx::PxScene *scene;
+	physx::PxDefaultCpuDispatcher *cpuDispatcher;
 	physx::PxGpuDispatcher *gpuDispatcher;
 	physx::PxCudaContextManager *cudaContextManager;
 	bool useGPUAcceleration;
+	bool extensionsInitialized;
 
 #ifdef PVD_ENABLED
 	physx::PxPvd *visualDebugger;
@@ -372,9 +374,11 @@ public:
 		defaultFilterShader(physx::PxSimulationFilterShader()),
 		defaultMaterial(nullptr),
 		scene(nullptr),
+		cpuDispatcher(nullptr),
 		gpuDispatcher(nullptr),
 		cudaContextManager(nullptr),
-		useGPUAcceleration(false) {
+		useGPUAcceleration(false),
+		extensionsInitialized(false) {
 		Initialize(config);
 	}
 
@@ -420,6 +424,10 @@ public:
 	}
 
 	void Shutdown() {
+		// Teardown order matters: every module that holds a reference to the
+		// foundation must be released before the foundation itself, otherwise
+		// PhysX reports "pending module references" on foundation destruction.
+
 		// Clear and release scene
 		if(scene != nullptr) {
 			ClearScene();
@@ -433,13 +441,22 @@ public:
 			defaultMaterial = nullptr;
 		}
 
-		// Release GPU acceleration
-		if(gpuDispatcher != nullptr) {
-			gpuDispatcher = nullptr;
+		// Release the CPU dispatcher (the scene does not own it)
+		if(cpuDispatcher != nullptr) {
+			cpuDispatcher->release();
+			cpuDispatcher = nullptr;
 		}
-		if(cudaContextManager) {
-			cudaContextManager->release();
-			cudaContextManager = nullptr;
+
+		// Close the extensions module (pairs with PxInitExtensions)
+		if(extensionsInitialized) {
+			PxCloseExtensions();
+			extensionsInitialized = false;
+		}
+
+		// Release physics (must happen before the GPU and foundation modules)
+		if(physics != nullptr) {
+			physics->release();
+			physics = nullptr;
 		}
 
 #ifdef PVD_ENABLED
@@ -455,11 +472,14 @@ public:
 		isPvdConnected = false;
 #endif
 
-		// Release physics and foundation
-		if(physics != nullptr) {
-			physics->release();
-			physics = nullptr;
+		// Release GPU acceleration after physics, before the foundation
+		gpuDispatcher = nullptr;
+		if(cudaContextManager != nullptr) {
+			cudaContextManager->release();
+			cudaContextManager = nullptr;
 		}
+
+		// Foundation goes last
 		if(foundation != nullptr) {
 			foundation->release();
 			foundation = nullptr;
@@ -539,6 +559,7 @@ public:
 			Shutdown();
 			return;
 		}
+		extensionsInitialized = true;
 
 		// Create the scene
 		physx::PxSceneDesc sceneDesc(physics->getTolerancesScale());
@@ -552,7 +573,8 @@ public:
 		uint32_t numThreads = std::min(config.threadCount, coreCount);
 		printf("  CPU core count: %lu\n", coreCount);
 		printf("  CPU acceleration supported (%d threads)\n", numThreads);
-		sceneDesc.cpuDispatcher = physx::PxDefaultCpuDispatcherCreate(numThreads);
+		cpuDispatcher = physx::PxDefaultCpuDispatcherCreate(numThreads);
+		sceneDesc.cpuDispatcher = cpuDispatcher;
 
 		// GPU Dispatcher
 		useGPUAcceleration = false;
