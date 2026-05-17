@@ -145,21 +145,28 @@ if(WIN32)
 	endif()
 else()
 	# Linux: PhysX is a shared build; the .so files are both link and runtime
-	# targets and carry identical names in the debug/release folders. Static
-	# archives (.a) must precede the shared objects they depend on.
+	# targets. The shared objects carry a DEBUG name suffix in the debug build
+	# (matching the prebuilt GPU module's expectations); the static archives
+	# (.a) do not. Static archives must precede the shared objects they need.
 	set(FS_PX_BIN    "${FS_PHYSX_DIR}/physx/bin/${FS_PHYSX_LIBDIR}")
 	set(FS_PX_LIB    "${FS_PHYSX_DIR}/physx/lib/${FS_PHYSX_LIBDIR}")
 	set(FS_PXS_BIN   "${FS_PHYSX_DIR}/pxshared/bin/${FS_PHYSX_LIBDIR}")
 	set(FS_PXS_LIB   "${FS_PHYSX_DIR}/pxshared/lib/${FS_PHYSX_LIBDIR}")
 
+	if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+		set(FS_PX_SO "DEBUG")
+	else()
+		set(FS_PX_SO "")
+	endif()
+
 	target_link_libraries(FluidSandbox PRIVATE
 		"${FS_PX_LIB}/libPhysX3Extensions.a"
-		"${FS_PX_BIN}/libPhysX3_x64.so"
-		"${FS_PX_BIN}/libPhysX3Cooking_x64.so"
-		"${FS_PX_BIN}/libPhysX3CharacterKinematic_x64.so"
-		"${FS_PX_BIN}/libPhysX3Common_x64.so"
-		"${FS_PXS_BIN}/libPxPvdSDK_x64.so"
-		"${FS_PXS_BIN}/libPxFoundation_x64.so"
+		"${FS_PX_BIN}/libPhysX3${FS_PX_SO}_x64.so"
+		"${FS_PX_BIN}/libPhysX3Cooking${FS_PX_SO}_x64.so"
+		"${FS_PX_BIN}/libPhysX3CharacterKinematic${FS_PX_SO}_x64.so"
+		"${FS_PX_BIN}/libPhysX3Common${FS_PX_SO}_x64.so"
+		"${FS_PXS_BIN}/libPxPvdSDK${FS_PX_SO}_x64.so"
+		"${FS_PXS_BIN}/libPxFoundation${FS_PX_SO}_x64.so"
 		"${FS_PXS_LIB}/libPxTask.a"
 		"${FS_PXS_LIB}/libPsFastXml.a"
 		pthread dl rt m
