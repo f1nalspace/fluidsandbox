@@ -128,6 +128,9 @@ bool CScene::load(const char *filePath) {
 		sim.viscosity = xmlUtils.getNodeFloat(fluidSystemNode, "Viscosity", FluidSimulationProperties::DefaultViscosity);
 		sim.stiffness = xmlUtils.getNodeFloat(fluidSystemNode, "Stiffness", FluidSimulationProperties::DefaultStiffness);
 
+		// Repair bad XML values back to safe defaults and recompute derived values
+		sim.Sanitize();
+
 		render.particleRenderFactor = xmlUtils.getNodeFloat(fluidSystemNode, "ParticleRenderFactor", FluidRenderProperties::DefaultParticleRenderFactor);
 		render.minDensity = xmlUtils.getNodeFloat(fluidSystemNode, "ParticleMinDensity", FluidRenderProperties::DefaultMinDensity);
 	}

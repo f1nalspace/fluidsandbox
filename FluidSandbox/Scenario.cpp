@@ -111,6 +111,9 @@ Scenario *Scenario::load(const char *filePath, CScene *scene) {
 			newScenario->sim.contactOffset = xmlUtils.getNodeFloat(fpNode, "ContactOffset", scene->sim.contactOffset);
 			newScenario->sim.particleMass = xmlUtils.getNodeFloat(fpNode, "ParticleMass", scene->sim.particleMass);
 
+			// Repair bad XML values back to safe defaults and recompute derived values
+			newScenario->sim.Sanitize();
+
 			newScenario->render.particleRenderFactor = xmlUtils.getNodeFloat(fpNode, "ParticleRenderFactor", scene->render.particleRenderFactor);
 			newScenario->render.minDensity = xmlUtils.getNodeFloat(fpNode, "ParticleMinDensity", scene->render.minDensity);
 		} else {
